@@ -1,6 +1,8 @@
 package com.kwcapstone.Domain.Entity;
 
+import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
@@ -27,4 +29,12 @@ public class Member {
     private String status;
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
+
+    @Builder
+    public Member(MemberRequestDto memberRequestDto) {
+        this.name = memberRequestDto.getName();
+        this.email = memberRequestDto.getEmail();
+        this.password = memberRequestDto.getPassword();
+        this.agreement = memberRequestDto.isAgreement();
+    }
 }
