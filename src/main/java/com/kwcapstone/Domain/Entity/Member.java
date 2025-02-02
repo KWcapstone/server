@@ -1,4 +1,30 @@
 package com.kwcapstone.Domain.Entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Document(collection = "member")
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Member {
+    @Id
+    private ObjectId memberId;
+    private String name;
+    private String email;
+    private String password;
+    private boolean agreement;
+    private String image;
+    private String provider;
+    private String socialId;
+    private String status;
+    private LocalDateTime inactivationDate;
+    private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
 }
