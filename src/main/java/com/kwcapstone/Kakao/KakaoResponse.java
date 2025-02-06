@@ -2,15 +2,17 @@ package com.kwcapstone.Kakao;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class KakaoResponse {
+
     @Getter
     @Setter
-    @AllArgsConstructor
+    @NoArgsConstructor
     public static class KakaoLoginResponse{
-        private final String name;
-        private final String imageUrl;
-        private final String email;
+        private String name;
+        private String imageUrl;
+        private String email;
     }
 }
