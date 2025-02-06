@@ -1,5 +1,6 @@
 package com.kwcapstone.Kakao;
 
+import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,10 @@ public class KaKaoController {
     public BaseResponse<KakaoResponse.KakaoLoginResponse> kakaoLogion(
             @RequestParam String code){
         //code = 인가 코드
-
         try{
             return BaseResponse()
         }catch(NoSuchElementException e){
-            return
+            return new BaseErrorResponse(e);
         }
     }
 }
