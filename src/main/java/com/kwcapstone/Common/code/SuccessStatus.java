@@ -1,4 +1,9 @@
 package com.kwcapstone.Common.code;
 
-public enum SuccessStatus {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public enum SuccessStatus implements BaseCode{
 }
