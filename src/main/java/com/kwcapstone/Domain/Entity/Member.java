@@ -25,7 +25,7 @@ public class Member {
     private boolean agreement;
     private String image;
     private String provider;
-    private String socialId;
+    private Long socialId;
     private String status;
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
@@ -36,5 +36,15 @@ public class Member {
         this.email = memberRequestDto.getEmail();
         this.password = memberRequestDto.getPassword();
         this.agreement = memberRequestDto.isAgreement();
+    }
+
+    @Builder
+    public Member(Long socialId, String name,
+                  String imageUrl,String email, Boolean agreement) {
+        this.socialId = socialId;
+        this.name = name;
+        this.image = imageUrl;
+        this.email = email;
+        this.agreement = agreement;
     }
 }

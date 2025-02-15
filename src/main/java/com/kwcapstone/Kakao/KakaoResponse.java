@@ -10,7 +10,9 @@ public class KakaoResponse {
     @Getter
     @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
     public static class KakaoLoginResponse{
+        private Long id;
         private String name;
         private String imageUrl;
         private String email;
