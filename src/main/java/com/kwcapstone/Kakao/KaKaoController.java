@@ -24,7 +24,7 @@ public class KaKaoController {
         try{
             return BaseResponse()
         }catch(NoSuchElementException e){
-            return new BaseErrorResponse(e);
+            return new BaseErrorResponse();
         }
     }
 }
