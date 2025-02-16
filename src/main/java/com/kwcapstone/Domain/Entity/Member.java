@@ -24,8 +24,7 @@ public class Member {
     private String password;
     private boolean agreement;
     private String image;
-    private String provider;
-    private Long socialId;
+    private String socialId;
     private String status;
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트

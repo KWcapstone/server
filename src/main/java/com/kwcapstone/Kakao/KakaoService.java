@@ -131,9 +131,11 @@ public class KakaoService {
         Boolean checkingKakaoUser = memberRepository.existsByEmail(kakaoEmail);
 
         if (!checkingKakaoUser) {//회원가입
-            Member kakaoUser = new Member(uid,nickName,imageUrl,kakaoEmail,true);
-            userRepository.save(kakaoUser);
+            Member kakaoUser = new Member
+                    (uid,nickName,imageUrl,kakaoEmail,true);
+            memberRepository.save(kakaoUser);
         }
+
         //토큰 생성
         AuthTokens token=authTokensGenerator.generate(uid.toString());
         return new LoginResponse(uid,nickName,kakaoEmail,token);
