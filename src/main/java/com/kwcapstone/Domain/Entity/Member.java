@@ -22,10 +22,10 @@ public class Member {
     private String name;
     private String email;
     private String password;
-    private boolean agreement;
-    private String image;
-    private String socialId;
-    private String status;
+    private boolean agreement; //약관 동의
+    private String image; //profile
+    private String socialId; //social Id
+    private String status; //회원 상태
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
 
