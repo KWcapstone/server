@@ -38,7 +38,7 @@ public class Member {
     }
 
     @Builder
-    public Member(Long socialId, String name,
+    public Member(String socialId, String name,
                   String imageUrl,String email, Boolean agreement) {
         this.socialId = socialId;
         this.name = name;

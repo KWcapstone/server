@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +32,7 @@ public class KakaoService {
     private String redirectUrl;
 
     //엑세스 토큰 요청
+    @Transactional
     private String getAccessToken(String code) {
         //Http Header 생성
         HttpHeaders headers = new HttpHeaders();
@@ -76,7 +78,8 @@ public class KakaoService {
     }
 
     //토큰 -> 카카오 api 호출
-    HashMap<String, Object> getKakaoUserInfo(String accessToken) {
+    @Transactional
+    private HashMap<String, Object> getKakaoUserInfo(String accessToken) {
         //userInfo(id,이름, 이메일)를 저장할 맵
         HashMap<String, Object> userInfo= new HashMap<String,Object>();
 
@@ -119,6 +122,7 @@ public class KakaoService {
         return userInfo;
     }
     //카카오 ID로 회원가입 및 로그인 처리
+    @Transactional
     private KakaoResponse.KakaoLoginResponse kakaoLogin
     (HashMap<String, Object> userInfo){
 
@@ -142,6 +146,7 @@ public class KakaoService {
     }
 
     //kakao login
+    @Transactional
     public KakaoResponse.KakaoLoginResponse kakaoLogin(String code){
         //인가코드 -> 엑세스 토큰 요청
         String accessToken = getAccessToken(code);
