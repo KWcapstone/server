@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class KakaoResponse {
-
     @Getter
     @Setter
     @NoArgsConstructor
