@@ -4,6 +4,9 @@ import com.kwcapstone.Domain.Entity.Member;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.Optional;
+
 public interface MemberRepository extends MongoRepository<Member, ObjectId> {
     boolean existsByEmail(String email);
+    Optional<Member> findByEmail(String email);
 }
