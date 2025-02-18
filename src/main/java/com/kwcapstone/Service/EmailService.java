@@ -52,4 +52,37 @@ public class EmailService {
 
         return mimeMessage;
     }
+
+    public void sendPasswordResetMessage(String to, String newPassword) {
+        try {
+            javaMailSender.send(sendPasswordResetEmail(to, newPassword));
+        } catch (MessagingException e) {
+            throw new BaseException(400, "이메일 전송 실패: 메시지 생성 중 오류 발생");
+        } catch (Exception e) {
+            throw new BaseException(500, "이메일 전송을 실패하였습니다.");
+        }
+    }
+
+    public MimeMessage sendPasswordResetEmail(String to, String newPassword)
+        throws MessagingException, UnsupportedEncodingException {
+        log.info("비밀번호 재설정 이메일 대상 : " + to);
+        log.info("새로운 비밀번호 : " + newPassword);  // 여기 보안상 손봐야할지도..??
+
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+        mimeMessage.addRecipients(MimeMessage.RecipientType.TO, to);
+        mimeMessage.setSubject("MoAba 비밀번호 재설정 안내");
+
+        // 이메일 내용
+        String message = "";
+        message += "<h3>아래의 새로운 비밀번호를 사용하여 로그인하세요</h3>";
+        message += "<h1>" + newPassword + "</h1>";
+        message += "<p>로그인 후 반드시 비밀번호를 변경해주세요.</p>";
+        message += "<h3>감사합니다.</h3>";
+
+        mimeMessage.setText(message, "utf-8", "html");
+        mimeMessage.setFrom(new InternetAddress(name, "MoAba"));
+
+        return mimeMessage;
+    }
 }
