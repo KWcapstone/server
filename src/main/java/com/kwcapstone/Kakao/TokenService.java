@@ -18,7 +18,7 @@ public class TokenService {
     private final MemberRepository memberRepository;
 
     //refreshToken 업데이트
-    public TokenResponse reissueToken(HttpServletRequest request) {
+    public TokenResponse.TokenResponse reissueToken(HttpServletRequest request) {
         //token 추출
         String refreshToken = jwtTokenProvider.extractToken(request);
         //refreshToken이랑 같은 Token 정보가 있는지 확인
@@ -26,13 +26,17 @@ public class TokenService {
 
         Long socialId = validateRefreshToken(refreshToken);
         String newAccessToken
-                = jwtTokenProvider.createAccessToken(memberId);
+                = jwtTokenProvider.createAccessToken(socialId);
         String newRefreshToken
-                = jwtTokenProvider.createRefreshToken(memberId);
+                = jwtTokenProvider.createRefreshToken(socialId);
 
         // refreshToken 업데이트
-        token.changeToken(newRefreshToken);
-        return AuthConverter.toTokenRefreshResponse(newAccessToken, newRefreshToken);
+        token.changeRefreshToken(newRefreshToken);
+        return TokenResponse.TokenResponse
+                .builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
     }
 
     private Token getToken(String refreshToken) {

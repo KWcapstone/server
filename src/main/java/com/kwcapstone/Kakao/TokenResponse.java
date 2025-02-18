@@ -2,13 +2,11 @@ package com.kwcapstone.Kakao;
 
 import lombok.*;
 
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TokenResponse {
-    @Getter
-    @Builder
-    @AllArgsConstructor(access = AccessLevel.PROTECTED)
-    @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    public static class Token {
-        String accessToken;
-        String refreshToken;
-    }
+    String accessToken;
+    String refreshToken;
 }
