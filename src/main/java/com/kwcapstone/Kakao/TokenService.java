@@ -3,6 +3,7 @@ package com.kwcapstone.Kakao;
 import com.kwcapstone.Repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +19,16 @@ public class TokenService {
 
     //refreshToken 업데이트
     public TokenResponse reissueToken(HttpServletRequest request) {
+        //token 추출
         String refreshToken = jwtTokenProvider.extractToken(request);
+        //refreshToken이랑 같은 Token 정보가 있는지 확인
         Token token = getToken(refreshToken);
 
-        Long memberId = validateRefreshToken(refreshToken);
-        String newAccessToken = jwtTokenProvider.createAccessToken(memberId);
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(memberId);
+        Long socialId = validateRefreshToken(refreshToken);
+        String newAccessToken
+                = jwtTokenProvider.createAccessToken(memberId);
+        String newRefreshToken
+                = jwtTokenProvider.createRefreshToken(memberId);
 
         // refreshToken 업데이트
         token.changeToken(newRefreshToken);
@@ -39,10 +44,10 @@ public class TokenService {
         return token.get();
     }
 
-
+    //socialId->String
     private Long validateRefreshToken(String refreshToken) {
         jwtTokenProvider.isTokenValid(refreshToken);
-        Long memberId = jwtTokenProvider.getId(refreshToken);
-        return memberId;
+        Long socialId = jwtTokenProvider.getId(refreshToken);
+        return socialId;
     }
 }

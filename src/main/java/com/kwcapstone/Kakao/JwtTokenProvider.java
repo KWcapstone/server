@@ -56,22 +56,22 @@ public class JwtTokenProvider {
             return authorizationHeader.substring(7);
         }
         throw new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED, "Auth_001 : 토큰추출에 실패하였습니다.");
+                HttpStatus.UNAUTHORIZED, "Auth_001 : refresh 토큰 추출에 실패하였습니다.");
     }
 
     //Token 생성
-    public String createAccessToken(ObjectId memberId){
-        return createToken(memberId, aTValidityMilliseconds);
+    public String createAccessToken(Long socialId){
+        return createToken(socialId, aTValidityMilliseconds);
     }
 
-    public String createRefreshToken(ObjectId memberId){
-        return createToken(memberId,rTValidityMilliseconds);
+    public String createRefreshToken(Long socialId){
+        return createToken(socialId,rTValidityMilliseconds);
     }
 
-    private String createToken(ObjectId memberId, Long validityMilliseconds){
+    private String createToken(Long socialId, Long validityMilliseconds){
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
-        claims.put("memberId", memberId.toString());
+        claims.put("socialId", socialId.toString());
 
         //현재시간 가져오기
         ZonedDateTime now = ZonedDateTime.now();
