@@ -39,7 +39,7 @@ public class TokenService {
                 = jwtTokenProvider.createRefreshToken(socialId);
 
         // refreshToken 업데이트
-        token.changeRefreshToken(newRefreshToken);
+        token.changeToken(newAccessToken, newRefreshToken);
         return TokenConvert
                 .toTokenRefreshResponse(newAccessToken,newRefreshToken);
     }
