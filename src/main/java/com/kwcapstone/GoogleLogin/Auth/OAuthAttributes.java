@@ -14,16 +14,18 @@ public class OAuthAttributes {
     private String name;
     private String email;
     private String picture;
+    private String socialId;
     private MemberRole role;
 
     @Builder
     public OAuthAttributes(Map<String, Object> attributes, String nameAttributeKey, String name,
-                           String email, String picture, MemberRole role) {
+                           String email, String picture, String socialId, MemberRole role) {
         this.attributes = attributes;
         this.nameAttributeKey = nameAttributeKey;
         this.name = name;
         this.email = email;
         this.picture = picture;
+        this.socialId = socialId;
         this.role = role;
     }
 
@@ -37,6 +39,7 @@ public class OAuthAttributes {
 
     public static OAuthAttributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
         return OAuthAttributes.builder()
+                .socialId((String) attributes.get("sub"))
                 .name((String) attributes.get("name"))
                 .email((String) attributes.get("email"))
                 .picture((String) attributes.get("picture"))
@@ -48,10 +51,12 @@ public class OAuthAttributes {
 
     public Member toEntity() {
         return Member.builder()
+                .socialId(socialId)
                 .name(name)
                 .email(email)
                 .image(picture)
                 .role(role)
+                .agreement(false)  // 기본적으로는 약관 동의 전
                 .build();
     }
 }

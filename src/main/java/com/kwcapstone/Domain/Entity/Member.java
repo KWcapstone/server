@@ -47,13 +47,13 @@ public class Member {
 
     // 구글 로그인 회원가입
     @Builder
-    public Member(String name, String email, String socialId, String image, String role, String password) {
+    public Member(String name, String email, String socialId, String image, Boolean agreement, String role) {
         this.name = name;
         this.email = email;
         this.socialId = socialId;
         this.image = image;
         this.role = (this.role != null) ? this.role : MemberRole.GOOGLE;
-        this.password = password;
+        this.agreement = agreement;
     }
 
     public Member update(String name, String image) {
