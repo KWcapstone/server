@@ -30,7 +30,9 @@ public class TokenService {
         //refreshToken이랑 같은 Token 정보가 있는지 확인
         Token token = getToken(refreshToken);
 
-        Long socialId = validateRefreshToken(refreshToken);
+        //google이 String이라서
+        String socialId = validateRefreshToken(refreshToken);
+
         String newAccessToken
                 = jwtTokenProvider.createAccessToken(socialId);
         String newRefreshToken
@@ -56,11 +58,15 @@ public class TokenService {
     }
 
     //socialId->String
-    private Long validateRefreshToken(String refreshToken) {
+    private String validateRefreshToken(String refreshToken) {
         //토큰이 존재하는가?
         jwtTokenProvider.isTokenValid(refreshToken);
+
         //jwt에서 정보 빼오는거라서 Long 괜추나
-        Long socialId = jwtTokenProvider.getId(refreshToken);
+        //Long socialId = jwtTokenProvider.getId(refreshToken);
+
+        String socialId = String.valueOf(jwtTokenProvider.getId(refreshToken));
+
         return socialId;
     }
 }
