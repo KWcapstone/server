@@ -87,6 +87,11 @@ public class JwtTokenProvider {
         return getClaims(token).getBody().get("socialId", String.class);
     }
 
+    //Jwt 에서 role 추출
+    public String getRole(String token) {
+        return getClaims(token).getBody().get("role", String.class);
+    }
+
     //토큰 확인
     public boolean isTokenValid(String token) {
         try {

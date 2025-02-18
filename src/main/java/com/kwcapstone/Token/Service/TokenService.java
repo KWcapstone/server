@@ -32,6 +32,7 @@ public class TokenService {
 
         //google이 String이라서
         String socialId = validateRefreshToken(refreshToken);
+        String role =
 
         String newAccessToken
                 = jwtTokenProvider.createAccessToken(socialId);
@@ -57,15 +58,12 @@ public class TokenService {
         return token.get();
     }
 
-    //socialId->String
+    //socialId
     private String validateRefreshToken(String refreshToken) {
         //토큰이 존재하는가?
         jwtTokenProvider.isTokenValid(refreshToken);
 
-        //jwt에서 정보 빼오는거라서 Long 괜추나
-        //Long socialId = jwtTokenProvider.getId(refreshToken);
-
-        String socialId = String.valueOf(jwtTokenProvider.getId(refreshToken));
+        String socialId = jwtTokenProvider.getId(refreshToken);
 
         return socialId;
     }
