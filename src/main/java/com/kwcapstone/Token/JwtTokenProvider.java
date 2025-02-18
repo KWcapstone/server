@@ -53,18 +53,18 @@ public class JwtTokenProvider {
     }
 
     //Token 생성
-    public String createAccessToken(Long socialId){
+    public String createAccessToken(String socialId){
         return createToken(socialId, aTValidityMilliseconds);
     }
 
-    public String createRefreshToken(Long socialId){
+    public String createRefreshToken(String socialId){
         return createToken(socialId,rTValidityMilliseconds);
     }
 
-    private String createToken(Long socialId, Long validityMilliseconds){
+    private String createToken(String socialId, Long validityMilliseconds){
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
-        claims.put("socialId", socialId.toString());
+        claims.put("socialId", socialId);
 
         //현재시간 가져오기
         ZonedDateTime now = ZonedDateTime.now();
