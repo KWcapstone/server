@@ -39,7 +39,7 @@ public class TokenService {
     }
 
 
-    private Boolean getToken(String refreshToken) {
+    private Token getToken(String refreshToken) {
         Optional<Token> token
                 = tokenRepository.findByRefreshToken(refreshToken);
 
