@@ -4,7 +4,6 @@ import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
-import com.kwcapstone.Exception.BadRequestException;
 import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.Repository.EmailVerificationRepository;
 import com.kwcapstone.Repository.MemberRepository;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
