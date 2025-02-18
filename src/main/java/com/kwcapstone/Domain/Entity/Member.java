@@ -42,7 +42,7 @@ public class Member {
         this.role = MemberRole.USER;
     }
 
-    // 구글 로그인 회원가입
+    //로그인 회원가입
     @Builder
     public Member(String name, String email, String socialId, String image, Boolean agreement, String role) {
         this.name = name;
@@ -66,15 +66,5 @@ public class Member {
 
     public String getRoleKey() {
         return this.role.getKey();
-    }
-
-    @Builder
-    public Member(String socialId, String name,
-                  String imageUrl,String email, Boolean agreement) {
-        this.socialId = socialId;
-        this.name = name;
-        this.image = imageUrl;
-        this.email = email;
-        this.agreement = agreement;
     }
 }
