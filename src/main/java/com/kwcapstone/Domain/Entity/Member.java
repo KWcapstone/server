@@ -70,4 +70,14 @@ public class Member {
     public String getRoleKey() {
         return this.role.getKey();
     }
+
+    @Builder
+    public Member(String socialId, String name,
+                  String imageUrl,String email, Boolean agreement) {
+        this.socialId = socialId;
+        this.name = name;
+        this.image = imageUrl;
+        this.email = email;
+        this.agreement = agreement;
+    }
 }
