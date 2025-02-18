@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>약관 동의</title>
+</head>
+<body>
+<h1>약관에 동의하세요</h1>
+<p>서비스 이용을 위해 약관에 동의해주세요.</p>
+
+<button id="agreeButton">동의하고 가입하기</button>
+
+<script>
+    document.getElementById("agreeButton").addEventListener("click", function() {
+        fetch("/auth/agree", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        })
+            .then(response => response.json()) // 응답을 JSON으로 변환
+            .then(data => {
+                if (data.status === 200) {
+                    alert(data.message); // "회원가입이 완료되었습니다."
+                    window.location.href = "/"; // 메인 페이지로 리디렉트
+                } else {
+                    alert("오류: " + data.message); // 에러 메시지 출력
+                }
+            })
+            .catch(error => console.error("Error:", error));
+    });
+</script>
+</body>
+</html>

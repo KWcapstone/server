@@ -4,8 +4,11 @@ import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Domain.Dto.Request.EmailDuplicationDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
+import com.kwcapstone.Domain.Entity.Member;
+import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Service.MemberService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +23,8 @@ public class MemberController {
     private MemberRepository memberRepository;
 
     private final MemberService memberService;
+    @Autowired
+    private HttpSession httpSession;
 
     // 회원가입
     @PostMapping("/auth/sign_up")
@@ -41,4 +46,25 @@ public class MemberController {
         memberService.validateEmail(emailRequestDto);
         return new BaseResponse(HttpStatus.OK.value(), "이메일 인증이 완료되었습니다.");
     }
+
+    // 약관동의
+    @PostMapping("/auth/agree")
+    public BaseResponse agree() {
+        Member tempMember = (Member) httpSession.getAttribute("tempMember");
+
+        if (tempMember == null) {
+            return new BaseResponse(HttpStatus.BAD_REQUEST.value(), "임시 회원 정보가 없습니다.");
+        }
+
+        // 약관 동의 처리 후, DB에 저장
+        tempMember.setAgreement(true);
+        memberRepository.save(tempMember);
+
+        // 세션 삭제
+        httpSession.setAttribute("member", new SessionUser(tempMember));
+        httpSession.removeAttribute("tempMember");
+
+        return new BaseResponse(HttpStatus.OK.value(), "회원가입이 완료되었습니다.");
+    }
+
 }
