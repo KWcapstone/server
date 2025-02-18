@@ -1,5 +1,7 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Token.Domain.Convert;
 
+
+import com.kwcapstone.Token.Domain.Dto.TokenResponse;
 
 public class TokenConvert {
     public static TokenResponse toTokenRefreshResponse(

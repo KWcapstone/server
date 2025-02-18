@@ -1,4 +1,4 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Token.Domain.Dto;
 
 import lombok.*;
 

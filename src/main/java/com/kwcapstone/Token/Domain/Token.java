@@ -1,6 +1,5 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Token.Domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

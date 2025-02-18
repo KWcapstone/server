@@ -1,6 +1,8 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Token.Controller;
 
 import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Token.Domain.Dto.TokenResponse;
+import com.kwcapstone.Token.Service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

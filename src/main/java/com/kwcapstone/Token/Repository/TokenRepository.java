@@ -1,5 +1,6 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Token.Repository;
 
+import com.kwcapstone.Token.Domain.Token;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
