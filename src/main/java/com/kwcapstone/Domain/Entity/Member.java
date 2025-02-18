@@ -22,11 +22,10 @@ public class Member {
     private String name;
     private String email;
     private String password;
-    private boolean agreement;
-    private String image;
-    private String provider;
-    private String socialId;
-    private String status;
+    private boolean agreement; //약관 동의 증거
+    private String image; //profile
+    private String socialId; //social Id
+    private String status; //회원 상태
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
 
@@ -36,5 +35,15 @@ public class Member {
         this.email = memberRequestDto.getEmail();
         this.password = memberRequestDto.getPassword();
         this.agreement = memberRequestDto.isAgreement();
+    }
+
+    @Builder
+    public Member(String socialId, String name,
+                  String imageUrl,String email, Boolean agreement) {
+        this.socialId = socialId;
+        this.name = name;
+        this.image = imageUrl;
+        this.email = email;
+        this.agreement = agreement;
     }
 }
