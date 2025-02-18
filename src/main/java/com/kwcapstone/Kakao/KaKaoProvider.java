@@ -1,8 +1,15 @@
 package com.kwcapstone.Kakao;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 @RequiredArgsConstructor
@@ -14,7 +21,50 @@ public class KaKaoProvider {
     @Value("${KAKAO_REDIRECT_URL}")
     private String redirectUrl;
 
-    //code로 accessToken 요청하기(해당 accessToken은 카카오에서 제공해주는 token)
+    //code(인가코드)로 accessToken 요청하기
+    // (해당 accessToken은 카카오에서 제공해주는 token)
     //보안을 위해 accessToken을 새로 서버쪽에서 발급할거임.
+    public OAuthToken requestToken(String code){
+        //Restemplate 새로 생성(Http 요청을 보내기 위함)
+        RestTemplate restTemplate = new RestTemplate();
+
+        //Http 요청의 header에 방식(Json이 아닌 URL 인코딩된 폼 데이터)
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-type",
+                "application/x-www-form-urlencoded;charset=UTF-8");
+
+        //넘길 정보 담기
+        MultiValueMap<String, String> params
+                = new LinkedMultiValueMap<>();
+        params.add("grant_type", "authorization_code");
+        params.add("client_id", clientId);
+        params.add("redirect_uri", redirectUrl);
+        params.add("code", code);
+
+        //요청할 객체 생성
+        HttpEntity<MultiValueMap<String,String>> kakaoTokenRequest
+                = new HttpEntity<>(params, headers);
+
+        //카카오 OAuth 토큰 요청하기
+        ResponseEntity<String> response
+                = restTemplate.exchange(
+                        "https://kauth.kakao.com/oauth/token",
+                HttpMethod.POST, kakaoTokenRequest, String.class);
+
+        //응답데이터는 OAuthToken로 변환해야함(이를 위해 객체 매핑할 도구)
+        ObjectMapper objectMapper = new ObjectMapper();
+        OAuthToken oauthToken = null;
+
+        try{
+            oauthToken = objectMapper.readValue(
+                    response.getBody(),OAuthToken.class);
+        }catch (JsonProcessingException e){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "카카오 정보 불러오기에 실패하였습니다.");
+        }
+        return oauthToken;
+    }
+
+    //Token으로 정보 요청
     public
 }
