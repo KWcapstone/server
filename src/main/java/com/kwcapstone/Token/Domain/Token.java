@@ -24,7 +24,8 @@ public class Token {
         this.memberId = memberId;
     }
 
-    public void changeRefreshToken(String refreshToken){
+    public void changeToken(String accessToken, String refreshToken){
+        this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }
 }
