@@ -1,5 +1,6 @@
 package com.kwcapstone.Token;
 
+import com.kwcapstone.Domain.Entity.MemberRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +23,7 @@ public class JwtTokenProvider {
     private static final String  HEADER_STRING
             = "Authorization";
     //"Bearer" 로 시작하는 Jwt 토큰 처리 위한 값
-    private static final String HEADER_STRING_PREFIX = " Bearer";
+    private static final String HEADER_STRING_PREFIX = "Bearer";
 
     private final SecretKey secretKey;//암호화키 -> 토큰이 변조되지 않았음을 검증
     private final long aTValidityMilliseconds; //AccessToken 유효기간
@@ -53,18 +54,19 @@ public class JwtTokenProvider {
     }
 
     //Token 생성
-    public String createAccessToken(String socialId){
-        return createToken(socialId, aTValidityMilliseconds);
+    public String createAccessToken(String socialId, MemberRole memberRole){
+        return createToken(socialId, memberRole, aTValidityMilliseconds);
     }
 
-    public String createRefreshToken(String socialId){
-        return createToken(socialId,rTValidityMilliseconds);
+    public String createRefreshToken(String socialId, MemberRole memberRole){
+        return createToken(socialId, memberRole,rTValidityMilliseconds);
     }
 
-    private String createToken(String socialId, Long validityMilliseconds){
+    private String createToken(String socialId, MemberRole memberRole, Long validityMilliseconds){
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
         claims.put("socialId", socialId);
+        claims.put("role", memberRole.toString());
 
         //현재시간 가져오기
         ZonedDateTime now = ZonedDateTime.now();
@@ -81,8 +83,8 @@ public class JwtTokenProvider {
     }
 
     //Jwt 에서 사용자 Id 추출
-    public Long getId(String token) {
-        return getClaims(token).getBody().get("id", Long.class);
+    public String getId(String token) {
+        return getClaims(token).getBody().get("socialId", String.class);
     }
 
     //토큰 확인

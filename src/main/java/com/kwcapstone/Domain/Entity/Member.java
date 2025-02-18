@@ -30,9 +30,6 @@ public class Member {
     @Setter
     private MemberRole role;  // 소셜 로그인 사용자
 
-    @Builder.Default
-    private String status = "ACTIVE";  // 계정 활성화 상태 - 수정했는데 필요없는???
-
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
 
