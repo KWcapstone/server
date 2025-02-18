@@ -32,12 +32,12 @@ public class TokenService {
 
         //google이 String이라서
         String socialId = validateRefreshToken(refreshToken);
-        String role =
+        String role = findRoleByRefrshToken(refreshToken);
 
         String newAccessToken
-                = jwtTokenProvider.createAccessToken(socialId);
+                = jwtTokenProvider.createAccessToken(socialId, role);
         String newRefreshToken
-                = jwtTokenProvider.createRefreshToken(socialId);
+                = jwtTokenProvider.createRefreshToken(socialId, role);
 
         // refreshToken 업데이트
         token.changeToken(newAccessToken, newRefreshToken);
@@ -66,5 +66,11 @@ public class TokenService {
         String socialId = jwtTokenProvider.getId(refreshToken);
 
         return socialId;
+    }
+
+    //role
+    private String findRoleByRefrshToken(String refreshToken) {
+        String role = jwtTokenProvider.getRole(refreshToken);
+        return role;
     }
 }
