@@ -22,7 +22,7 @@ public class Member {
     private String name;
     private String email;
     private String password;
-    private boolean agreement; //약관 동의
+    private boolean agreement; //약관 동의 증거
     private String image; //profile
     private String socialId; //social Id
     private String status; //회원 상태
