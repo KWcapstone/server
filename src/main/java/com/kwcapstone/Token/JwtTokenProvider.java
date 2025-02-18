@@ -54,19 +54,19 @@ public class JwtTokenProvider {
     }
 
     //Token 생성
-    public String createAccessToken(String socialId, MemberRole memberRole){
-        return createToken(socialId, memberRole, aTValidityMilliseconds);
+    public String createAccessToken(String socialId, String role){
+        return createToken(socialId, role, aTValidityMilliseconds);
     }
 
-    public String createRefreshToken(String socialId, MemberRole memberRole){
-        return createToken(socialId, memberRole,rTValidityMilliseconds);
+    public String createRefreshToken(String socialId, String role){
+            return createToken(socialId, role,rTValidityMilliseconds);
     }
 
-    private String createToken(String socialId, MemberRole memberRole, Long validityMilliseconds){
+    private String createToken(String socialId, String role, Long validityMilliseconds){
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
         claims.put("socialId", socialId);
-        claims.put("role", memberRole.toString());
+        claims.put("role", role);
 
         //현재시간 가져오기
         ZonedDateTime now = ZonedDateTime.now();
