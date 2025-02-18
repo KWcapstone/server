@@ -13,16 +13,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Token {
     @Id
     private ObjectId id;
+    private String accessToken;
     private String refreshToken;
     private ObjectId memberId; //memberId 참조
 
     @Builder
-    public Token(String refreshToken, ObjectId memberId){
+    public Token(String accessToken, String refreshToken, ObjectId memberId){
+        this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.memberId = memberId;
     }
 
-    public void changeRefreshToken(String refreshToken){
+    public void changeToken(String accessToken, String refreshToken){
+        this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }
 }
