@@ -30,7 +30,7 @@ public class KaKaoProvider {
 
         //Http 요청의 header에 방식(Json이 아닌 URL 인코딩된 폼 데이터)
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-type",
+        headers.add("Content-Type",
                 "application/x-www-form-urlencoded;charset=UTF-8");
 
         //넘길 정보 담기
@@ -66,5 +66,47 @@ public class KaKaoProvider {
     }
 
     //Token으로 정보 요청
-    public
+    public KaKaoProfile getProfile(String token){
+        //Http 요청을 위해
+        RestTemplate restTemplate
+                = new RestTemplate();
+
+        //Http 요청 담기 위해
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Content-Type",
+                "application/x-www-form-urlencoded;charset=utf-8");
+
+        //넘길정보 담기
+        MultiValueMap<String, Object> params
+                = new LinkedMultiValueMap<>();
+        params.add("secure_resource", true);
+
+        //Http 요청하기
+        HttpEntity<MultiValueMap<String, Object>> kakaoProfileRequest
+                = new HttpEntity<>(params, headers);
+
+        //정보 받아오기
+        ResponseEntity<String> response =
+                restTemplate.exchange(
+                        "https://kapi.kakao.com/v2/user/me",
+                        HttpMethod.POST,
+                        kakaoProfileRequest, String.class);
+
+        //객체 매핑 생성
+        ObjectMapper objectMapper = new ObjectMapper();
+        KaKaoProfile kaKaoProfile = null;
+
+        //checking
+        System.out.println(response.getBody());
+        try{
+            kaKaoProfile
+                    = objectMapper.readValue(response.getBody(), KaKaoProfile.class);
+        }catch (JsonProcessingException e){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "카카오 유저 정보 불러오기에 실패하였습니다.");
+        }
+
+        return kaKaoProfile;
+    }
 }
