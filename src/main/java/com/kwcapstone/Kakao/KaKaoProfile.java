@@ -15,7 +15,7 @@ public class KaKaoProfile {
 
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class KakaoAccount {
+    public static class KakaoAccount {
         private String email;
 
         @JsonProperty("profile")
@@ -24,7 +24,7 @@ public class KaKaoProfile {
 
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class Profile{
+    public static class Profile{
         private String nickname;
 
         @JsonProperty("profile_image_url")
