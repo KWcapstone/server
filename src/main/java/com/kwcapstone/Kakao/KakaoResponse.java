@@ -12,8 +12,7 @@ public class KakaoResponse {
     @AllArgsConstructor
     public static class KakaoLoginResponse{
         private Long id;
-        private String name;
-        private String imageUrl;
-        private String email;
+        private String accessToken;
+        private String refreshToken;
     }
 }
