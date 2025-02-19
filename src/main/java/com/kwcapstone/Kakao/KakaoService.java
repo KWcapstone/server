@@ -1,6 +1,7 @@
 package com.kwcapstone.Kakao;
 
 import com.kwcapstone.Domain.Entity.Member;
+import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
@@ -26,7 +27,7 @@ public class KakaoService {
     @Transactional
     public KakaoResponse.KakaoLoginResponse kakaoLogin(String code){
         //kakao token 발급
-        OAuthToken oAuthToken = kaKaoProvider.requestToken(code);
+        OAuthToken oAuthToken = getTokenRequest(code);
 
         KaKaoProfile kaKaoProfile;
         //kakao user 정보 가져오기
@@ -43,15 +44,43 @@ public class KakaoService {
                 memberRepository.findByEmail(
                         kaKaoProfile.getKakaoAccount().getEmail());
 
+        KakaoResponse.KakaoTokenResponse tokenResponse
+                = new KakaoResponse.KakaoTokenResponse();
+
         //존재하면 새로운 accesstoekn하고 refresh token만 다시 주는 걸로
         if(queryMember.isPresent()){
-            Member member = queryMember.get();
-
+            tokenResponse = getKakaoResponseForPresentUser(queryMember.get());
+            return new KakaoResponse.KakaoLoginResponse(queryMember.get().getMemberId(),
+                    tokenResponse.getAccessToken(),tokenResponse.getRefreshToken());
         }
+
+        //존재하지 않음
+        Member member = Member.builder()
+                .name(kaKaoProfile.getKakaoAccount()
+                        .getProfile().getNickname())
+                .email(kaKaoProfile.getKakaoAccount().getEmail())
+                .agreement(true)
+                .image(kaKaoProfile.getKakaoAccount().getProfile().getProfileImageUrl())
+                .socialId(String.valueOf(kaKaoProfile.getId()))
+                .role(MemberRole.KAKAO)
+                .build();
+
+        return getKakaoResponseForNewUser(member);
     }
 
+    //token 발급
+    private OAuthToken getTokenRequest(String code){
+        OAuthToken oAuthToken;
+        try{
+            oAuthToken = kaKaoProvider.requestToken(code);
+        }catch (Exception e){
+            throw new RuntimeException("코드 번호가 유효하지 않습니다." + e.getMessage());
+        }
+
+        return oAuthToken;
+    }
     //기존 유저
-    private KakaoResponse.KakaoLoginResponse getKakaoResponseForPresentUser(Member member,Optional<Member> queryMember){
+    private KakaoResponse.KakaoTokenResponse getKakaoResponseForPresentUser(Member member){
         //accessToken  새로 만들기
         String newAccessToken
                 = jwtTokenProvider.createAccessToken(member.getSocialId(),"kakao");
@@ -71,9 +100,22 @@ public class KakaoService {
                     new Token(newAccessToken, newRefreshToken, member.getMemberId()));
         }
 
-        return new KakaoResponse.KakaoLoginResponse()
+        return new KakaoResponse.KakaoTokenResponse(newAccessToken, newRefreshToken);
     }
 
-    //token 변경하기
-    private
+    //새로운 유저
+    private KakaoResponse.KakaoLoginResponse getKakaoResponseForNewUser(Member member){
+        //accessToken  새로 만들기
+        String newAccessToken
+                = jwtTokenProvider.createAccessToken(member.getSocialId(),"kakao");
+
+        //refreshToken 새로 만들기
+        String newRefreshToken
+                = jwtTokenProvider.createRefreshToken(member.getSocialId(),"kakao");
+
+        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+        memberRepository.save(member);
+
+        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken,newRefreshToken);
+    }
 }
