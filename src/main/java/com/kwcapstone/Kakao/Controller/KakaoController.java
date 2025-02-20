@@ -23,10 +23,4 @@ public class KakaoController {
     public BaseResponse<KakaoResponse.KakaoLoginResponse> kakaoLogin(@RequestParam("code") String code){
         return new BaseResponse (HttpStatus.OK.value(),"로그인이 성공적으로 완료되었습니다.", kakaoService.kakaoLogin(code));
     }
-
-    @GetMapping("/logout")
-    public BaseResponse logout(HttpServletRequest request) {
-        request.getSession().invalidate();  // ✅ 기존 세션 삭제
-        return new BaseResponse(HttpStatus.OK.value(), "세션 삭제");
-    }
 }

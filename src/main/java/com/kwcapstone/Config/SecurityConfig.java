@@ -44,9 +44,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-/*
-.oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))  // OAuth2 사용자 정보 서비스 등록
-                )
- */
