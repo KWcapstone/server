@@ -1,6 +1,7 @@
 package com.kwcapstone.Config;
 
 import com.kwcapstone.GoogleLogin.Auth.Dto.CustomOAuth2UserService;
+import com.kwcapstone.Token.JwtRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,11 +12,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private final JwtRequestFilter jwtRequestFilter;
+
     private String[] possibleAccess = {
             "/api/error", "/api", "/error", "/auth/**", "/api/**",
     "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs",
@@ -30,14 +34,14 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // 세션 사용 X
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(possibleAccess).permitAll()
                         .anyRequest().authenticated())
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))  // OAuth2 사용자 정보 서비스 등록
-                )
+//                .oauth2Login(oauth2 -> oauth2
+//                        .userInfoEndpoint(userInfo -> userInfo
+//                                .userService(customOAuth2UserService))  // OAuth2 사용자 정보 서비스 등록
+//                )
                 .logout(logout -> logout
                         .logoutSuccessUrl("/")  // 로그아웃 후 이동할 URL
                         .invalidateHttpSession(true)  // 세션 무효화

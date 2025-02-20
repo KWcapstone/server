@@ -14,9 +14,10 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -73,5 +74,15 @@ public class MemberController {
     @PostMapping("/auth/find_pw")
     public BaseResponse<String> passwordFinding(@RequestBody AuthFindRequestDto authFindRequestDto) {
         return memberService.findPassword(authFindRequestDto);
+    }
+
+    // 구글로그인
+    @GetMapping("/auth/login/google")
+    public BaseResponse<Map<String, String>> googleLogin(@RequestParam String code) {
+        if (code == null || code.isEmpty()) {
+            return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.");
+        }
+
+        return memberService.handleGoogleLogin(code);
     }
 }
