@@ -1,5 +1,6 @@
-package com.kwcapstone.Token;
+package com.kwcapstone.Security;
 
+import com.kwcapstone.Token.JwtTokenProvider;
 import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,9 +19,9 @@ import java.io.IOException;
 @RequiredArgsConstructor
 //jwt 한 번만 filter 검사하기 위해 하는 상속
 //이거 안하면 jwt 인증이 여러번 나고 그러면 성능 저하, 중복 인증 문제 등이 발생
-public class JwtRequestFilter {//extends OncePerRequestFilter {
+public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
-    /*
+
     //jwt 기반 인증 처리 필터
     //(HTTP 요청 들어올 때 jwt를 검증하고 인증정보를 저장하는 역할)
     //service에서 안하는 이유 : 비효율적, 보안적으로 좋지 않음
@@ -37,8 +38,7 @@ public class JwtRequestFilter {//extends OncePerRequestFilter {
         //Swagger, 로그인 등 "인증이 필요 없는 경로" 검사 -> jwt 검증 스킵
         if (isPermitAllPath(path)) {
             filterChain.doFilter(request, response);
-            return;
-        }
+            return;}
 
         //jwt 검증이 필요한 경우
         try {
@@ -48,9 +48,12 @@ public class JwtRequestFilter {//extends OncePerRequestFilter {
             //token이 유효한지, 만료되지 않았는지 checking
             if (jwtTokenProvider.isTokenValid(token)) {
                 //jwt에서 사용자 id를 추출
-                Long userId = jwtTokenProvider.getId(token);
+                String socialId = jwtTokenProvider.getId(token);
+
+                //인증을 처리할 때 UserDetails 타입으로 사용자의 정보를 객체로 관리
+                //principalDetailService를 하는 이유는 따로 만들면 security랑 연동이 안된다고 함
                 UserDetails userDetails =
-                        principalDetailsService.loadUserByUsername(userId.toString());
+                        principalDetailsService.loadUserByUsername(socialId);
 
                 if (userDetails != null) {
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
@@ -75,7 +78,7 @@ public class JwtRequestFilter {//extends OncePerRequestFilter {
                     "INTERNAL_SERVER_ERROR",
                     "예기치 않은 오류가 발생했습니다.");
         }
-    }*/
+    }
 
     private boolean isPermitAllPath(String path) {
         return path.startsWith("/swagger-ui")
