@@ -1,17 +1,25 @@
 package com.kwcapstone.Service;
 
+import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Common.PasswordGenerator;
+import com.kwcapstone.Domain.Dto.Request.AuthFindRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
+import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.Repository.EmailVerificationRepository;
 import com.kwcapstone.Repository.MemberRepository;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
@@ -54,7 +62,7 @@ public class MemberService {
             throw new BaseException(400, "비밀번호를 입력해주세요.");
         }
         if (!Pattern.matches(passwordPattern, memberRequestDto.getPassword())) {
-            throw new BaseException(422, "비밀번호를 6자 이상 12자 이하이며, " +
+            throw new BaseException(422, "비밀번호는 6자 이상 12자 이하이며, " +
                     "영문자, 숫자, 특수문자(@$!%*?&)를 각각 최소 1개 이상 포함해야 합니다.");
         }
         if (!memberRequestDto.isAgreement()) {
@@ -103,5 +111,33 @@ public class MemberService {
         emailVerificationRepository.save(emailVerification);
 
         emailService.sendEmailRequestMessage(email, verificationCode.toString());
+    }
+
+    // 비밀번호 찾기
+    public BaseResponse<String> findPassword(AuthFindRequestDto authFindRequestDto) {
+        Optional<Member> memberExist = memberRepository.findByNameAndEmail(
+                authFindRequestDto.getName(), authFindRequestDto.getEmail());
+
+        if (memberExist.isEmpty()) {
+            throw new BaseException(404, "가입하지 않은 회원입니다. 이름이나 이메일을 다시 확인해주세요.");
+        }
+
+        Member member = memberExist.get();
+        MemberRole role = member.getRole();
+
+        if (role == MemberRole.USER) {
+            String newPassword = PasswordGenerator.generateRandomPassword();
+
+            member.setPassword(newPassword);
+            memberRepository.save(member);
+
+            // 이메일 발송
+            emailService.sendPasswordResetMessage(member.getEmail(), newPassword);
+            return new BaseResponse<>(HttpStatus.OK.value(), "이메일에 발송된 비밀번호를 확인하세요.");
+        } else if (role == MemberRole.GOOGLE || role == MemberRole.NAVER || role == MemberRole.KAKAO) {
+            return new BaseResponse<>(HttpStatus.OK.value(),
+                    "소셜 로그인으로 가입된 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요.");
+        }
+        return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "잘못된 요청입니다.");
     }
 }

@@ -20,6 +20,8 @@ public class Member {
     private ObjectId memberId;
     private String name;
     private String email;
+
+    @Setter
     private String password;
 
     @Setter

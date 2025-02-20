@@ -1,11 +1,13 @@
 package com.kwcapstone.Controller;
 
 import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Domain.Dto.Request.AuthFindRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailDuplicationDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
 import com.kwcapstone.Domain.Entity.Member;
-//import com.kwcapstone.GoogleLogin.Auth.SessionUser;
+import com.kwcapstone.Domain.Entity.MemberRole;
+import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Service.MemberService;
 import jakarta.servlet.http.HttpSession;
@@ -47,7 +49,6 @@ public class MemberController {
         return new BaseResponse(HttpStatus.OK.value(), "이메일 인증이 완료되었습니다.");
     }
 
-    /*
     // 약관동의
     @PostMapping("/auth/agree")
     public BaseResponse agree() {
@@ -66,6 +67,11 @@ public class MemberController {
         httpSession.removeAttribute("tempMember");
 
         return new BaseResponse(HttpStatus.OK.value(), "회원가입이 완료되었습니다.");
-    }*/
+    }
 
+    // 비밀번호 찾기 기능
+    @PostMapping("/auth/find_pw")
+    public BaseResponse<String> passwordFinding(@RequestBody AuthFindRequestDto authFindRequestDto) {
+        return memberService.findPassword(authFindRequestDto);
+    }
 }
