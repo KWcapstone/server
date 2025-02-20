@@ -34,10 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(possibleAccess).permitAll()
                         .anyRequest().authenticated())
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))  // OAuth2 사용자 정보 서비스 등록
-                )
+
                 .logout(logout -> logout
                         .logoutSuccessUrl("/")  // 로그아웃 후 이동할 URL
                         .invalidateHttpSession(true)  // 세션 무효화
@@ -47,3 +44,9 @@ public class SecurityConfig {
         return http.build();
     }
 }
+/*
+.oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))  // OAuth2 사용자 정보 서비스 등록
+                )
+ */

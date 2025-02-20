@@ -1,4 +1,4 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Kakao.Dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +14,6 @@ public class KakaoResponse {
     public static class KakaoLoginResponse{
         private ObjectId id;
         private String accessToken;
-        private String refreshToken;
     }
 
     @Getter

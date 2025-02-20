@@ -1,4 +1,4 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Kakao.Dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

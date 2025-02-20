@@ -1,7 +1,10 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Kakao.Controller;
 
 import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Kakao.Dto.KakaoResponse;
+import com.kwcapstone.Kakao.Service.KakaoService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,5 +22,11 @@ public class KakaoController {
     @GetMapping("/kakao")
     public BaseResponse<KakaoResponse.KakaoLoginResponse> kakaoLogin(@RequestParam("code") String code){
         return new BaseResponse (HttpStatus.OK.value(),"로그인이 성공적으로 완료되었습니다.", kakaoService.kakaoLogin(code));
+    }
+
+    @GetMapping("/logout")
+    public BaseResponse logout(HttpServletRequest request) {
+        request.getSession().invalidate();  // ✅ 기존 세션 삭제
+        return new BaseResponse(HttpStatus.OK.value(), "세션 삭제");
     }
 }

@@ -1,18 +1,19 @@
-package com.kwcapstone.Kakao;
+package com.kwcapstone.Kakao.Service;
 
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
+import com.kwcapstone.Kakao.Dto.KaKaoProfile;
+import com.kwcapstone.Kakao.Dto.KakaoResponse;
+import com.kwcapstone.Kakao.Dto.OAuthToken;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
-import jakarta.security.auth.message.AuthException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.OptionalLong;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +52,7 @@ public class KakaoService {
         if(queryMember.isPresent()){
             tokenResponse = getKakaoResponseForPresentUser(queryMember.get());
             return new KakaoResponse.KakaoLoginResponse(queryMember.get().getMemberId(),
-                    tokenResponse.getAccessToken(),tokenResponse.getRefreshToken());
+                    tokenResponse.getAccessToken());
         }
 
         //존재하지 않음
@@ -116,6 +117,6 @@ public class KakaoService {
         tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
         memberRepository.save(member);
 
-        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken,newRefreshToken);
+        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken);
     }
 }
