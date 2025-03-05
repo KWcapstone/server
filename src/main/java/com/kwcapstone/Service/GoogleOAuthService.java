@@ -64,14 +64,10 @@ public class GoogleOAuthService {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
 
-        System.out.println("Received authorizationCode (original) : " + authorizationCode);
-
         String finalCode = authorizationCode;
         if (authorizationCode.contains("%")) {  // 인코딩 되어있으면 디코딩
             finalCode = URLDecoder.decode(authorizationCode, StandardCharsets.UTF_8);
         }
-
-        System.out.println("Final authorizationCode : " + finalCode);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client_id", clientId);
