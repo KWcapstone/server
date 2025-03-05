@@ -9,16 +9,27 @@ import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Exception.BaseException;
+import com.kwcapstone.GoogleLogin.Auth.GoogleUser;
+import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.EmailVerificationRepository;
 import com.kwcapstone.Repository.MemberRepository;
+import com.kwcapstone.Token.Domain.Token;
+import com.kwcapstone.Token.JwtTokenProvider;
+import com.kwcapstone.Token.Repository.TokenRepository;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -28,8 +39,12 @@ import java.util.regex.Pattern;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final EmailVerificationRepository emailVerificationRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenRepository tokenRepository;
 
     private final EmailService emailService;
+    private final GoogleOAuthService googleOAuthService;
+    private final HttpSession httpSession;
 
     // 회원가입
     @Transactional
@@ -139,5 +154,65 @@ public class MemberService {
                     "소셜 로그인으로 가입된 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요.");
         }
         return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "잘못된 요청입니다.");
+    }
+
+    // 구글 로그인
+    public BaseResponse<Map<String, String>> handleGoogleLogin
+        (String authorizationCode, HttpServletResponse response) throws IOException {
+        // jwt를 위한 코드를 받으러감
+        BaseResponse<String> tokenResponse = googleOAuthService.getAccessToken(authorizationCode);
+
+        // 실제 accessToken 값 꺼내기
+        if (tokenResponse.getStatus() != HttpStatus.OK.value()) {
+            return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Google OAuth 오류 : " + tokenResponse.getMessage(), null);
+        }
+
+        String googleAccessToken = tokenResponse.getData();
+        BaseResponse<GoogleUser> userResponse = googleOAuthService.getUserInfo(googleAccessToken);
+
+        if (userResponse.getStatus() != HttpStatus.OK.value()) {
+            return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Google 사용자 정보 요청 오류: " + userResponse.getMessage(), null);
+        }
+
+        GoogleUser googleUser = userResponse.getData();
+        Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
+
+        // 새로운 멤버인 경우 저장
+        if (member == null) {
+            member = Member.builder()
+                    .socialId(googleUser.getSocialId())
+                    .name(googleUser.getName())
+                    .email(googleUser.getEmail())
+                    .image(googleUser.getPicture())
+                    .role(MemberRole.GOOGLE)
+                    .agreement(false)
+                    .build();
+            memberRepository.save(member);
+
+            httpSession.setAttribute("tempMember", member);
+
+            response.sendRedirect("/auth/agree");
+        }
+
+        Map<String, String> tokens = processGoogleUser(member);
+        httpSession.setAttribute("member", new SessionUser(member));
+
+        return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokens);
+    }
+
+    public Map<String, String> processGoogleUser(Member member) {
+        String accessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
+
+        Token token = new Token(accessToken, refreshToken, member.getMemberId());
+        tokenRepository.save(token);
+
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+
+        return tokens;
     }
 }
