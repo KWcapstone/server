@@ -1,10 +1,7 @@
 package com.kwcapstone.Controller;
 
 import com.kwcapstone.Common.BaseResponse;
-import com.kwcapstone.Domain.Dto.Request.AuthFindRequestDto;
-import com.kwcapstone.Domain.Dto.Request.EmailDuplicationDto;
-import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
-import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
+import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.GoogleLogin.Auth.SessionUser;
@@ -61,7 +58,7 @@ public class MemberController {
         response.sendRedirect("/terms.html");
     }
 
-    // 약관동의
+    // 약관동의 - 여기 형식도 통일해야할듯
     @PostMapping("/agree")
     public ResponseEntity<Map<String, String>> agree(HttpServletResponse response) throws IOException {
         Member tempMember = (Member) httpSession.getAttribute("tempMember");
@@ -101,10 +98,16 @@ public class MemberController {
     @GetMapping("/login/google")
     public BaseResponse<Map<String, String>> googleLogin
         (@RequestParam String code, HttpServletResponse response) throws IOException {
-        System.out.println("Received Google Auth Code: " + code);  // 로그 추가
         if (code == null || code.isEmpty()) {
             return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null);
         }
         return memberService.handleGoogleLogin(code, response);
+    }
+
+    // 일반로그인
+    @PostMapping("/login")
+    public BaseResponse<Map<String, String>> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
+        return new BaseResponse<>(HttpStatus.OK.value(), "로그인이 완료되었습니다.",
+                memberService.userLogin(memberLoginRequestDto));
     }
 }

@@ -4,6 +4,7 @@ import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
 import com.kwcapstone.Domain.Dto.Request.AuthFindRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
+import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
@@ -214,5 +215,21 @@ public class MemberService {
         tokens.put("refreshToken", refreshToken);
 
         return tokens;
+    }
+
+    // 일반 유저 로그인
+    public Map<String, String> userLogin(MemberLoginRequestDto memberLoginRequestDto) {
+        // 아이디랑 비번 일치하는지 보고
+        // 둘 중 하나라도 일치하지 않으면 아이디나 비번이 일치하지 않습니다 에러 처리
+        // processGoogleUser 활용해서 그냥 토큰 반환하면 될것같은디
+        Optional<Member> member = memberRepository.findByEmail(memberLoginRequestDto.getEmail());
+        if (member.isEmpty()) {
+            throw new BaseException(HttpStatus.NOT_FOUND.value(), "해당 아이디를 찾을 수 없습니다.");
+        }
+        if (!memberLoginRequestDto.getPassword().equals(member.get().getPassword())) {
+            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "아이디 또는 비밀번호를 확인해주세요.");
+        }
+
+        return processGoogleUser(member.get());
     }
 }
