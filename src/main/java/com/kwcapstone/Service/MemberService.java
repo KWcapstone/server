@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -224,10 +225,10 @@ public class MemberService {
         // processGoogleUser 활용해서 그냥 토큰 반환하면 될것같은디
         Optional<Member> member = memberRepository.findByEmail(memberLoginRequestDto.getEmail());
         if (member.isEmpty()) {
-            throw new BaseException(HttpStatus.NOT_FOUND.value(), "해당 아이디를 찾을 수 없습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 아이디를 찾을 수 없습니다.");
         }
         if (!memberLoginRequestDto.getPassword().equals(member.get().getPassword())) {
-            throw new BaseException(HttpStatus.UNAUTHORIZED.value(), "아이디 또는 비밀번호를 확인해주세요.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
         }
 
         return processGoogleUser(member.get());
