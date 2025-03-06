@@ -1,5 +1,6 @@
 package com.kwcapstone.Service;
 
+import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
 import com.kwcapstone.Domain.Dto.Request.AuthFindRequestDto;
@@ -18,9 +19,11 @@ import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -232,5 +235,55 @@ public class MemberService {
         }
 
         return processGoogleUser(member.get());
+    }
+
+    // 로그아웃 - 어쩌면 소셜하고 일반로그인 나눠야할수도 있음... (지금은 카카오/네이버만 일 듯..?)
+    public BaseResponse userLogout(HttpServletRequest request) {
+        String accessToken;
+        // Access Token 추출
+        try {
+            accessToken = jwtTokenProvider.extractToken(request);
+        } catch (ResponseStatusException e) {
+            return new BaseErrorResponse(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 Access Token입니다.");
+        }
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.substring(7);
+        } else {
+            return new BaseErrorResponse(HttpStatus.FORBIDDEN.value(), "유효하지 않은 AccessToken 입니다.");
+        }
+
+        // Access Token 유효성 검사
+        try {
+            if (!jwtTokenProvider.isTokenValid(accessToken)) {
+                return new BaseErrorResponse(HttpStatus.UNAUTHORIZED.value(),
+                        "만료되었거나 유효하지 않은 Access Token입니다.");
+            }
+        } catch (ResponseStatusException e) {
+            return new BaseErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getReason());
+        }
+
+        // Access Token에서 사용자 ID 추출
+        String userIdStr;
+        try {
+            userIdStr = jwtTokenProvider.getId(accessToken);
+        } catch (Exception e) {
+            return new BaseErrorResponse(HttpStatus.UNAUTHORIZED.value(),
+                    "Access Token에서 사용자 정보를 추출할 수 없습니다.");
+        }
+
+        // String -> ObjectId 변환
+        ObjectId userId;
+        try {
+            userId = new ObjectId(userIdStr);
+        } catch (IllegalArgumentException e) {
+            return new BaseErrorResponse(HttpStatus.BAD_REQUEST.value(),
+                    "잘못된 사용자 ID 형식입니다.");
+        }
+
+        // db에서 해당 사용자의 refresh token 삭제
+        tokenRepository.deleteById(userId);
+
+        // 로그아웃 완료 응답 반환
+        return new BaseResponse(HttpStatus.OK.value(), "로그아웃이 완료되었습니다.");
     }
 }

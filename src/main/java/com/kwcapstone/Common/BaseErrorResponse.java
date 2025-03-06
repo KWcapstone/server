@@ -4,17 +4,12 @@ import com.kwcapstone.Exception.BaseException;
 import lombok.Getter;
 
 @Getter
-public class BaseErrorResponse {
-    private final int status;
-    private final String message;
-
-    public BaseErrorResponse(int status, String messgae) {
-        this.status = status;
-        this.message = messgae;
+public class BaseErrorResponse extends BaseResponse {
+    public BaseErrorResponse(int status, String message) {
+        super(status, message);
     }
 
     public BaseErrorResponse(BaseException baseException) {
-        this.status = baseException.getCode();
-        this.message = baseException.getMessage();
+        super(baseException.getCode(), baseException.getMessage());
     }
 }
