@@ -89,10 +89,10 @@ public class MemberController {
         return ResponseEntity.ok(responseBody);
     }
 
-    // 비밀번호 찾기 기능
-    @PostMapping("/find_pw")
-    public BaseResponse<String> passwordFinding(@RequestBody AuthFindRequestDto authFindRequestDto) {
-        return memberService.findPassword(authFindRequestDto);
+    // 비밀번호 초기화 기능
+    @PostMapping("/reset_pw")
+    public BaseResponse<String> passwordFinding(@RequestBody AuthResetRequestDto authResetRequestDto) {
+        return memberService.resetPassword(authResetRequestDto);
     }
 
     // 구글로그인

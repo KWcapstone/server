@@ -3,7 +3,7 @@ package com.kwcapstone.Service;
 import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
-import com.kwcapstone.Domain.Dto.Request.AuthFindRequestDto;
+import com.kwcapstone.Domain.Dto.Request.AuthResetRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
@@ -18,20 +18,17 @@ import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -133,10 +130,10 @@ public class MemberService {
         emailService.sendEmailRequestMessage(email, verificationCode.toString());
     }
 
-    // 비밀번호 찾기
-    public BaseResponse<String> findPassword(AuthFindRequestDto authFindRequestDto) {
+    // 비밀번호 초기화
+    public BaseResponse<String> resetPassword(AuthResetRequestDto authResetRequestDto) {
         Optional<Member> memberExist = memberRepository.findByNameAndEmail(
-                authFindRequestDto.getName(), authFindRequestDto.getEmail());
+                authResetRequestDto.getName(), authResetRequestDto.getEmail());
 
         if (memberExist.isEmpty()) {
             throw new BaseException(404, "가입하지 않은 회원입니다. 이름이나 이메일을 다시 확인해주세요.");
