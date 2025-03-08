@@ -45,8 +45,8 @@ public class KakaoService {
                 memberRepository.findByEmail(
                         kaKaoProfile.getKakaoAccount().getEmail());
 
-        KakaoResponse.KakaoTokenResponse tokenResponse
-                = new KakaoResponse.KakaoTokenResponse();
+        KakaoResponse.KakaoLoginResponse tokenResponse
+                = new KakaoResponse.KakaoLoginResponse();
 
         //존재하면 새로운 accesstoekn하고 refresh token만 다시 주는 걸로
         if(queryMember.isPresent()){
