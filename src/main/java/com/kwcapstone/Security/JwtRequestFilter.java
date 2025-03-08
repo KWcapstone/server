@@ -59,7 +59,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 //인증을 처리할 때 UserDetails 타입으로 사용자의 정보를 객체로 관리
                 //principalDetailService를 하는 이유는 따로 만들면 security랑 연동이 안된다고 함
                 UserDetails userDetails =
-                        principalDetailsService.loadUserByUsername();
+                        principalDetailsService.loadUserByUsername(memberId);
 
                 if (userDetails != null) {
                     //securityContext에 인증 정보 저장

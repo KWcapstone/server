@@ -25,7 +25,7 @@ public class TokenService {
     private final MemberRepository memberRepository;
 
     //String -> obejctId
-    private ObjectId ConvertToObjectId(String memberId){
+    public ObjectId ConvertToObjectId(String memberId){
         return new ObjectId(memberId);
     }
 
