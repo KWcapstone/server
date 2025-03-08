@@ -67,7 +67,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         } catch (IOException e) {
             throw new RuntimeException("약관 동의 페이지로 이동 중 오류 발생", e);
         }
-
         return createOAuth2User(tempMember, attributes);
     }
 

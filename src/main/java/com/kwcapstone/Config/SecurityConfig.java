@@ -19,7 +19,7 @@ public class SecurityConfig {
     private String[] possibleAccess = {
             "/api/error", "/api", "/error", "/auth/**", "/api/**",
     "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs",
-    "/oauth2/**", "/login", "/"};
+    "/oauth2/**", "/login", "terms.html", "/auth/agree"};
 
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
@@ -30,11 +30,10 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // 세션 사용 X
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(possibleAccess).permitAll()
                         .anyRequest().authenticated())
-
                 .logout(logout -> logout
                         .logoutSuccessUrl("/")  // 로그아웃 후 이동할 URL
                         .invalidateHttpSession(true)  // 세션 무효화

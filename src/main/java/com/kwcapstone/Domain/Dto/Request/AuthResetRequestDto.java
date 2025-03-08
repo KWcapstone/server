@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthFindRequestDto {
+public class AuthResetRequestDto {
     private String name;
     private String email;
 }
