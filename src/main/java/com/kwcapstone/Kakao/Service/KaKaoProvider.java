@@ -22,7 +22,7 @@ public class KaKaoProvider {
     @Value("${KAKAO_CLIENT_ID}")
     private String clientId;
 
-    @Value("${KAKAO_REDIRECT_URL}")
+    @Value("${KAKAO_REDIRECT_URI}")
     private String redirectUrl;
 
     @Value("${KAKAO_CLIENT_SECRET}")
