@@ -4,6 +4,7 @@ import com.kwcapstone.Domain.Entity.MemberRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -72,8 +73,12 @@ public class JwtTokenProvider {
         return createGeneralToken(memberId, role, rTValidityMilliseconds);
     }
 
-    //소셜 로그인 jwt 발급
-    private String createToken(String socialId, String role, Long validityMilliseconds){
+    private String ConvertToStringType(ObjectId memberId){
+        return memberId.toHexString();
+    }
+
+    //소셜 로그인 & 일반 로그인 jwt 발급
+    private String createToken(ObjectId memberId, String role, Long validityMilliseconds){
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
         claims.put("memberId", socialId);

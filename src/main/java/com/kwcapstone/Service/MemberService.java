@@ -20,6 +20,7 @@ import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
+import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -49,6 +50,7 @@ public class MemberService {
     private final EmailService emailService;
     private final GoogleOAuthService googleOAuthService;
     private final HttpSession httpSession;
+    private final Filter springSecurityFilterChain;
 
     // 회원가입
     @Transactional
@@ -226,9 +228,16 @@ public class MemberService {
         return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
     }
 
+    private String ConvertToStringType(ObjectId memberId){
+        return memberId.toHexString();
+    }
+
     private MemberLoginResponseDto getMemberToken(Member member) {
-        String newAccessToken = jwtTokenProvider.createGeneralAccessToken(member.getRole().name());
-        String newRefreshToken = jwtTokenProvider.createGeneralRefreshToken(member.getRole().name());
+        //memberId를 String 으로 받음
+        String stringMemberId = ConvertToStringType(member.getMemberId());
+
+        String newAccessToken = jwtTokenProvider.createGeneralAccessToken(stringMemberId, member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createGeneralRefreshToken(stringMemberId, member.getRole().name());
 
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 

@@ -58,7 +58,7 @@ public class TokenService {
         return token.get();
     }
 
-    //socialId
+    //ObjectId
     private String validateRefreshToken(String refreshToken) {
         //토큰이 존재하는가?
         jwtTokenProvider.isTokenValid(refreshToken);
