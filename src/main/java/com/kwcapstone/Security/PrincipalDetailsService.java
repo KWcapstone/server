@@ -24,6 +24,6 @@ public class PrincipalDetailsService implements UserDetailsService {
         Member member = memberRepository.findBySocialId(socialId)
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 사용자 입니다."));
 
-        return new
+        return new PrincipalDetails(member);
     }
 }
