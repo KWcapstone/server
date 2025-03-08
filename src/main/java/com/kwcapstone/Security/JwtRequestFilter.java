@@ -53,13 +53,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             //token이 유효한지, 만료되지 않았는지 checking
             if (jwtTokenProvider.isTokenValid(token)) {
-                //jwt에서 사용자 id를 추출
+                //jwt에서 String 한 ObjectId 추출
                 String memberId = jwtTokenProvider.getId(token);
 
                 //인증을 처리할 때 UserDetails 타입으로 사용자의 정보를 객체로 관리
                 //principalDetailService를 하는 이유는 따로 만들면 security랑 연동이 안된다고 함
                 UserDetails userDetails =
-                        principalDetailsService.loadUserByUsername(socialId);
+                        principalDetailsService.loadUserByUsername();
 
                 if (userDetails != null) {
                     //securityContext에 인증 정보 저장
