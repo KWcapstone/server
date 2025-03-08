@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class PrincipalDetailsService implements UserDetailsService {
     private final MemberRepository memberRepository;
 
+    //유저 이름으로
     @Override
     public UserDetails loadUserByUsername(String socialId) throws UsernameNotFoundException {
         Member member = memberRepository.findBySocialId(socialId)
