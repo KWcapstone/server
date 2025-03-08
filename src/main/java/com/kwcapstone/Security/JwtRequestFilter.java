@@ -1,5 +1,6 @@
 package com.kwcapstone.Security;
 
+import com.kwcapstone.Exception.AuthenticationException;
 import com.kwcapstone.Token.JwtTokenProvider;
 import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.FilterChain;
@@ -10,13 +11,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -70,21 +69,20 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext()
                             .setAuthentication(usernamePasswordAuthenticationToken);
                 } else { //유저 없음
-                    throw new AuthException("존재하지 않는 사용자입니다.");
+                    throw new AuthenticationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 사용자입니다.");
                 }
             } else { //토큰이 유효하지 않음
-                throw new AuthException("토큰이 유효하지 않습니다.");
+                throw new AuthenticationException(HttpStatus.UNAUTHORIZED.value(), "토큰이 유효하지 않습니다.");
             }
 
             //다음 필터 실행
             filterChain.doFilter(request, response);
-        } catch (AuthException ex) {
+        } catch (AuthenticationException ex) {
             //Jwt 검증 과정에서 인증에 실패했을 때 발생하는 예외
-            setJsonResponse(response, ex.getSta
-                    ex.getErrorReason().getMessage());
+            setJsonResponse(response, ex.getStatusCode(), ex.getMessage());
         } catch (Exception ex) {
+            //기타 에러
             setJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "INTERNAL_SERVER_ERROR",
                     "예기치 않은 오류가 발생했습니다.");
         }
     }
