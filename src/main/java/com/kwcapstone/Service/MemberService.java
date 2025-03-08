@@ -213,8 +213,8 @@ public class MemberService {
     }
 
     private GoogleTokenResponseDto getGoogleToken(Member member) {
-        String newAccessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
 
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 
@@ -228,16 +228,9 @@ public class MemberService {
         return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
     }
 
-    private String ConvertToStringType(ObjectId memberId){
-        return memberId.toHexString();
-    }
-
     private MemberLoginResponseDto getMemberToken(Member member) {
-        //memberId를 String 으로 받음
-        String stringMemberId = ConvertToStringType(member.getMemberId());
-
-        String newAccessToken = jwtTokenProvider.createGeneralAccessToken(stringMemberId, member.getRole().name());
-        String newRefreshToken = jwtTokenProvider.createGeneralRefreshToken(stringMemberId, member.getRole().name());
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
 
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 
