@@ -70,10 +70,11 @@ public class JwtTokenProvider {
         return createGeneralToken(role, rTValidityMilliseconds);
     }
 
+    //소셜 로그인 jwt 발급
     private String createToken(String socialId, String role, Long validityMilliseconds){
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
-        claims.put("socialId", socialId);
+        claims.put("memberId", socialId);
         claims.put("role", role);
 
         //현재시간 가져오기
@@ -90,8 +91,10 @@ public class JwtTokenProvider {
                 .compact(); //최종 Jwt 생성
     }
 
-    private String createGeneralToken(String role, Long validityMilliseconds) {
+    //일반 로그인 jwt 발급
+    private String createGeneralToken(String memberId, String role, Long validityMilliseconds) {
         Claims claims = Jwts.claims();
+        claims.put("memberId", memberId);
         claims.put("role", role);
 
         ZonedDateTime now = ZonedDateTime.now();
@@ -107,7 +110,7 @@ public class JwtTokenProvider {
 
     //Jwt 에서 사용자 Id 추출
     public String getId(String token) {
-        return getClaims(token).getBody().get("socialId", String.class);
+        return getClaims(token).getBody().get("memberId", String.class);
     }
 
     //Jwt 에서 role 추출
