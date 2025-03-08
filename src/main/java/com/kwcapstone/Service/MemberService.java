@@ -8,6 +8,7 @@ import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
 import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
+import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
@@ -234,6 +235,21 @@ public class MemberService {
         return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
     }
 
+    private MemberLoginResponseDto getMemberToken(Member member) {
+        String newAccessToken = jwtTokenProvider.createGeneralAccessToken(member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createGeneralRefreshToken(member.getRole().name());
+
+        Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
+
+        if (present.isPresent()) {
+            present.get().changeToken(newAccessToken, newRefreshToken);
+        } else {
+            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+            memberRepository.save(member);
+        }
+        return new MemberLoginResponseDto(member.getMemberId(), newAccessToken);
+    }
+
     // 약관 동의 (새로운 Google User)
     public BaseResponse<GoogleTokenResponseDto> agreeNewMember() {
         Member tempMember = (Member) httpSession.getAttribute("tempMember");
@@ -258,10 +274,7 @@ public class MemberService {
     }
 
     // 일반 유저 로그인
-    public GoogleTokenResponseDto userLogin(MemberLoginRequestDto memberLoginRequestDto) {
-        // 아이디랑 비번 일치하는지 보고
-        // 둘 중 하나라도 일치하지 않으면 아이디나 비번이 일치하지 않습니다 에러 처리
-        // processGoogleUser 활용해서 그냥 토큰 반환하면 될것같은디
+    public MemberLoginResponseDto userLogin(MemberLoginRequestDto memberLoginRequestDto) {
         Optional<Member> member = memberRepository.findByEmail(memberLoginRequestDto.getEmail());
         if (member.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 아이디를 찾을 수 없습니다.");
@@ -270,7 +283,7 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
         }
 
-        return getNewGoogleToken(member.get());  // 여기 그냥 수정해야한다.. 구글 안쓰고 하게
+        return getMemberToken(member.get());
     }
 
     // 로그아웃 - 어쩌면 소셜하고 일반로그인 나눠야할수도 있음... (지금은 카카오/네이버만 일 듯..?)

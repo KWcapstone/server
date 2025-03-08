@@ -4,6 +4,7 @@ import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
+import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Exception.BaseException;
@@ -87,8 +88,7 @@ public class MemberController {
 
     // 일반로그인
     @PostMapping("/login")
-    // 여기 걍 BaseResponse<Map<String, String>>으로 반환형 수정하시길...
-    public BaseResponse<GoogleTokenResponseDto> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
+    public BaseResponse<MemberLoginResponseDto> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
         return new BaseResponse<>(HttpStatus.OK.value(), "로그인이 완료되었습니다.",
                 memberService.userLogin(memberLoginRequestDto));
     }
