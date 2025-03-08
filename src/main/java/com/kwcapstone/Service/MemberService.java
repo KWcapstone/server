@@ -7,6 +7,7 @@ import com.kwcapstone.Domain.Dto.Request.AuthResetRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
+import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
@@ -159,7 +160,7 @@ public class MemberService {
     }
 
     // 구글 로그인
-    public BaseResponse<Map<String, String>> handleGoogleLogin
+    public BaseResponse<GoogleTokenResponseDto> handleGoogleLogin
         (String authorizationCode, HttpServletResponse response) throws IOException {
         // jwt를 위한 코드를 받으러감
         BaseResponse<String> tokenResponse = googleOAuthService.getAccessToken(authorizationCode);
@@ -181,6 +182,9 @@ public class MemberService {
         GoogleUser googleUser = userResponse.getData();
         Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
 
+        Map<String, String> tokens;
+        GoogleTokenResponseDto tokenResponseDto;
+
         // 새로운 멤버인 경우 저장
         if (member == null) {
             member = Member.builder()
@@ -196,30 +200,65 @@ public class MemberService {
             httpSession.setAttribute("tempMember", member);
 
             response.sendRedirect("/auth/agree");
+            return null;
         }
-
-        Map<String, String> tokens = processGoogleUser(member);
         httpSession.setAttribute("member", new SessionUser(member));
+        // jwt 사용할 것
+        tokenResponseDto = getExistingGoogleToken(member);
 
-        return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokens);
+        return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
     }
 
-    public Map<String, String> processGoogleUser(Member member) {
-        String accessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
-        String refreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
+    private GoogleTokenResponseDto getNewGoogleToken(Member member) {
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
 
-        Token token = new Token(accessToken, refreshToken, member.getMemberId());
-        tokenRepository.save(token);
+        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+        memberRepository.save(member);
 
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshToken);
+        return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
+    }
 
-        return tokens;
+    private GoogleTokenResponseDto getExistingGoogleToken(Member member) {
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
+
+        Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
+
+        if (present.isPresent()) {
+            present.get().changeToken(newAccessToken, newRefreshToken);
+        } else {
+            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+        }
+
+        return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
+    }
+
+    // 약관 동의 (새로운 Google User)
+    public BaseResponse<GoogleTokenResponseDto> agreeNewMember() {
+        Member tempMember = (Member) httpSession.getAttribute("tempMember");
+
+        // 세션 값 확인용 로그 추가
+        System.out.println("tempMember: " + tempMember);
+
+        if (tempMember == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "임시 회원 정보가 없습니다.");
+        }
+
+        // 약관 동의 처리 후, DB에 저장
+        tempMember.setAgreement(true);
+        memberRepository.save(tempMember);
+
+        GoogleTokenResponseDto tokenResponseDto = getNewGoogleToken(tempMember);
+
+        httpSession.setAttribute("tempMember", new SessionUser(tempMember));
+        httpSession.removeAttribute("tempMember");
+
+        return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
     }
 
     // 일반 유저 로그인
-    public Map<String, String> userLogin(MemberLoginRequestDto memberLoginRequestDto) {
+    public GoogleTokenResponseDto userLogin(MemberLoginRequestDto memberLoginRequestDto) {
         // 아이디랑 비번 일치하는지 보고
         // 둘 중 하나라도 일치하지 않으면 아이디나 비번이 일치하지 않습니다 에러 처리
         // processGoogleUser 활용해서 그냥 토큰 반환하면 될것같은디
@@ -231,7 +270,7 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
         }
 
-        return processGoogleUser(member.get());
+        return getNewGoogleToken(member.get());  // 여기 그냥 수정해야한다.. 구글 안쓰고 하게
     }
 
     // 로그아웃 - 어쩌면 소셜하고 일반로그인 나눠야할수도 있음... (지금은 카카오/네이버만 일 듯..?)
