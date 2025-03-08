@@ -1,9 +1,12 @@
 package com.kwcapstone.Controller;
 
+import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Domain.Dto.Request.*;
+import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
+import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Service.MemberService;
@@ -17,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -61,32 +65,8 @@ public class MemberController {
 
     // 약관동의 - 여기 형식도 통일해야할듯
     @PostMapping("/agree")
-    public ResponseEntity<Map<String, String>> agree(HttpServletResponse response) throws IOException {
-        Member tempMember = (Member) httpSession.getAttribute("tempMember");
-
-        // 세션 값 확인용 로그 추가
-        System.out.println("tempMember: " + tempMember);
-
-        if (tempMember == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "임시 회원 정보가 없습니다."));
-        }
-
-        // 약관 동의 처리 후, DB에 저장
-        tempMember.setAgreement(true);
-        memberRepository.save(tempMember);
-
-        Map<String, String> tokens = memberService.processGoogleUser(tempMember);
-
-        // 세션 삭제
-        httpSession.setAttribute("member", new SessionUser(tempMember));
-        httpSession.removeAttribute("tempMember");
-
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", "회원가입이 완료되었습니다.");
-        responseBody.put("redirectUrl", "/");
-
-        return ResponseEntity.ok(responseBody);
+    public BaseResponse<GoogleTokenResponseDto> agree(HttpServletRequest request) throws IOException {
+        return memberService.agreeNewMember();
     }
 
     // 비밀번호 초기화 기능
@@ -97,7 +77,7 @@ public class MemberController {
 
     // 구글로그인
     @GetMapping("/login/google")
-    public BaseResponse<Map<String, String>> googleLogin
+    public BaseResponse<GoogleTokenResponseDto> googleLogin
         (@RequestParam String code, HttpServletResponse response) throws IOException {
         if (code == null || code.isEmpty()) {
             return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null);
@@ -107,7 +87,8 @@ public class MemberController {
 
     // 일반로그인
     @PostMapping("/login")
-    public BaseResponse<Map<String, String>> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
+    // 여기 걍 BaseResponse<Map<String, String>>으로 반환형 수정하시길...
+    public BaseResponse<GoogleTokenResponseDto> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
         return new BaseResponse<>(HttpStatus.OK.value(), "로그인이 완료되었습니다.",
                 memberService.userLogin(memberLoginRequestDto));
     }

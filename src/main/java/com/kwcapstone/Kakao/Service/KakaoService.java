@@ -48,7 +48,7 @@ public class KakaoService {
         KakaoResponse.KakaoLoginResponse tokenResponse
                 = new KakaoResponse.KakaoLoginResponse();
 
-        //존재하면 새로운 accesstoekn하고 refresh token만 다시 주는 걸로
+        //존재하면 새로운 access token하고 refresh token만 다시 주는 걸로
         if(queryMember.isPresent()){
             tokenResponse = getKakaoResponseForPresentUser(queryMember.get());
             return new KakaoResponse.KakaoLoginResponse(queryMember.get().getMemberId(),
@@ -101,7 +101,7 @@ public class KakaoService {
                     new Token(newAccessToken, newRefreshToken, member.getMemberId()));
         }
 
-        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken);
+        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(), newAccessToken);
     }
 
     //새로운 유저
