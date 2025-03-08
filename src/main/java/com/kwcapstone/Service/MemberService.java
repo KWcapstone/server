@@ -205,22 +205,12 @@ public class MemberService {
         }
         httpSession.setAttribute("member", new SessionUser(member));
         // jwt 사용할 것
-        tokenResponseDto = getExistingGoogleToken(member);
+        tokenResponseDto = getGoogleToken(member);
 
         return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
     }
 
-    private GoogleTokenResponseDto getNewGoogleToken(Member member) {
-        String newAccessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
-
-        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
-        memberRepository.save(member);
-
-        return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
-    }
-
-    private GoogleTokenResponseDto getExistingGoogleToken(Member member) {
+    private GoogleTokenResponseDto getGoogleToken(Member member) {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
 
@@ -230,6 +220,7 @@ public class MemberService {
             present.get().changeToken(newAccessToken, newRefreshToken);
         } else {
             tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+            memberRepository.save(member);
         }
 
         return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
@@ -265,7 +256,7 @@ public class MemberService {
         tempMember.setAgreement(true);
         memberRepository.save(tempMember);
 
-        GoogleTokenResponseDto tokenResponseDto = getNewGoogleToken(tempMember);
+        GoogleTokenResponseDto tokenResponseDto = getGoogleToken(tempMember);
 
         httpSession.setAttribute("tempMember", new SessionUser(tempMember));
         httpSession.removeAttribute("tempMember");
