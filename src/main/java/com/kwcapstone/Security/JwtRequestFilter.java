@@ -80,7 +80,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (AuthException ex) {
             //Jwt 검증 과정에서 인증에 실패했을 때 발생하는 예외
-            setJsonResponse(response, ex.
+            setJsonResponse(response, ex.getSta
                     ex.getErrorReason().getMessage());
         } catch (Exception ex) {
             setJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,

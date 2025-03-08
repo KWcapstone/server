@@ -13,4 +13,8 @@ public class BaseException extends RuntimeException {
         this.code = code;
         this.message = message;
     }
+
+    public int getStatusCode(){
+        return this.getCode();
+    }
 }
