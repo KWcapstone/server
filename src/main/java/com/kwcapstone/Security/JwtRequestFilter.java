@@ -114,13 +114,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 || path.equals("/auth/email_duplication")
                 || path.equals("/auth/email_verification")
                 || path.equals("/auth/login")
+                || path.equals("/auth/login/kakao")
                 || path.equals("/auth/login/google") //추후 개선 가능성 있음
                 || path.equals("/auth/agree")
                 || path.equals("/auth/find_id")
                 || path.equals("/auth/find_pw")
                 || path.equals("/auth/change_pw")
                 || path.equals("/auth/refresh")
-                || path.startsWith("/auth/login")
                 || path.startsWith("/test")
 
                 // 필요하다면 다른 permitAll 경로들도 추가
