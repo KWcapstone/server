@@ -56,22 +56,22 @@ public class JwtTokenProvider {
 
     //Token 생성
     //1. 소셜 로그인 발급
-    public String createAccessToken(String socialId, String role){
-        return createToken(socialId, role, aTValidityMilliseconds);
+    public String createAccessToken(ObjectId memberId, String role){
+        return createToken(memberId, role, aTValidityMilliseconds);
     }
 
-    public String createRefreshToken(String socialId, String role){
-            return createToken(socialId, role,rTValidityMilliseconds);
+    public String createRefreshToken(ObjectId memberId, String role){
+            return createToken(memberId, role,rTValidityMilliseconds);
     }
 
-    //2. 일반 로그인 발급
+    /*//2. 일반 로그인 발급
     public String createGeneralAccessToken(String memberId, String role) {
         return createGeneralToken(memberId, role, aTValidityMilliseconds);
     }
 
     public String createGeneralRefreshToken(String memberId, String role) {
         return createGeneralToken(memberId, role, rTValidityMilliseconds);
-    }
+    }*/
 
     private String ConvertToStringType(ObjectId memberId){
         return memberId.toHexString();
@@ -79,9 +79,10 @@ public class JwtTokenProvider {
 
     //소셜 로그인 & 일반 로그인 jwt 발급
     private String createToken(ObjectId memberId, String role, Long validityMilliseconds){
+        String stringMemberId = ConvertToStringType(memberId);
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
-        claims.put("memberId", socialId);
+        claims.put("memberId", stringMemberId);
         claims.put("role", role);
 
         //현재시간 가져오기
@@ -98,7 +99,7 @@ public class JwtTokenProvider {
                 .compact(); //최종 Jwt 생성
     }
 
-    //일반 로그인 jwt 발급
+    /* //일반 로그인 jwt 발급
     private String createGeneralToken(String memberId, String role, Long validityMilliseconds) {
         Claims claims = Jwts.claims();
         claims.put("memberId", memberId);
@@ -113,9 +114,9 @@ public class JwtTokenProvider {
                 .setExpiration(Date.from(tokenValidity.toInstant()))  // 만료 시간 설정
                 .signWith(secretKey, SignatureAlgorithm.HS256) // 서명 추가
                 .compact();  // 최종 JWT 생성
-    }
+    }*/
 
-    //Jwt 에서 사용자 Id 추출
+    //Jwt 에서 사용자 Id 추출(ObjecctId 타입인데 String 타입으로 추출)
     public String getId(String token) {
         return getClaims(token).getBody().get("memberId", String.class);
     }
