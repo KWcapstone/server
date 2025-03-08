@@ -62,6 +62,14 @@ public class JwtTokenProvider {
             return createToken(socialId, role,rTValidityMilliseconds);
     }
 
+    public String createGeneralAccessToken(String role) {
+        return createGeneralToken(role, aTValidityMilliseconds);
+    }
+
+    public String createGeneralRefreshToken(String role) {
+        return createGeneralToken(role, rTValidityMilliseconds);
+    }
+
     private String createToken(String socialId, String role, Long validityMilliseconds){
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
@@ -79,7 +87,22 @@ public class JwtTokenProvider {
                 .setIssuedAt(Date.from(now.toInstant())) //발급 시간(iat) 설정
                 .setExpiration(Date.from(tokenValidity.toInstant())) //만료 시간 설정
                 .signWith(secretKey, SignatureAlgorithm.HS256) //서명 추가
-                .compact(); //최종 Jwt 샐성
+                .compact(); //최종 Jwt 생성
+    }
+
+    private String createGeneralToken(String role, Long validityMilliseconds) {
+        Claims claims = Jwts.claims();
+        claims.put("role", role);
+
+        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime tokenValidity = now.plusSeconds(validityMilliseconds / 1000);
+
+        return Jwts.builder()
+                .setClaims(claims)  // 사용자 정보 설정
+                .setIssuedAt(Date.from(now.toInstant()))  // 발급 시간(iat) 설정
+                .setExpiration(Date.from(tokenValidity.toInstant()))  // 만료 시간 설정
+                .signWith(secretKey, SignatureAlgorithm.HS256) // 서명 추가
+                .compact();  // 최종 JWT 생성
     }
 
     //Jwt 에서 사용자 Id 추출
