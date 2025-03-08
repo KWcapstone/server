@@ -54,6 +54,7 @@ public class JwtTokenProvider {
     }
 
     //Token 생성
+    //1. 소셜 로그인 발급
     public String createAccessToken(String socialId, String role){
         return createToken(socialId, role, aTValidityMilliseconds);
     }
@@ -62,12 +63,13 @@ public class JwtTokenProvider {
             return createToken(socialId, role,rTValidityMilliseconds);
     }
 
-    public String createGeneralAccessToken(String role) {
-        return createGeneralToken(role, aTValidityMilliseconds);
+    //2. 일반 로그인 발급
+    public String createGeneralAccessToken(String memberId, String role) {
+        return createGeneralToken(memberId, role, aTValidityMilliseconds);
     }
 
-    public String createGeneralRefreshToken(String role) {
-        return createGeneralToken(role, rTValidityMilliseconds);
+    public String createGeneralRefreshToken(String memberId, String role) {
+        return createGeneralToken(memberId, role, rTValidityMilliseconds);
     }
 
     //소셜 로그인 jwt 발급
