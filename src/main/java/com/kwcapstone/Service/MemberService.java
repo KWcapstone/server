@@ -306,8 +306,6 @@ public class MemberService {
             return new BaseErrorResponse(HttpStatus.UNAUTHORIZED.value(),
                     "Access Token에서 사용자 정보를 추출할 수 없습니다.");
         }
-        // 여기가 문제였음
-        System.out.println("Access Token 사용자 정보 추출: " + userIdStr);
 
         // 여기 추가함
         if (!ObjectId.isValid(userIdStr)) {
