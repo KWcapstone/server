@@ -8,6 +8,7 @@ import com.kwcapstone.Token.Domain.Convert.TokenConvert;
 import com.kwcapstone.Token.Repository.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,11 @@ public class TokenService {
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
 
+    //String -> obejctId
+    public ObjectId ConvertToObjectId(String memberId){
+        return new ObjectId(memberId);
+    }
+
     //refreshToken 업데이트
     public TokenResponse reissueToken(HttpServletRequest request) {
         //token 추출
@@ -30,14 +36,16 @@ public class TokenService {
         //refreshToken이랑 같은 Token 정보가 있는지 확인
         Token token = getToken(refreshToken);
 
-        //google이 String이라서
-        String socialId = validateRefreshToken(refreshToken);
+        //memberId
+        String stringMemberId = validateRefreshToken(refreshToken);
         String role = findRoleByRefrshToken(refreshToken);
 
+        ObjectId memberId = ConvertToObjectId(stringMemberId);
+
         String newAccessToken
-                = jwtTokenProvider.createAccessToken(socialId, role);
+                = jwtTokenProvider.createAccessToken(memberId, role);
         String newRefreshToken
-                = jwtTokenProvider.createRefreshToken(socialId, role);
+                = jwtTokenProvider.createRefreshToken(memberId, role);
 
         // refreshToken 업데이트
         token.changeToken(newAccessToken, newRefreshToken);
@@ -58,14 +66,14 @@ public class TokenService {
         return token.get();
     }
 
-    //socialId
+    //ObjectId
     private String validateRefreshToken(String refreshToken) {
         //토큰이 존재하는가?
         jwtTokenProvider.isTokenValid(refreshToken);
 
-        String socialId = jwtTokenProvider.getId(refreshToken);
+        String memberId = jwtTokenProvider.getId(refreshToken);
 
-        return socialId;
+        return memberId;
     }
 
     //role
