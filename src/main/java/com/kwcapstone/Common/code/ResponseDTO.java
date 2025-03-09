@@ -10,6 +10,5 @@ import org.springframework.stereotype.Service;
 @Builder
 public class ResponseDTO {
     private HttpStatus httpStatus;
-    private String code;
     private String message;
 }
