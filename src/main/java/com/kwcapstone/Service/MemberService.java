@@ -279,19 +279,13 @@ public class MemberService {
         return getMemberToken(member.get());
     }
 
-    // 로그아웃 - 어쩌면 소셜하고 일반로그인 나눠야할수도 있음... (지금은 카카오/네이버만 일 듯..?)
     public BaseResponse userLogout(HttpServletRequest request) {
         String accessToken;
         // Access Token 추출
         try {
             accessToken = jwtTokenProvider.extractToken(request);
         } catch (ResponseStatusException e) {
-            return new BaseErrorResponse(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 Access Token입니다.");
-        }
-        if (accessToken != null && accessToken.startsWith("Bearer ")) {
-            accessToken = accessToken.substring(7);
-        } else {
-            return new BaseErrorResponse(HttpStatus.FORBIDDEN.value(), "유효하지 않은 AccessToken 입니다.");
+            return new BaseErrorResponse(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 Access Token 입니다.");
         }
 
         // Access Token 유효성 검사
@@ -313,10 +307,16 @@ public class MemberService {
                     "Access Token에서 사용자 정보를 추출할 수 없습니다.");
         }
 
+        // 여기 추가함
+        if (!ObjectId.isValid(userIdStr)) {
+            return new BaseErrorResponse(HttpStatus.BAD_REQUEST.value(), "잘못된 사용자 ID 형식입니다.");
+        }
+
         // String -> ObjectId 변환
         ObjectId userId;
         try {
             userId = new ObjectId(userIdStr);
+            System.out.println("ObjectId 변환 완료: " + userId);
         } catch (IllegalArgumentException e) {
             return new BaseErrorResponse(HttpStatus.BAD_REQUEST.value(),
                     "잘못된 사용자 ID 형식입니다.");
