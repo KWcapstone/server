@@ -4,6 +4,7 @@ import com.kwcapstone.Domain.Entity.MemberRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -54,26 +55,34 @@ public class JwtTokenProvider {
     }
 
     //Token 생성
-    public String createAccessToken(String socialId, String role){
-        return createToken(socialId, role, aTValidityMilliseconds);
+    //1. 소셜 로그인 발급
+    public String createAccessToken(ObjectId memberId, String role){
+        return createToken(memberId, role, aTValidityMilliseconds);
     }
 
-    public String createRefreshToken(String socialId, String role){
-            return createToken(socialId, role,rTValidityMilliseconds);
+    public String createRefreshToken(ObjectId memberId, String role){
+            return createToken(memberId, role,rTValidityMilliseconds);
     }
 
-    public String createGeneralAccessToken(String role) {
-        return createGeneralToken(role, aTValidityMilliseconds);
+    /*//2. 일반 로그인 발급
+    public String createGeneralAccessToken(String memberId, String role) {
+        return createGeneralToken(memberId, role, aTValidityMilliseconds);
     }
 
-    public String createGeneralRefreshToken(String role) {
-        return createGeneralToken(role, rTValidityMilliseconds);
+    public String createGeneralRefreshToken(String memberId, String role) {
+        return createGeneralToken(memberId, role, rTValidityMilliseconds);
+    }*/
+
+    private String ConvertToStringType(ObjectId memberId){
+        return memberId.toHexString();
     }
 
-    private String createToken(String socialId, String role, Long validityMilliseconds){
+    //소셜 로그인 & 일반 로그인 jwt 발급
+    private String createToken(ObjectId memberId, String role, Long validityMilliseconds){
+        String stringMemberId = ConvertToStringType(memberId);
         //Jwt에 사용자 정보를 저장하기 위해 필요한 것
         Claims claims = Jwts.claims();
-        claims.put("socialId", socialId);
+        claims.put("memberId", stringMemberId);
         claims.put("role", role);
 
         //현재시간 가져오기
@@ -90,8 +99,10 @@ public class JwtTokenProvider {
                 .compact(); //최종 Jwt 생성
     }
 
-    private String createGeneralToken(String role, Long validityMilliseconds) {
+    /* //일반 로그인 jwt 발급
+    private String createGeneralToken(String memberId, String role, Long validityMilliseconds) {
         Claims claims = Jwts.claims();
+        claims.put("memberId", memberId);
         claims.put("role", role);
 
         ZonedDateTime now = ZonedDateTime.now();
@@ -103,11 +114,11 @@ public class JwtTokenProvider {
                 .setExpiration(Date.from(tokenValidity.toInstant()))  // 만료 시간 설정
                 .signWith(secretKey, SignatureAlgorithm.HS256) // 서명 추가
                 .compact();  // 최종 JWT 생성
-    }
+    }*/
 
-    //Jwt 에서 사용자 Id 추출
+    //Jwt 에서 사용자 Id 추출(ObjecctId 타입인데 String 타입으로 추출)
     public String getId(String token) {
-        return getClaims(token).getBody().get("socialId", String.class);
+        return getClaims(token).getBody().get("memberId", String.class);
     }
 
     //Jwt 에서 role 추출

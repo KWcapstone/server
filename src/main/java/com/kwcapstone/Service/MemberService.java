@@ -20,6 +20,7 @@ import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
+import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -49,6 +50,7 @@ public class MemberService {
     private final EmailService emailService;
     private final GoogleOAuthService googleOAuthService;
     private final HttpSession httpSession;
+    private final Filter springSecurityFilterChain;
 
     // 회원가입
     @Transactional
@@ -211,8 +213,8 @@ public class MemberService {
     }
 
     private GoogleTokenResponseDto getGoogleToken(Member member) {
-        String newAccessToken = jwtTokenProvider.createAccessToken(member.getSocialId(), member.getRole().name());
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getSocialId(), member.getRole().name());
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
 
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 
@@ -227,8 +229,8 @@ public class MemberService {
     }
 
     private MemberLoginResponseDto getMemberToken(Member member) {
-        String newAccessToken = jwtTokenProvider.createGeneralAccessToken(member.getRole().name());
-        String newRefreshToken = jwtTokenProvider.createGeneralRefreshToken(member.getRole().name());
+        String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
 
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 
