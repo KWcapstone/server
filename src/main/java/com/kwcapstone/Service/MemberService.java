@@ -212,22 +212,6 @@ public class MemberService {
         return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
     }
 
-//    private GoogleTokenResponseDto getGoogleToken(Member member) {
-//        String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
-//        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
-//
-//        Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
-//
-//        if (present.isPresent()) {
-//            present.get().changeToken(newAccessToken, newRefreshToken);
-//        } else {
-//            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
-//            memberRepository.save(member);
-//        }
-//
-//        return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
-//    }
-
     private MemberLoginResponseDto getMemberToken(Member member) {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
