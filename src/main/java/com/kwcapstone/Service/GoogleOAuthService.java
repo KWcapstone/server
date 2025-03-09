@@ -76,7 +76,9 @@ public class GoogleOAuthService {
         params.add("grant_type", "authorization_code");
         params.add("redirect_uri", redirectUri);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        HttpEntity<MultiValueMap<String, String>> request
+                = new HttpEntity<>(params, headers);
+
 
         try {
             ResponseEntity<String> response = restTemplate.exchange(
