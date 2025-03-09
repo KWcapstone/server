@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum SuccessStatus implements BaseCode{
     //일반 회원 기능 관련
     USER_SIGN_UP(HttpStatus.OK, "회원가입이 완료되었습니다."),
+    USER_LOGIN(HttpStatus.OK, "로그인이 완료되었습니다."),
 
     //이메일 중복확인
     USER_EMAIL_DUPLICATION(HttpStatus.OK, "사용 가능한 이메일"),

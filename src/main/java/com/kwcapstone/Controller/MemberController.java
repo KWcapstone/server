@@ -94,8 +94,9 @@ public class MemberController {
     // 일반로그인
     @PostMapping("/login")
     public BaseResponse<MemberLoginResponseDto> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
-        return new BaseResponse<>(HttpStatus.OK.value(), "로그인이 완료되었습니다.",
-                memberService.userLogin(memberLoginRequestDto));
+        return BaseResponse.res(SuccessStatus.USER_LOGIN, memberService.userLogin(memberLoginRequestDto));
+
+        //return new BaseResponse<>(HttpStatus.OK.value(), "로그인이 완료되었습니다.",memberService.userLogin(memberLoginRequestDto));
     }
 
     // 로그아웃
