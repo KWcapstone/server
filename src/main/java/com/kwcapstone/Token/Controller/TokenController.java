@@ -1,6 +1,7 @@
 package com.kwcapstone.Token.Controller;
 
 import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Common.code.SuccessStatus;
 import com.kwcapstone.Token.Domain.Dto.TokenResponse;
 import com.kwcapstone.Token.Service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +24,7 @@ public class TokenController {
     public BaseResponse reissueToken(final HttpServletRequest request) {
         TokenResponse tokenResponse = tokenService.reissueToken(request);
 
-        return new BaseResponse(HttpStatus.OK.value(), "토큰 재발급이 완료되었습니다.");
+        return BaseResponse.res(SuccessStatus.USER_REISSUE_TOKEN, tokenResponse.getAccessToken());
+        //return new BaseResponse(HttpStatus.OK.value(), "토큰 재발급이 완료되었습니다.");
     }
 }

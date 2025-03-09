@@ -15,6 +15,9 @@ public enum SuccessStatus implements BaseCode{
     USER_EMAIL_DUPLICATION(HttpStatus.OK, "사용 가능한 이메일"),
     USER_EMAIL_VERIFICATION(HttpStatus.OK, "이메일 인증이 완료되었습니다."),
 
+    //토큰 발급
+    USER_REISSUE_TOKEN(HttpStatus.OK,"토큰 재발급이 완료되었습니다."),
+
     //소셜로그인
     USER_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
     USER_NEW_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
