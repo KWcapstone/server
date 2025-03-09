@@ -163,7 +163,7 @@ public class MemberService {
     }
 
     // 구글 로그인
-    public BaseResponse<GoogleTokenResponseDto> handleGoogleLogin
+    public BaseResponse<MemberLoginResponseDto> handleGoogleLogin
         (String authorizationCode, HttpServletResponse response) throws IOException {
         // jwt를 위한 코드를 받으러감
         BaseResponse<String> tokenResponse = googleOAuthService.getAccessToken(authorizationCode);
@@ -186,7 +186,7 @@ public class MemberService {
         Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
 
         Map<String, String> tokens;
-        GoogleTokenResponseDto tokenResponseDto;
+        MemberLoginResponseDto tokenResponseDto;
 
         // 새로운 멤버인 경우 저장
         if (member == null) {
@@ -207,26 +207,26 @@ public class MemberService {
         }
         httpSession.setAttribute("member", new SessionUser(member));
         // jwt 사용할 것
-        tokenResponseDto = getGoogleToken(member);
+        tokenResponseDto = getMemberToken(member);
 
         return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
     }
 
-    private GoogleTokenResponseDto getGoogleToken(Member member) {
-        String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
-
-        Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
-
-        if (present.isPresent()) {
-            present.get().changeToken(newAccessToken, newRefreshToken);
-        } else {
-            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
-            memberRepository.save(member);
-        }
-
-        return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
-    }
+//    private GoogleTokenResponseDto getGoogleToken(Member member) {
+//        String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+//        String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
+//
+//        Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
+//
+//        if (present.isPresent()) {
+//            present.get().changeToken(newAccessToken, newRefreshToken);
+//        } else {
+//            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+//            memberRepository.save(member);
+//        }
+//
+//        return new GoogleTokenResponseDto(member.getMemberId(), newAccessToken);
+//    }
 
     private MemberLoginResponseDto getMemberToken(Member member) {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
@@ -244,7 +244,8 @@ public class MemberService {
     }
 
     // 약관 동의 (새로운 Google User)
-    public BaseResponse<GoogleTokenResponseDto> agreeNewMember() {
+    public BaseResponse<MemberLoginResponseDto> agreeNewMember() {
+        System.out.println("약관 동의 서비스 들어왔음");
         Member tempMember = (Member) httpSession.getAttribute("tempMember");
 
         // 세션 값 확인용 로그 추가
@@ -258,7 +259,7 @@ public class MemberService {
         tempMember.setAgreement(true);
         memberRepository.save(tempMember);
 
-        GoogleTokenResponseDto tokenResponseDto = getGoogleToken(tempMember);
+        MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember);
 
         httpSession.setAttribute("tempMember", new SessionUser(tempMember));
         httpSession.removeAttribute("tempMember");
