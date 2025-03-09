@@ -96,13 +96,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 ("{\"message\":\"%s\"}", message);
         response.getWriter().write(jsonResponse);
     }
-    //token 핊요 없는 url
+    //token 필요 없는 url
     private boolean isPermitAllPath(String path) {
         return path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-resources")
                 || path.startsWith("/webjars")
                 || path.equals("/swagger-ui.html")
+                || path.equals("/terms.html")
                 // open-api
                 || path.startsWith("/api/open-api")
 

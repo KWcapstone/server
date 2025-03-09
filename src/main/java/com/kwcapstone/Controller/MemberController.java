@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -66,7 +67,7 @@ public class MemberController {
 
     // 약관동의 - 여기 형식도 통일해야할듯
     @PostMapping("/agree")
-    public BaseResponse<GoogleTokenResponseDto> agree(HttpServletRequest request) throws IOException {
+    public BaseResponse<MemberLoginResponseDto> agree(HttpServletRequest request) {
         return memberService.agreeNewMember();
     }
 
@@ -78,7 +79,7 @@ public class MemberController {
 
     // 구글로그인
     @GetMapping("/login/google")
-    public BaseResponse<GoogleTokenResponseDto> googleLogin
+    public BaseResponse<MemberLoginResponseDto> googleLogin
         (@RequestParam String code, HttpServletResponse response) throws IOException {
         if (code == null || code.isEmpty()) {
             return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null);
