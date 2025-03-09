@@ -245,11 +245,7 @@ public class MemberService {
 
     // 약관 동의 (새로운 Google User)
     public BaseResponse<MemberLoginResponseDto> agreeNewMember() {
-        System.out.println("약관 동의 서비스 들어왔음");
         Member tempMember = (Member) httpSession.getAttribute("tempMember");
-
-        // 세션 값 확인용 로그 추가
-        System.out.println("tempMember: " + tempMember);
 
         if (tempMember == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "임시 회원 정보가 없습니다.");

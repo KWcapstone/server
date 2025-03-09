@@ -67,7 +67,7 @@ public class MemberController {
 
     // 약관동의 - 여기 형식도 통일해야할듯
     @PostMapping("/agree")
-    public BaseResponse<MemberLoginResponseDto> agree(HttpServletRequest request) throws IOException {
+    public BaseResponse<MemberLoginResponseDto> agree(HttpServletRequest request) {
         return memberService.agreeNewMember();
     }
 
