@@ -38,7 +38,7 @@ public class TokenService {
 
         //memberId
         String stringMemberId = validateRefreshToken(refreshToken);
-        String role = findRoleByRefrshToken(refreshToken);
+        String role = findRoleByRefreshToken(refreshToken);
 
         ObjectId memberId = ConvertToObjectId(stringMemberId);
 
@@ -77,7 +77,7 @@ public class TokenService {
     }
 
     //role
-    private String findRoleByRefrshToken(String refreshToken) {
+    private String findRoleByRefreshToken(String refreshToken) {
         String role = jwtTokenProvider.getRole(refreshToken);
         return role;
     }
