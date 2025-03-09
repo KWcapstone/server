@@ -18,6 +18,7 @@ public enum SuccessStatus implements BaseCode{
     //소셜로그인
     USER_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
     USER_NEW_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
+    USER_KAKAO_LOGIN(HttpStatus.OK,"로그인 성공"),
 
     //비밀번호 초기화 및 변경
     USER_RESET_PW(HttpStatus.OK,"이메일에 발송된 비밀번호를 확인하세요."),

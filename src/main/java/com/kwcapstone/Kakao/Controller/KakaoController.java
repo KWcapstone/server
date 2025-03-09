@@ -1,6 +1,7 @@
 package com.kwcapstone.Kakao.Controller;
 
 import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Common.code.SuccessStatus;
 import com.kwcapstone.Kakao.Dto.KakaoResponse;
 import com.kwcapstone.Kakao.Service.KakaoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +22,7 @@ public class KakaoController {
     @Operation(summary = "카카오 로그인 Api")
     @GetMapping("/kakao")
     public BaseResponse<KakaoResponse.KakaoLoginResponse> kakaoLogin(@RequestParam("code") String code){
-        return new BaseResponse (HttpStatus.OK.value(),"로그인이 성공적으로 완료되었습니다.", kakaoService.kakaoLogin(code));
+        return BaseResponse.res(SuccessStatus.USER_KAKAO_LOGIN,kakaoService.kakaoLogin(code));
+        //return new BaseResponse (HttpStatus.OK.value(),"로그인이 성공적으로 완료되었습니다.", kakaoService.kakaoLogin(code));
     }
 }
