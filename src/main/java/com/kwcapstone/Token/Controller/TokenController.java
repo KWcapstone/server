@@ -25,6 +25,5 @@ public class TokenController {
         TokenResponse tokenResponse = tokenService.reissueToken(request);
 
         return BaseResponse.res(SuccessStatus.USER_REISSUE_TOKEN, tokenResponse.getAccessToken());
-        //return new BaseResponse(HttpStatus.OK.value(), "토큰 재발급이 완료되었습니다.");
     }
 }

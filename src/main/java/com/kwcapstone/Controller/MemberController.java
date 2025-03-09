@@ -46,7 +46,6 @@ public class MemberController {
         memberService.join(memberRequestDto);
         //null 이면 response 응답기에서 알아서 null 인지해서 응답 필드에서 빼버림
         return BaseResponse.res(SuccessStatus.USER_SIGN_UP,null);
-        //return new BaseResponse(HttpStatus.OK.value(), "회원가입이 완료되었습니다.");
     }
 
     // 이메일 중복 인증
@@ -54,7 +53,6 @@ public class MemberController {
     public BaseResponse emailDuplication(@RequestBody EmailDuplicationDto emailDuplicationDto) {
         memberService.checkDuplicateEmail(emailDuplicationDto.getEmail());
         return BaseResponse.res(SuccessStatus.USER_EMAIL_DUPLICATION,null);
-        //return new BaseResponse(HttpStatus.OK.value(), "사용 가능한 이메일");
     }
 
     // 이메일 인증
@@ -62,7 +60,6 @@ public class MemberController {
     public BaseResponse emailVerification(@RequestBody EmailRequestDto emailRequestDto) {
         memberService.validateEmail(emailRequestDto);
         return BaseResponse.res(SuccessStatus.USER_EMAIL_VERIFICATION,null);
-        //return new BaseResponse(HttpStatus.OK.value(), "이메일 인증이 완료되었습니다.");
     }
 
     @GetMapping("/agree")
@@ -96,8 +93,6 @@ public class MemberController {
     @PostMapping("/login")
     public BaseResponse<MemberLoginResponseDto> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
         return BaseResponse.res(SuccessStatus.USER_LOGIN, memberService.userLogin(memberLoginRequestDto));
-
-        //return new BaseResponse<>(HttpStatus.OK.value(), "로그인이 완료되었습니다.",memberService.userLogin(memberLoginRequestDto));
     }
 
     // 로그아웃
