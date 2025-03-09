@@ -16,8 +16,17 @@ public enum SuccessStatus implements BaseCode{
     USER_EMAIL_VERIFICATION(HttpStatus.OK, "이메일 인증이 완료되었습니다."),
 
     //소셜로그인
-    USER_
+    USER_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
+    USER_NEW_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
+
+    //비밀번호 초기화 및 변경
+    USER_RESET_PW(HttpStatus.OK,"이메일에 발송된 비밀번호를 확인하세요."),
+    USER_AlREADY_SOCIAL_LOGIN(HttpStatus.OK,"소셜 로그인으로 가입돈 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요."),
+
+    //로그아웃
+    USER_LOGOUT(HttpStatus.OK,"로그아웃이 완료되었습니다.")
     ;
+
     private final HttpStatus httpStatus;
     private final String message;
 

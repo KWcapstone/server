@@ -21,15 +21,16 @@ public class BaseResponse<T> {
         this.data = data;
     }
 
-    public BaseResponse(int status, String message) {
-        this.status = status;
-        this.message = message;
-    }
-
     public BaseResponse(int status, T data) {
         this.status = status;
         this.data = data;
     }*/
+
+    //오류를 위해.
+    public BaseResponse(int status, String message) {
+        this.status = status;
+        this.message = message;
+    }
 
     //객체 지향을 위해서임
     public static <T> BaseResponse<T> res(BaseCode code, T data){

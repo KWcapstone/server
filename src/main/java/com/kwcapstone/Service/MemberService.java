@@ -1,8 +1,10 @@
 package com.kwcapstone.Service;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
+import com.kwcapstone.Common.code.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.AuthResetRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
@@ -154,10 +156,11 @@ public class MemberService {
 
             // 이메일 발송
             emailService.sendPasswordResetMessage(member.getEmail(), newPassword);
-            return new BaseResponse<>(HttpStatus.OK.value(), "이메일에 발송된 비밀번호를 확인하세요.");
+            return BaseResponse.res(SuccessStatus.USER_RESET_PW,null);
+            //return new BaseResponse<>(HttpStatus.OK.value(), "이메일에 발송된 비밀번호를 확인하세요.");
         } else if (role == MemberRole.GOOGLE || role == MemberRole.NAVER || role == MemberRole.KAKAO) {
-            return new BaseResponse<>(HttpStatus.OK.value(),
-                    "소셜 로그인으로 가입된 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요.");
+            return BaseResponse.res(SuccessStatus.USER_AlREADY_SOCIAL_LOGIN,null);
+            //return new BaseResponse<>(HttpStatus.OK.value(), "소셜 로그인으로 가입된 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요.");
         }
         return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "잘못된 요청입니다.");
     }
@@ -209,7 +212,8 @@ public class MemberService {
         // jwt 사용할 것
         tokenResponseDto = getGoogleToken(member);
 
-        return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
+        return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN,null);
+        //return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
     }
 
     private GoogleTokenResponseDto getGoogleToken(Member member) {
@@ -263,7 +267,8 @@ public class MemberService {
         httpSession.setAttribute("tempMember", new SessionUser(tempMember));
         httpSession.removeAttribute("tempMember");
 
-        return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
+        return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN,null);
+        //return new BaseResponse<>(HttpStatus.OK.value(), "로그인 성공", tokenResponseDto);
     }
 
     // 일반 유저 로그인
@@ -326,6 +331,7 @@ public class MemberService {
         tokenRepository.deleteById(userId);
 
         // 로그아웃 완료 응답 반환
-        return new BaseResponse(HttpStatus.OK.value(), "로그아웃이 완료되었습니다.");
+        return BaseResponse.res(SuccessStatus.USER_LOGOUT,null);
+        //return new BaseResponse(HttpStatus.OK.value(), "로그아웃이 완료되었습니다.");
     }
 }
