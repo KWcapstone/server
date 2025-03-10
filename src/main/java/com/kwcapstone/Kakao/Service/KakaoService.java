@@ -86,11 +86,11 @@ public class KakaoService {
     private KakaoResponse.KakaoLoginResponse getKakaoResponseForPresentUser(Member member){
         //accessToken  새로 만들기
         String newAccessToken
-                = jwtTokenProvider.createAccessToken(member.getMemberId(), "kakao");
+                = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().getTitle());
 
         //refreshToken 새로 만들기
         String newRefreshToken
-                = jwtTokenProvider.createRefreshToken(member.getMemberId(),"kakao");
+                = jwtTokenProvider.createRefreshToken(member.getMemberId(),member.getRole().getTitle());
 
 
         //db에 token 저장하기

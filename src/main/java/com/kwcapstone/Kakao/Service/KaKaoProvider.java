@@ -32,9 +32,6 @@ public class KaKaoProvider {
     // (해당 accessToken은 카카오에서 제공해주는 token)
     //보안을 위해 accessToken을 새로 서버쪽에서 발급할거임.
     public OAuthToken requestToken(String code){
-        System.out.println("clientId" + clientId);
-        System.out.println("redirectUrl" + redirectUrl);
-
         //Restemplate 새로 생성(Http 요청을 보내기 위함)
         RestTemplate restTemplate = new RestTemplate();
 
@@ -52,8 +49,6 @@ public class KaKaoProvider {
         params.add("code", code);
         params.add("client_secret", clientSecret);
 
-        System.out.println("params" + params);
-
         //요청할 객체 생성
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest
                 = new HttpEntity<>(params, headers);
@@ -62,9 +57,6 @@ public class KaKaoProvider {
         ResponseEntity<String> response
                 = restTemplate.exchange(
                         "https://kauth.kakao.com/oauth/token", HttpMethod.POST, kakaoTokenRequest, String.class);
-
-        System.out.println(response.getStatusCode());
-        System.out.println(response.getBody());
 
         //응답데이터는 OAuthToken로 변환해야함(이를 위해 객체 매핑할 도구)
         ObjectMapper objectMapper = new ObjectMapper();
@@ -112,8 +104,6 @@ public class KaKaoProvider {
         ObjectMapper objectMapper = new ObjectMapper();
         KaKaoProfile kaKaoProfile = null;
 
-        //checking
-        System.out.println(response.getBody());
         try{
             kaKaoProfile
                     = objectMapper.readValue(response.getBody(), KaKaoProfile.class);
