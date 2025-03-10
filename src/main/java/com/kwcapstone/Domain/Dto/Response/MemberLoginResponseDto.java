@@ -6,9 +6,13 @@ import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class MemberLoginResponseDto {
-    private ObjectId memberId;
+    private String memberId;
     private String accessToken;
+
+    public MemberLoginResponseDto(ObjectId memberId, String accessToken) {
+        this.memberId = memberId.toHexString();
+        this.accessToken=accessToken;
+    }
 }
