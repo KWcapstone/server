@@ -64,15 +64,6 @@ public class JwtTokenProvider {
             return createToken(memberId, role,rTValidityMilliseconds);
     }
 
-    /*//2. 일반 로그인 발급
-    public String createGeneralAccessToken(String memberId, String role) {
-        return createGeneralToken(memberId, role, aTValidityMilliseconds);
-    }
-
-    public String createGeneralRefreshToken(String memberId, String role) {
-        return createGeneralToken(memberId, role, rTValidityMilliseconds);
-    }*/
-
     private String ConvertToStringType(ObjectId memberId){
         return memberId.toHexString();
     }
@@ -98,23 +89,6 @@ public class JwtTokenProvider {
                 .signWith(secretKey, SignatureAlgorithm.HS256) //서명 추가
                 .compact(); //최종 Jwt 생성
     }
-
-    /* //일반 로그인 jwt 발급
-    private String createGeneralToken(String memberId, String role, Long validityMilliseconds) {
-        Claims claims = Jwts.claims();
-        claims.put("memberId", memberId);
-        claims.put("role", role);
-
-        ZonedDateTime now = ZonedDateTime.now();
-        ZonedDateTime tokenValidity = now.plusSeconds(validityMilliseconds / 1000);
-
-        return Jwts.builder()
-                .setClaims(claims)  // 사용자 정보 설정
-                .setIssuedAt(Date.from(now.toInstant()))  // 발급 시간(iat) 설정
-                .setExpiration(Date.from(tokenValidity.toInstant()))  // 만료 시간 설정
-                .signWith(secretKey, SignatureAlgorithm.HS256) // 서명 추가
-                .compact();  // 최종 JWT 생성
-    }*/
 
     //Jwt 에서 사용자 Id 추출(ObjecctId 타입인데 String 타입으로 추출)
     public String getId(String token) {
