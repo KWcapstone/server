@@ -4,7 +4,7 @@ import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Kakao.Dto.KaKaoProfile;
 import com.kwcapstone.Kakao.Dto.KakaoResponse;
-import com.kwcapstone.Kakao.Dto.OAuthToken;
+import com.kwcapstone.Token.Domain.Dto.OAuthToken;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
