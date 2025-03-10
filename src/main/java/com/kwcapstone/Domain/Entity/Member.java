@@ -1,6 +1,8 @@
 package com.kwcapstone.Domain.Entity;
 
 import com.fasterxml.jackson.databind.annotation.EnumNaming;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
 import lombok.*;
 import org.bson.types.ObjectId;

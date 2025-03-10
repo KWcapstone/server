@@ -10,10 +10,14 @@ public class KakaoResponse {
     @Getter
     @Setter
     @NoArgsConstructor
-    @AllArgsConstructor
     public static class KakaoLoginResponse{
-        private ObjectId id;
+        private String id;
         private String accessToken;
+
+        public KakaoLoginResponse(ObjectId id, String accessToken) {
+            this.id=id.toHexString();
+            this.accessToken=accessToken;
+        }
     }
 
     @Getter

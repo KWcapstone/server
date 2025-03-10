@@ -2,6 +2,7 @@ package com.kwcapstone.Controller;
 
 import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Common.code.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
@@ -43,21 +44,22 @@ public class MemberController {
     @PostMapping("/sign_up")
     public BaseResponse signUp(@RequestBody MemberRequestDto memberRequestDto) {
         memberService.join(memberRequestDto);
-        return new BaseResponse(HttpStatus.OK.value(), "회원가입이 완료되었습니다.");
+        //null 이면 response 응답기에서 알아서 null 인지해서 응답 필드에서 빼버림
+        return BaseResponse.res(SuccessStatus.USER_SIGN_UP,null);
     }
 
     // 이메일 중복 인증
     @PostMapping("/email_duplication")
     public BaseResponse emailDuplication(@RequestBody EmailDuplicationDto emailDuplicationDto) {
         memberService.checkDuplicateEmail(emailDuplicationDto.getEmail());
-        return new BaseResponse(HttpStatus.OK.value(), "사용 가능한 이메일");
+        return BaseResponse.res(SuccessStatus.USER_EMAIL_DUPLICATION,null);
     }
 
     // 이메일 인증
     @PostMapping("/email_verification")
     public BaseResponse emailVerification(@RequestBody EmailRequestDto emailRequestDto) {
         memberService.validateEmail(emailRequestDto);
-        return new BaseResponse(HttpStatus.OK.value(), "이메일 인증이 완료되었습니다.");
+        return BaseResponse.res(SuccessStatus.USER_EMAIL_VERIFICATION,null);
     }
 
     @GetMapping("/agree")
@@ -90,8 +92,7 @@ public class MemberController {
     // 일반로그인
     @PostMapping("/login")
     public BaseResponse<MemberLoginResponseDto> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
-        return new BaseResponse<>(HttpStatus.OK.value(), "로그인이 완료되었습니다.",
-                memberService.userLogin(memberLoginRequestDto));
+        return BaseResponse.res(SuccessStatus.USER_LOGIN, memberService.userLogin(memberLoginRequestDto));
     }
 
     // 로그아웃
