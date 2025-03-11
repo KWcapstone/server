@@ -2,6 +2,7 @@ package com.kwcapstone.Naver.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kwcapstone.Naver.Dto.NaverProfile;
 import com.kwcapstone.Token.Domain.Dto.OAuthToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class NaverProvider {
         //code가 null 이거나 빈 공백인 경우의 예외처리
         if(code == null | code.trim().isEmpty()){
             new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "code 값이 null 입니다.");
+                    "code 값이 null 또는 빈칸(공백)입니다.");
         }
 
         RestTemplate restTemplate = new RestTemplate();
@@ -84,5 +85,50 @@ public class NaverProvider {
     }
 
     //Token으로 정보 요청
+    public NaverProfile getProfile(String token){
+        //token이 없거나 빈칸, 공백일 경우의 예외처리
+        if(token == null || token.trim().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "토큰 값이 null 또는 빈칸(공백)입니다.");
+        }
+        //Http 요청을 위해
+        RestTemplate restTemplate = new RestTemplate();
 
+        //Http 요청 담기 위해
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+
+        //네이버는 넘길 정보가 없기 때문에 MultiValue 뛰어넘기
+
+        //Http 요청하기
+        HttpEntity<Void> naverProfileRequest
+                = new HttpEntity<>(headers);
+
+        //정보 받아오기
+        ResponseEntity<String> response;
+
+        //예외처리
+        try{
+            response = restTemplate.exchange(
+                    "https://openapi.naver.com/v1/nid/me",
+                    HttpMethod.GET,
+                    naverProfileRequest, String.class);
+        }catch (RestClientException e){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 프로필 서버가 응답하지 않습니다.");
+        }
+
+        //객체 매핑 생성
+        ObjectMapper objectMapper = new ObjectMapper();
+        NaverProfile naverProfile = null;
+
+        //예외처리
+        try{
+            naverProfile = objectMapper.readValue(
+                    response.getBody(),NaverProfile.class);
+        }catch (JsonProcessingException e){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "네이버 유저 정보 불러오는 것에 실패했습니다.(서버 오류)");
+        }
+        return naverProfile;
+    }
 }
