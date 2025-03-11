@@ -83,4 +83,6 @@ public class NaverProvider {
         return oAuthToken;
     }
 
+    //Token으로 정보 요청
+
 }
