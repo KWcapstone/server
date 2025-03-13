@@ -122,7 +122,6 @@ public class KakaoService {
 
 
         tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
-        memberRepository.save(member);
 
         return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken);
     }

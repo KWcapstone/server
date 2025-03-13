@@ -1,6 +1,7 @@
 package com.kwcapstone.Naver.Service;
 
 import com.kwcapstone.Domain.Entity.Member;
+import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Kakao.Service.KaKaoProvider;
 import com.kwcapstone.Naver.Dto.NaverProfile;
 import com.kwcapstone.Naver.Dto.NaverResponse;
@@ -68,8 +69,23 @@ public class NaverService {
 
         //존재하면 새로운 accessToken + refresh만 발급
         if(queryMember.isPresent()){
-            tokenResponse =
+            tokenResponse = getNaverResponseForUser(queryMember.get());
+            return new NaverResponse.NaverLoginResponse(queryMember.get().getMemberId(),
+                    tokenResponse.getAccessToken());
         }
+
+        //존재하지 않음
+        //약관 동의 생기면 변경해야 함
+        Member member = Member.builder()
+                .name(naverProfile.getResponse().getNickname())
+                .email(naverProfile.getResponse().getEmail())
+                .agreement(true)
+                .image(naverProfile.getResponse().getProfileImage())
+                .socialId(naverProfile.getResponse().getId())
+                .role(MemberRole.NAVER)
+                .build();
+
+        return get
     }
 
     //토큰 발급
@@ -119,6 +135,25 @@ public class NaverService {
             tokenRepository.save(
                     new Token(newAccessToken, newrefreshToken, member.getMemberId()));
         }
+        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken);
+    }
+
+    //새로운 유저
+    private NaverResponse.NaverLoginResponse getNaverResponseForNewUser(Member member){
+        //member 새로 저장
+        Member savedMember = memberRepository.save(member);
+
+        //accessToken 새로 만들기
+        String newAccessToken
+                = jwtTokenProvider.createAccessToken(member.getMemberId(), MemberRole.NAVER.getTitle());
+
+        //refreshToken 새로 만들기
+        String newRefreshToken
+                = jwtTokenProvider.createRefreshToken(member.getMemberId(), MemberRole.NAVER.getTitle());
+
+        //token 저장
+        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+
         return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken);
     }
 }
