@@ -85,7 +85,7 @@ public class NaverService {
                 .role(MemberRole.NAVER)
                 .build();
 
-        return get
+        return getNaverResponseForNewUser(member);
     }
 
     //토큰 발급
