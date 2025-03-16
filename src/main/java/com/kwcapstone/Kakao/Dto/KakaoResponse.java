@@ -19,13 +19,4 @@ public class KakaoResponse {
             this.accessToken=accessToken;
         }
     }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class KakaoTokenResponse{
-        private String accessToken;
-        private String refreshToken;
-    }
 }
