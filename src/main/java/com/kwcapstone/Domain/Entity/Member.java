@@ -39,9 +39,6 @@ public class Member {
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
 
-    @Indexed(unique = true)
-    private ObjectId tokenId;
-
     @Builder
     public Member(MemberRequestDto memberRequestDto) {
         this.name = memberRequestDto.getName();

@@ -16,8 +16,6 @@ public class Token {
     private ObjectId id;
     private String accessToken;
     private String refreshToken;
-
-    @Indexed(unique = true)
     private ObjectId memberId; //memberId 참조
 
     @Builder
