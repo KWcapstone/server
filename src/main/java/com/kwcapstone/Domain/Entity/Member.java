@@ -19,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 public class Member {
     @Id
+    @JsonSerialize(using = ToStringSerializer.class)
     private ObjectId memberId;
     private String name;
     private String email;

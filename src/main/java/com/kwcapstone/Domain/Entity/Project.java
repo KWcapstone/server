@@ -21,4 +21,5 @@ public class Project {
     private String record;
     private String summary;
     private LocalDateTime updateAt;
+    private ObjectId creator;
 }
