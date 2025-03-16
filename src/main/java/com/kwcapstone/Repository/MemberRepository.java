@@ -13,5 +13,4 @@ public interface MemberRepository extends MongoRepository<Member, ObjectId> {
     Optional<Member> findByEmail(String email);
     Optional<Member> findByNameAndEmail(String name, String email);
     Optional<Member> findByMemberId(ObjectId memberId);
-    boolean existsByMemberId(ObjectId memberId);
 }

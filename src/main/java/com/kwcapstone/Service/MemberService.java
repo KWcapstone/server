@@ -321,22 +321,18 @@ public class MemberService {
     public BaseResponse userWithdraw(ObjectId memberId) {
         //회원 관련 정보 삭제
         //1. Member의 이름 제외 다 삭제
-        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        Optional<Member> member = memberRepository.existsByMemberId(memberId);
 
-        //예외처리
-        if(!member.isPresent()){
+        //OAuth 계정 연동 해체(api 요청 참고해야 함)
+        if(!exists){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 유저입니다.");
         }
 
-
         //2. Member의 이름 unknown으로 정보 변경
-
-        //이러기 위해서는 MemberId에서 모든 정보를 다 없애고 Id는 남겨두고 이름은 unknow 해야하나?
+        updateMember(memberId);
 
         //accessToken, refreshToken 삭제하기
-        //tokenRepository.deleteByMemberId(memberId);
-
-        //OAuth 계정 연동 해체(api 요청 참고해야 함)
+        tokenRepository.deleteByMemberId(memberId);
 
         //회원 삭제
 
@@ -344,7 +340,7 @@ public class MemberService {
 
     //member 정보 update를 위함(회원탈퇴 때 사용)
     @Transactional
-    public void updateMember(ObjectId memberId, String newName){
+    public void updateMember(ObjectId memberId){
         Query query = new Query(Criteria.where("_id").is(memberId));
 
         Update update = new Update()
