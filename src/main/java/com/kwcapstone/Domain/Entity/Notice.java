@@ -19,7 +19,7 @@ public class Notice {
     private String title;
     private String content;
     private LocalDateTime createAt;
-    private String noticeStatus;
+    private Boolean isRead;
     private ObjectId userId;
     private ObjectId senderId;
 }
