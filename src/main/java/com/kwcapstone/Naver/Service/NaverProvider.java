@@ -55,7 +55,7 @@ public class NaverProvider {
         params.add("redirect_uri", redirectUri);
         params.add("code", code);
 
-        //요청할 객체 새서
+        //요청할 객체 생성
         HttpEntity<MultiValueMap<String,String>> naverTokenRequest
                 =new HttpEntity<>(params, headers);
 
@@ -63,7 +63,7 @@ public class NaverProvider {
         ResponseEntity<String> response;
         try {
             response = restTemplate.exchange(
-                    "https://nid.naver.com/oauth2.0/token", HttpMethod.GET,
+                    "https://nid.naver.com/oauth2.0/token", HttpMethod.POST,
                     naverTokenRequest, String.class);
         }catch (RestClientException e){
             //ResTemplate 에서 Http 요청을 보내는 중 발생하는 예외(서버 문제임)
@@ -73,12 +73,13 @@ public class NaverProvider {
         //응답데이터는 OAuthToken으로 변환
         ObjectMapper objectMapper = new ObjectMapper();
         OAuthToken oAuthToken = null;
-
+        System.out.println("response body " + response.getBody());
         try{
             oAuthToken = objectMapper.readValue(
                     response.getBody(),OAuthToken.class);
+            System.out.println("oAuthToken : " + oAuthToken);
         }catch (JsonProcessingException e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 응답을 JSON으로 변환하는 중 오류 발생");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 응답을 JSON으로 변환하는 중 오류 발생");
         }
 
         return oAuthToken;

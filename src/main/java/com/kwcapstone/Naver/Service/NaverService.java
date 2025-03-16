@@ -27,7 +27,6 @@ public class NaverService {
     private final NaverProvider naverProvider; //네이버 요청을 위함
     private final JwtTokenProvider jwtTokenProvider;//jwt 토큰 발급을 위함
     private final MemberRepository memberRepository; //member 저장하기 위함
-    private final KaKaoProvider kaKaoProvider;
 
     //naver Login
     //MemberId랑 accessToken 보내주기
@@ -96,20 +95,20 @@ public class NaverService {
         }catch (HttpClientErrorException e){
             if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "네이버 토큰 생성에서 잘못된 요청입니다.");
+                        "토큰 발급 중 잘못된 요청입니다.");
             } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                        "인증이 필요합니다.(clientId, clientsecretKey가 잘못됐을 가능성 있습니다.)");
+                        "토큰 발급 중 인증이 필요합니다.(clientId, clientsecretKey가 잘못됐을 가능성 있습니다.)");
             }
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "토큰을 가져오는 과정에서 서버 오류가 발생했습니다." +e.getMessage());
 
         } catch (HttpServerErrorException e){
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "네이버 서버 오류");
+                    "토큰 발급 중 네이버 서버 오류");
         } catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "기타 오류 발생했습니다."+ e.getMessage());
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "토큰 발급 중 기타 오류 발생했습니다."+ e.getMessage());
         }
 
         return oAuthToken;
