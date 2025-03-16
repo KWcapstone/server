@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.GoogleLogin.Auth.GoogleUser;
 import com.kwcapstone.Repository.MemberRepository;
@@ -20,12 +21,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.*;
 
 import org.springframework.http.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @PropertySource("classpath:application.properties")
@@ -125,5 +128,41 @@ public class GoogleOAuthService {
             return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Google 사용자 정보 요청 실패: " + e.getMessage());
         }
+    }
+
+    //구글 연동 해체
+    private boolean googleUnLink(Member member) {
+        RestTemplate restTemplate = new RestTemplate();
+        Optional<Token> token = tokenRepository.findByMemberId(member.getMemberId());
+        if(!token.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "구글 연동 해체 과정에서 토큰이 존재하지 않는 오류가 발생했습니다.");
+        }
+        String accessToken = token.get().getAccessToken();
+
+        // 요청 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // 요청 본문 설정
+        String requestBody = "token=" + accessToken;
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response;
+        try{
+            response = restTemplate.exchange(
+                    "https://oauth2.googleapis.com/revoke", HttpMethod.POST,
+                    requestEntity, String.class);
+
+            if(response == null){
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"구글 연동 해체 응답을 받지 못했습니다.");
+            }else {
+                return true;
+            }
+        }catch(RestClientException e){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "구글 서버가 응답하지 않습니다.");
+        }catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "구글 연동 해체 중 예기치 못한 오류가 발생했습니다.");
+        }
+
     }
 }

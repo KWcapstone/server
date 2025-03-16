@@ -22,7 +22,6 @@ import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
-import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -35,10 +34,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
@@ -53,13 +48,16 @@ import java.util.regex.Pattern;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final EmailVerificationRepository emailVerificationRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final TokenRepository tokenRepository;
-    private final NaverProvider naverProvider;
+
     private final EmailService emailService;
     private final GoogleOAuthService googleOAuthService;
+
     private final HttpSession httpSession;
     private final MongoTemplate mongoTemplate;
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final NaverProvider naverProvider;
     private final KaKaoProvider kaKaoProvider;
 
     // 회원가입
@@ -369,7 +367,9 @@ public class MemberService {
                 break;
             case KAKAO:
                 isSuccess = kaKaoProvider.kakaoUnLink(member);
-
+                break;
+            case GOOGLE:
+                isSuccess =
         }
     }
     //구글 연동 해체
