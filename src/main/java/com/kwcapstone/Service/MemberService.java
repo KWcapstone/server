@@ -337,7 +337,7 @@ public class MemberService {
         //accessToken, refreshToken 삭제하기
         tokenRepository.deleteByMemberId(memberId);
 
-        //회원 삭제
+        return BaseResponse.
 
     }
 
@@ -369,11 +369,14 @@ public class MemberService {
                 isSuccess = kaKaoProvider.kakaoUnLink(member);
                 break;
             case GOOGLE:
-                isSuccess =
+                isSuccess = googleOAuthService.googleUnLink(member);
+                break;
+            default:
+                isSuccess = true;
         }
-    }
-    //구글 연동 해체
-    private void googleUnLink(Member member) {
 
+        if(!isSuccess){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "연동 해체를 실패하였습니다.");
+        }
     }
 }

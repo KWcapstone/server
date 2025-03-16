@@ -29,7 +29,10 @@ public enum SuccessStatus implements BaseCode{
     USER_AlREADY_SOCIAL_LOGIN(HttpStatus.OK,"소셜 로그인으로 가입돈 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요."),
 
     //로그아웃
-    USER_LOGOUT(HttpStatus.OK,"로그아웃이 완료되었습니다.")
+    USER_LOGOUT(HttpStatus.OK,"로그아웃이 완료되었습니다."),
+
+    //회원탈퇴
+    USER_WITHDRAW(HttpStatus.OK, "회원 탈퇴가 완료되었습니다.")
     ;
 
     private final HttpStatus httpStatus;

@@ -131,7 +131,7 @@ public class GoogleOAuthService {
     }
 
     //구글 연동 해체
-    private boolean googleUnLink(Member member) {
+    public boolean googleUnLink(Member member) {
         RestTemplate restTemplate = new RestTemplate();
         Optional<Token> token = tokenRepository.findByMemberId(member.getMemberId());
         if(!token.isPresent()) {
