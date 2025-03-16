@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "token")
@@ -15,6 +16,8 @@ public class Token {
     private ObjectId id;
     private String accessToken;
     private String refreshToken;
+
+    @Indexed(unique = true)
     private ObjectId memberId; //memberId 참조
 
     @Builder

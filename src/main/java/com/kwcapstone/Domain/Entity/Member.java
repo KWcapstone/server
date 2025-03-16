@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.annotation.EnumNaming;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
+import com.kwcapstone.Token.Domain.Token;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -36,6 +38,9 @@ public class Member {
 
     private LocalDateTime inactivationDate;
     private List<ObjectId> projectIds;  // 사용자가 속한 프로젝트 리스트
+
+    @Indexed(unique = true)
+    private ObjectId tokenId;
 
     @Builder
     public Member(MemberRequestDto memberRequestDto) {

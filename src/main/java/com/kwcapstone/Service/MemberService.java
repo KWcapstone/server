@@ -30,15 +30,17 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -321,12 +323,13 @@ public class MemberService {
     public BaseResponse userWithdraw(ObjectId memberId) {
         //회원 관련 정보 삭제
         //1. Member의 이름 제외 다 삭제
-        Optional<Member> member = memberRepository.existsByMemberId(memberId);
-
-        //OAuth 계정 연동 해체(api 요청 참고해야 함)
-        if(!exists){
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        if(!member.isPresent()){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 유저입니다.");
         }
+
+        //OAuth 계정 연동 해체(api 요청 참고해야 함)
+        Unlink(member.get());
 
         //2. Member의 이름 unknown으로 정보 변경
         updateMember(memberId);
@@ -352,5 +355,23 @@ public class MemberService {
                 .unset("role");
 
         mongoTemplate.updateFirst(query, update, Member.class);
+    }
+
+    //연동 해체
+    private void Unlink(Member member) {
+        switch (member.getRole()){
+            case NAVER:
+                naverUnLink(member);
+        }
+    }
+
+    //카카오 연동 해체
+    private void kakaoUnLink(Member member) {
+
+    }
+
+    //구글 연동 해체
+    private void googleUnLink(Member member) {
+
     }
 }

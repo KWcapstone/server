@@ -2,8 +2,11 @@ package com.kwcapstone.Naver.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Naver.Dto.NaverProfile;
 import com.kwcapstone.Token.Domain.Dto.OAuthToken;
+import com.kwcapstone.Token.Domain.Token;
+import com.kwcapstone.Token.Repository.TokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,11 +18,16 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
+
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class NaverProvider {
+    private final TokenRepository tokenRepository;
     //필요한 필드값
     @Value("${NAVER_CLIENT_ID}")
     private String clientId;
@@ -131,4 +139,45 @@ public class NaverProvider {
         }
         return naverProfile;
     }
+
+
+    //네이버 연동 해체
+    private boolean naverUnLink(Member member) {
+        RestTemplate restTemplate = new RestTemplate();
+        Optional<Token> token = tokenRepository.findByMemberId(member.getMemberId());
+        if(!token.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "네이버 연동 해체 과정에서 토큰이 존재하지 않는 오류가 발생했습니다.");
+        }
+
+        String accessToken = token.get().getAccessToken();
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client", clientId);
+        params.add("client_secret", clientSecret);
+        params.add("access_token",accessToken);
+        params.add("grant_type", "authorization_code");
+
+
+        try{
+            URI uri = new URI("https://nid.naver.com/oauth2.0/token" + params);
+
+            ResponseEntity<String> response;
+            response = restTemplate.exchange(uri,
+                    HttpMethod.GET, null, String.class);
+
+            if(response == null){
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 연동 해체 응답을 받지 못했습니다.");
+            }
+            else{
+                return true;
+            }
+        }catch (RestClientException e){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 서버가 응답하지 않습니다.");
+        } catch (URISyntaxException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "네이버 연동 해체 요청 URI 가 잘못된 형식입니다.");
+        }catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 연동 해체 중 오류가 발생했습니다.");
+        }
+    }
+
 }
