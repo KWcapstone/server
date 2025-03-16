@@ -319,7 +319,9 @@ public class MemberService {
     @Transactional
     public BaseResponse userWithdraw(ObjectId memberId) {
         //회원 관련 정보 삭제
-        //1. MemberId가 포함된
+        //1. MemberId가 생성자인 모든 프로젝트 unknow으로 바꾸기
+        //2. MemberId에서 unknown으로 싹다 바꾸기
+        //이러기 위해서는 MemberId에서 모든 정보를 다 없애고 Id는 남겨두고 이름은 unknow 해야하나?
         //accessToken, refreshToken 삭제하기
 
         //OAuth 계정 연동 해체(api 요청 참고해야 함)
