@@ -100,4 +100,11 @@ public class MemberController {
     public BaseResponse logout(HttpServletRequest request) {
         return memberService.userLogout(request);
     }
+
+    //회원 탈퇴
+    @DeleteMapping("/withdraw")
+    public BaseResponse withdraw(HttpServletRequest request) {
+
+    }
+
 }

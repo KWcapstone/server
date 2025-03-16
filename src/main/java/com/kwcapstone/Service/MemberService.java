@@ -19,9 +19,11 @@ import com.kwcapstone.GoogleLogin.Auth.GoogleUser;
 import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.EmailVerificationRepository;
 import com.kwcapstone.Repository.MemberRepository;
+import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
+import com.sun.security.auth.UserPrincipal;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +31,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -309,5 +312,12 @@ public class MemberService {
 
         // 로그아웃 완료 응답 반환
         return BaseResponse.res(SuccessStatus.USER_LOGOUT,null);
+    }
+
+    //탈퇴
+    //만들어둔 class 이용하기
+    public BaseResponse userWithdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+
+
     }
 }
