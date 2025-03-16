@@ -83,7 +83,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             //기타 에러
             setJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "예기치 않은 오류가 발생했습니다.");
+                    "jwt 검증에 대한 예기치 않은 오류가 발생했습니다.");
         }
     }
 
@@ -116,7 +116,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 || path.equals("/auth/email_verification")
                 || path.equals("/auth/login")
                 || path.equals("/auth/login/kakao")
-                || path.equals("/auth/login/google") //추후 개선 가능성 있음
+                || path.equals("/auth/login/google")
+                || path.equals("/auth/login/naver")//추후 개선 가능성 있음
                 || path.equals("/auth/agree")
                 || path.equals("/auth/find_id")
                 || path.equals("/auth/find_pw")

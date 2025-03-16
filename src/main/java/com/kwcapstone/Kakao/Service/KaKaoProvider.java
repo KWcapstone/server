@@ -3,7 +3,7 @@ package com.kwcapstone.Kakao.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kwcapstone.Kakao.Dto.KaKaoProfile;
-import com.kwcapstone.Kakao.Dto.OAuthToken;
+import com.kwcapstone.Token.Domain.Dto.OAuthToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,8 +23,7 @@ public class KaKaoProvider {
     private String clientId;
 
     @Value("${KAKAO_REDIRECT_URI}")
-    private String redirectUrl;
-
+    private String redirectUri;
     @Value("${KAKAO_CLIENT_SECRET}")
     private String clientSecret;
 
@@ -45,7 +44,7 @@ public class KaKaoProvider {
                 = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", clientId);
-        params.add("redirect_uri", redirectUrl);
+        params.add("redirect_uri", redirectUri);
         params.add("code", code);
         params.add("client_secret", clientSecret);
 
