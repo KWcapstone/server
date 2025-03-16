@@ -73,11 +73,10 @@ public class NaverProvider {
         //응답데이터는 OAuthToken으로 변환
         ObjectMapper objectMapper = new ObjectMapper();
         OAuthToken oAuthToken = null;
-        System.out.println("response body " + response.getBody());
+
         try{
             oAuthToken = objectMapper.readValue(
                     response.getBody(),OAuthToken.class);
-            System.out.println("oAuthToken : " + oAuthToken);
         }catch (JsonProcessingException e){
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 응답을 JSON으로 변환하는 중 오류 발생");
         }

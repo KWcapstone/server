@@ -75,6 +75,7 @@ public class NaverService {
 
         //존재하지 않음
         //약관 동의 생기면 변경해야 함
+        System.out.println(naverProfile.getResponse().getEmail());
         Member member = Member.builder()
                 .name(naverProfile.getResponse().getNickname())
                 .email(naverProfile.getResponse().getEmail())

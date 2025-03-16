@@ -104,10 +104,10 @@ public class MemberController {
     }
 
     //회원 탈퇴
-    @DeleteMapping("/withdraw")
+    /*@DeleteMapping("/withdraw")
     public BaseResponse withdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
 
-    }
+    }*/
 
 }
