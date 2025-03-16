@@ -86,7 +86,8 @@ public class NaverProvider {
             oAuthToken = objectMapper.readValue(
                     response.getBody(),OAuthToken.class);
         }catch (JsonProcessingException e){
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 응답을 JSON으로 변환하는 중 오류 발생");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "네이버 응답을 JSON으로 변환하는 중 오류 발생");
         }
 
         return oAuthToken;
@@ -134,7 +135,7 @@ public class NaverProvider {
             naverProfile = objectMapper.readValue(
                     response.getBody(),NaverProfile.class);
         }catch (JsonProcessingException e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "네이버 유저 정보 불러오는 것에 실패했습니다.(서버 오류)");
         }
         return naverProfile;
@@ -142,7 +143,7 @@ public class NaverProvider {
 
 
     //네이버 연동 해체
-    private boolean naverUnLink(Member member) {
+    public boolean naverUnLink(Member member) {
         RestTemplate restTemplate = new RestTemplate();
         Optional<Token> token = tokenRepository.findByMemberId(member.getMemberId());
         if(!token.isPresent()){

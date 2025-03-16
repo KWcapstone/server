@@ -15,6 +15,8 @@ import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.GoogleLogin.Auth.GoogleUser;
 import com.kwcapstone.GoogleLogin.Auth.SessionUser;
+import com.kwcapstone.Kakao.Service.KaKaoProvider;
+import com.kwcapstone.Naver.Service.NaverProvider;
 import com.kwcapstone.Repository.EmailVerificationRepository;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
@@ -53,12 +55,12 @@ public class MemberService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenRepository tokenRepository;
-
+    private final NaverProvider naverProvider;
     private final EmailService emailService;
     private final GoogleOAuthService googleOAuthService;
     private final HttpSession httpSession;
-    private final Filter springSecurityFilterChain;
     private final MongoTemplate mongoTemplate;
+    private final KaKaoProvider kaKaoProvider;
 
     // 회원가입
     @Transactional
@@ -359,17 +361,17 @@ public class MemberService {
 
     //연동 해체
     private void Unlink(Member member) {
+        boolean isSuccess;
+
         switch (member.getRole()){
             case NAVER:
-                naverUnLink(member);
+                isSuccess = naverProvider.naverUnLink(member);
+                break;
+            case KAKAO:
+                isSuccess = kaKaoProvider.kakaoUnLink(member);
+
         }
     }
-
-    //카카오 연동 해체
-    private void kakaoUnLink(Member member) {
-
-    }
-
     //구글 연동 해체
     private void googleUnLink(Member member) {
 
