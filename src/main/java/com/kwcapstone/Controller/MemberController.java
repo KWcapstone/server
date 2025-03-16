@@ -11,6 +11,7 @@ import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.MemberRepository;
+import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +21,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -103,7 +105,8 @@ public class MemberController {
 
     //회원 탈퇴
     @DeleteMapping("/withdraw")
-    public BaseResponse withdraw(HttpServletRequest request) {
+    public BaseResponse withdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        ObjectId memberId = principalDetails.getId();
 
     }
 

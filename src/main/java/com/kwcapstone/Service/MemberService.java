@@ -316,8 +316,15 @@ public class MemberService {
 
     //탈퇴
     //만들어둔 class 이용하기
-    public BaseResponse userWithdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+    @Transactional
+    public BaseResponse userWithdraw(ObjectId memberId) {
+        //회원 관련 정보 삭제
+        //1. MemberId가 포함된
+        //accessToken, refreshToken 삭제하기
 
+        //OAuth 계정 연동 해체(api 요청 참고해야 함)
+
+        //회원 삭제
 
     }
 }
