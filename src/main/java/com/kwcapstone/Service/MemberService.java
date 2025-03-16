@@ -337,8 +337,7 @@ public class MemberService {
         //accessToken, refreshToken 삭제하기
         tokenRepository.deleteByMemberId(memberId);
 
-        return BaseResponse.
-
+        return BaseResponse.res(SuccessStatus.USER_WITHDRAW, null);
     }
 
     //member 정보 update를 위함(회원탈퇴 때 사용)
