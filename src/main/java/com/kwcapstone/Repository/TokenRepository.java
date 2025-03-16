@@ -9,5 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface TokenRepository extends MongoRepository<Token, ObjectId>{
-    Optional<Token> findByMemberId(ObjectId memberId);
+    void deleteByMemberId(ObjectId memberId);
 }
