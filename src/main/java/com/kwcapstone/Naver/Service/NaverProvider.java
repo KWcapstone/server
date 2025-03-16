@@ -177,7 +177,7 @@ public class NaverProvider {
         } catch (URISyntaxException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "네이버 연동 해체 요청 URI 가 잘못된 형식입니다.");
         }catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 연동 해체 중 오류가 발생했습니다.");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 연동 해체 중 예기치 못한 오류가 발생했습니다.");
         }
     }
 
