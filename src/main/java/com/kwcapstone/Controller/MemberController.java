@@ -109,7 +109,7 @@ public class MemberController {
     @DeleteMapping("/withdraw")
     public BaseResponse withdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
-
+        return memberService.userWithdraw(memberId);
     }
 
 }
