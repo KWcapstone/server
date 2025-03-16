@@ -1,6 +1,5 @@
 package com.kwcapstone.Service;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
@@ -9,7 +8,6 @@ import com.kwcapstone.Domain.Dto.Request.AuthResetRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
-import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
@@ -19,17 +17,19 @@ import com.kwcapstone.GoogleLogin.Auth.GoogleUser;
 import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.EmailVerificationRepository;
 import com.kwcapstone.Repository.MemberRepository;
-import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
-import com.sun.security.auth.UserPrincipal;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
@@ -56,6 +56,7 @@ public class MemberService {
     private final GoogleOAuthService googleOAuthService;
     private final HttpSession httpSession;
     private final Filter springSecurityFilterChain;
+    private final MongoTemplate mongoTemplate;
 
     // 회원가입
     @Transactional
@@ -316,11 +317,20 @@ public class MemberService {
 
     //탈퇴
     //만들어둔 class 이용하기
-    /*@Transactional
+    @Transactional
     public BaseResponse userWithdraw(ObjectId memberId) {
         //회원 관련 정보 삭제
         //1. Member의 이름 제외 다 삭제
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+
+        //예외처리
+        if(!member.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 유저입니다.");
+        }
+
+
         //2. Member의 이름 unknown으로 정보 변경
+
         //이러기 위해서는 MemberId에서 모든 정보를 다 없애고 Id는 남겨두고 이름은 unknow 해야하나?
 
         //accessToken, refreshToken 삭제하기
@@ -330,5 +340,21 @@ public class MemberService {
 
         //회원 삭제
 
-    }*/
+    }
+
+    //member 정보 update를 위함(회원탈퇴 때 사용)
+    @Transactional
+    public void updateMember(ObjectId memberId, String newName){
+        Query query = new Query(Criteria.where("_id").is(memberId));
+
+        Update update = new Update()
+                .set("name", "unknown")
+                .unset("email")
+                .unset("agreement")
+                .unset("image")
+                .unset("socialId")
+                .unset("role");
+
+        mongoTemplate.updateFirst(query, update, Member.class);
+    }
 }

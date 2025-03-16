@@ -13,6 +13,7 @@ import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -104,10 +105,11 @@ public class MemberController {
     }
 
     //회원 탈퇴
-    /*@DeleteMapping("/withdraw")
+    @Operation(summary = "회원 탈퇴")
+    @DeleteMapping("/withdraw")
     public BaseResponse withdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
 
-    }*/
+    }
 
 }
