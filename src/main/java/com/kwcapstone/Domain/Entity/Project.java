@@ -18,8 +18,26 @@ public class Project {
     private ObjectId projectId;
     private String projectName;
     private String projectImage;
-    private String record;
+    private Record record;
+    private Script script;
     private String summary;
     private LocalDateTime updateAt;
     private ObjectId creator;
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Record{
+        private String fileUrl;
+        private String fileName;
+        private long length;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Script{
+        private String content;
+        private String fileUrl;
+    }
 }
