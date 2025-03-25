@@ -21,7 +21,7 @@ public class Project {
     private Record record;
     private Script script;
     private String summary;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
     private ObjectId creator;
 
     @Getter
@@ -38,6 +38,6 @@ public class Project {
     @AllArgsConstructor
     public static class Script{
         private String content;
-        private String fileUrl;
+        private long sizeInBytes;  // 스크립트 파일 크기 (바이트 단위)
     }
 }

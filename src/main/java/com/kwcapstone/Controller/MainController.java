@@ -25,4 +25,12 @@ public class MainController {
                                           @PathVariable("noticeId") String noticeId) {
         return BaseResponse.res(SuccessStatus.NOTICE_DETAIL_CONFIRM, mainService.showDetailNotice(memberId, noticeId));
     }
+
+    // [녹음파일 + 녹음본] 메인화면
+    @GetMapping("/recordings/{memberId}")
+    public BaseResponse recordingShow (@PathVariable("memberId") String memberId,
+                                       @RequestParam(value = "sort", defaultValue = "latest") String sort,
+                                       @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
+        return BaseResponse.res(SuccessStatus.MAIN_RECORDING, mainService.showRecording(memberId, sort, filterType));
+    }
 }
