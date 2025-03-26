@@ -53,7 +53,7 @@ public class KakaoService {
         if(queryMember.isPresent()){
             tokenResponse = getKakaoResponseForPresentUser(queryMember.get());
             return new KakaoResponse.KakaoLoginResponse(queryMember.get().getMemberId(),
-                    tokenResponse.getAccessToken());
+                    tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
         }
 
         //존재하지 않음
@@ -92,19 +92,21 @@ public class KakaoService {
         String newRefreshToken
                 = jwtTokenProvider.createRefreshToken(member.getMemberId(),member.getRole().getTitle());
 
-
         //db에 token 저장하기
         Optional<Token> isPresent
                 = tokenRepository.findByMemberId(member.getMemberId());
 
         if(isPresent.isPresent()){
-            isPresent.get().changeToken(newAccessToken,newRefreshToken);
+            Token token = isPresent.get();
+            token.changeToken(newAccessToken,newRefreshToken);
+            System.out.println("저장된 refreshToken: " + newRefreshToken);
+            tokenRepository.save(token);
         }else{
             tokenRepository.save(
                     new Token(newAccessToken, newRefreshToken, member.getMemberId()));
         }
 
-        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(), newAccessToken);
+        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(), newAccessToken, newRefreshToken);
     }
 
     //새로운 유저
@@ -123,6 +125,6 @@ public class KakaoService {
 
         tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
 
-        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken);
+        return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken, newRefreshToken);
     }
 }

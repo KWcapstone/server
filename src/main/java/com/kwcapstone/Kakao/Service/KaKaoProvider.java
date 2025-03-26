@@ -6,14 +6,17 @@ import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Kakao.Dto.KaKaoProfile;
 import com.kwcapstone.Token.Domain.Dto.OAuthToken;
 import com.kwcapstone.Token.Domain.Token;
+import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,6 +28,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class KaKaoProvider {
     private final TokenRepository tokenRepository;
+    private final JwtTokenProvider jwtTokenProvider;
     //필요한 필드값
     @Value("${KAKAO_CLIENT_ID}")
     private String clientId;
@@ -140,6 +144,7 @@ public class KaKaoProvider {
     }
 
     //카카오 연동 해체
+    @Transactional
     public boolean kakaoUnLink(Member member){
         RestTemplate restTemplate = new RestTemplate();
 
@@ -149,11 +154,24 @@ public class KaKaoProvider {
         }
 
         String accessToken = token.get().getAccessToken();
+        try{
+            jwtTokenProvider.isTokenValid(accessToken);
+        }catch(ResponseStatusException e){
+            if(e.getStatusCode() == HttpStatus.UNAUTHORIZED && e.getReason().contains("토큰이 만료되었습니다.")){
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"AccessToken 이 만료되었습니다.");
+            }
+            throw e;
+        }
         String socialId = member.getSocialId();
+
+        //System.out.print("socialId"+ socialId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + accessToken);
         headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+        headers.add("Accept", "application/json");
+
+        System.out.println("📡 요청 헤더: " + headers.toString());
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("target_id_type", "user_id");
@@ -168,6 +186,8 @@ public class KaKaoProvider {
             response = restTemplate.exchange(
                     "https://kapi.kakao.com/v1/user/unlink", HttpMethod.POST,
                     unLinkRequest, String.class);
+            System.out.println("📥 응답 코드: " + response.getStatusCode());
+            System.out.println("📄 응답 바디: " + response.getBody());
 
             if(response == null){
                 throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "카카오 연동 해체 응답을 받지 못했습니다.");
@@ -175,7 +195,10 @@ public class KaKaoProvider {
                 System.out.println("socialId: " + socialId + " response: " + response.getBody());
                 return true;
             }
-        }catch (RestClientException e){
+        }catch (HttpStatusCodeException e){
+            // 여기서 실제 응답 확인 가능
+            System.out.println("❗카카오 응답 코드: " + e.getStatusCode());
+            System.out.println("❗카카오 응답 바디: " + e.getResponseBodyAsString());
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서버가 응답하지 않습니다.");
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "카카오 연동 해체 중 예기치 못한 오류가 발생했습니다.");

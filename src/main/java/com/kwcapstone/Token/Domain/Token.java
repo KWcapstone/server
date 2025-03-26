@@ -14,8 +14,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Token {
     @Id
     private ObjectId id;
+
     private String accessToken;
     private String refreshToken;
+    private String socialAccessToken;
+
     private ObjectId memberId; //memberId 참조
 
     @Builder

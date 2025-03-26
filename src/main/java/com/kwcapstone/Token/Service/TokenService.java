@@ -8,6 +8,7 @@ import com.kwcapstone.Token.Domain.Convert.TokenConvert;
 import com.kwcapstone.Token.Repository.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional //동시성과 DB를 위함
 public class TokenService {
     private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final MemberRepository memberRepository;
 
     //String -> obejctId
     public ObjectId ConvertToObjectId(String memberId){
@@ -30,10 +31,12 @@ public class TokenService {
     }
 
     //refreshToken 업데이트
-    public TokenResponse reissueToken(HttpServletRequest request) {
+    public TokenResponse reissueToken(String refreshToken) {
         //token 추출
-        String refreshToken = jwtTokenProvider.extractToken(request);
+        //String refreshToken = jwtTokenProvider.extractToken(request).trim();
+        //System.out.println("클라이언트가 보낸 refereshToken: {}"+ refreshToken);
         //refreshToken이랑 같은 Token 정보가 있는지 확인
+
         Token token = getToken(refreshToken);
 
         //memberId
@@ -49,6 +52,7 @@ public class TokenService {
 
         // refreshToken 업데이트
         token.changeToken(newAccessToken, newRefreshToken);
+        tokenRepository.save(token);
         return TokenConvert
                 .toTokenRefreshResponse(newAccessToken,newRefreshToken);
     }
@@ -57,6 +61,12 @@ public class TokenService {
     private Token getToken(String refreshToken) {
         Optional<Token> token
                 = tokenRepository.findByRefreshToken(refreshToken);
+        System.out.println("getToken에서의 "+refreshToken);
+        System.out.println("DB에 저장된 refreshToken들:");
+
+        tokenRepository.findAll().forEach(t -> {
+            System.out.println("-> " + t.getRefreshToken());
+        });
 
         if (!token.isPresent()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,

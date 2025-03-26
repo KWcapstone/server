@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
@@ -24,7 +25,7 @@ public class JwtTokenProvider {
     private static final String  HEADER_STRING
             = "Authorization";
     //"Bearer" 로 시작하는 Jwt 토큰 처리 위한 값
-    private static final String HEADER_STRING_PREFIX = "Bearer";
+    private static final String HEADER_STRING_PREFIX = "Bearer ";
 
     private final SecretKey secretKey;//암호화키 -> 토큰이 변조되지 않았음을 검증
     private final long aTValidityMilliseconds; //AccessToken 유효기간
@@ -46,7 +47,7 @@ public class JwtTokenProvider {
     public String extractToken(final HttpServletRequest request) {
         String authorizationHeader = request.getHeader(HEADER_STRING);
 
-        if (authorizationHeader != null ||
+        if (authorizationHeader != null &&
                 authorizationHeader.startsWith(HEADER_STRING_PREFIX)) {
             return authorizationHeader.substring(7);
         }
@@ -80,7 +81,7 @@ public class JwtTokenProvider {
         ZonedDateTime now = ZonedDateTime.now();
         //현재시간을 통해 jwt 발급 시점을 기록하기
         ZonedDateTime tokenValidity
-                = now.plusSeconds(validityMilliseconds / 1000);
+                = now.plus(Duration.ofMillis((validityMilliseconds)));
 
         return Jwts.builder()
                 .setClaims(claims) //사용자 정보 설정
