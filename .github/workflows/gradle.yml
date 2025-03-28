@@ -89,8 +89,27 @@ jobs:
           docker stop kwcapstone-server || true
           docker rm kwcapstone-server || true
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kwcapstone-server
-          docker run -d -p 8080:8080 --name kwcapstone-server -e MAIL_HOST=${{ secrets.MAIL_HOST }} -e MAIL_PORT=${{ secrets.MAIL_PORT }} -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} -e MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} -e MAIL_SMTP_TRUST=${{ secrets.MAIL_SMTP_TRUST }} -e KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} -e KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }} -e KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }} -e NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }} -e NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }} -e NAVER_REDIRECT_URI=${{ secrets.NAVER_REDIRECT_URI }} -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} -e GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} -e JWT_ACCESS_TOKEN_VALIDITY=${{ secrets.JWT_ACCESS_TOKEN_VALIDITY }} -e JWT_REFRESH_TOKEN_VALIDITY=${{ secrets.JWT_REFRESH_TOKEN_VALIDITY }} -e MONGODB_URI=${{ secrets.MONGODB_URI }} -e MONGODB_DATABASE=${{ secrets.MONGODB_DATABASE }} ${{ secrets.DOCKERHUB_USERNAME }}/kwcapstone-server
-    
+          docker run -d -p 8080:8080 --name kwcapstone-server \
+            -e MAIL_HOST="${MAIL_HOST}" \
+            -e MAIL_PORT="${MAIL_PORT}" \
+            -e MAIL_USERNAME="${MAIL_USERNAME}" \
+            -e MAIL_PASSWORD="${MAIL_PASSWORD}" \
+            -e MAIL_SMTP_TRUST="${MAIL_SMTP_TRUST}" \
+            -e KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
+            -e KAKAO_CLIENT_SECRET="${KAKAO_CLIENT_SECRET}" \
+            -e KAKAO_REDIRECT_URI="${KAKAO_REDIRECT_URI}" \
+            -e NAVER_CLIENT_ID="${NAVER_CLIENT_ID}" \
+            -e NAVER_CLIENT_SECRET="${NAVER_CLIENT_SECRET}" \
+            -e NAVER_REDIRECT_URI="${NAVER_REDIRECT_URI}" \
+            -e GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
+            -e GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
+            -e GOOGLE_REDIRECT_URI="${GOOGLE_REDIRECT_URI}" \
+            -e JWT_SECRET_KEY="${JWT_SECRET_KEY}" \
+            -e JWT_ACCESS_TOKEN_VALIDITY="${JWT_ACCESS_TOKEN_VALIDITY}" \
+            -e JWT_REFRESH_TOKEN_VALIDITY="${JWT_REFRESH_TOKEN_VALIDITY}" \
+            -e MONGODB_URI="${MONGODB_URI}" \
+            -e MONGODB_DATABASE="${MONGODB_DATABASE}" \
+            ${{ secrets.DOCKERHUB_USERNAME }}/kwcapstone-server
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
