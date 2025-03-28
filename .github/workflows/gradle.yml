@@ -85,6 +85,12 @@ jobs:
         username: ${{ secrets.WAS_USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.WAS_SSH_PORT }}
+        envs: MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,MAIL_SMTP_TRUST,
+          KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,KAKAO_REDIRECT_URI,
+          NAVER_CLIENT_ID,NAVER_CLIENT_SECRET,NAVER_REDIRECT_URI,
+          GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,
+          JWT_SECRET_KEY,JWT_ACCESS_TOKEN_VALIDITY,JWT_REFRESH_TOKEN_VALIDITY,
+          MONGODB_URI,MONGODB_DATABASE
         script: |
           docker stop kwcapstone-server || true
           docker rm kwcapstone-server || true
