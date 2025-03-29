@@ -35,7 +35,10 @@ public enum SuccessStatus implements BaseCode{
     NOTICE_CONFIRM(HttpStatus.OK, "모든 알림을 조회합니다."),
 
     // 알림창 세부 조회
-    NOTICE_DETAIL_CONFIRM(HttpStatus.OK, "알림 세부 조회입니다.")
+    NOTICE_DETAIL_CONFIRM(HttpStatus.OK, "알림 세부 조회입니다."),
+
+    // 메인화면 녹음파일 + 스크립트 확인
+    MAIN_RECORDING(HttpStatus.OK, "모든 녹음 리스트를 불러왔습니다.")
     ;
 
     private final HttpStatus httpStatus;
