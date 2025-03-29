@@ -181,4 +181,27 @@ public class NaverProvider {
         }
     }
 
+    //isValidAccessToken
+    public boolean validateAccessToken(String accessToken) {
+        String uri = "https://openapi.naver.com/v1/nid/me";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        try{
+            ResponseEntity<String> response =
+                    new RestTemplate().exchange(uri, HttpMethod.GET, request, String.class);
+
+
+            if(response == null){
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 socialAccessToken 유효성을 확인하지 못했습니다.");
+            }
+
+            return response.getStatusCode().is2xxSuccessful();
+        }catch (RestClientException e){
+            return false;
+        }
+    }
 }
