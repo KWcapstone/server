@@ -14,6 +14,5 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
     // 특정 사용자가 생성한 프로젝트 조회 (내 회의)
     List<Project> findByCreator(ObjectId creator);
 
-    // 특정 사용자가 초대된 프로젝트 조회 (초대된 회의)
-    List<Project> findByInvitedMembersContaining(ObjectId memberId);
+    List<Project> findByProjectIdInOrderByUpdatedAtDesc(List<ObjectId> projectIds);
 }

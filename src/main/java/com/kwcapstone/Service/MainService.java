@@ -116,34 +116,37 @@ public class MainService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
         }
 
-        List<Project> projects;
+        List<Project> projects = new ArrayList<>();
 
         if ("my".equalsIgnoreCase(filterType)) {
             projects = projectRepository.findByCreator(memberObjectId);
         } else if ("invited".equalsIgnoreCase(filterType)) {
             List<MemberToProject> invitedProjectMappings = memberToProjectRepository
-                    .findByMemberIdAndProjectIdNot(memberObjectId, memberObjectId);
+                    .findByMemberId(memberObjectId);
 
             List<ObjectId> invitedProjectIds = invitedProjectMappings.stream()
                     .map(MemberToProject::getProjectId)
                     .collect(Collectors.toList());
 
-            projects = projectRepository.findAllById(invitedProjectIds);
-        } else {  // "전체 회의" 인 경우
-            List<Project> myProjects = projectRepository.findByCreator(memberObjectId);
+            List<Project> invitedProjects = projectRepository.findByProjectIdInOrderByUpdatedAtDesc(invitedProjectIds);
 
+            // 🔥 내가 만든 프로젝트는 제외
+            List<Project> filteredProjects = invitedProjects.stream()
+                    .filter(project -> !project.getCreator().equals(memberObjectId))
+                    .collect(Collectors.toList());
+
+            projects.addAll(filteredProjects);
+
+            System.out.println("조회된 초대된 프로젝트 수: " + projects.size());
+        } else {  // "전체 회의"인 경우
             List<MemberToProject> invitedProjectMappings = memberToProjectRepository
-                    .findByMemberIdAndProjectIdNot(memberObjectId, memberObjectId);
+                    .findByMemberId(memberObjectId);
 
             List<ObjectId> invitedProjectIds = invitedProjectMappings.stream()
                     .map(MemberToProject::getProjectId)
                     .collect(Collectors.toList());
-            List<Project> invitedProjects = projectRepository.findAllById(invitedProjectIds);
 
-            // 두 리스트 합치기 (중복 제거)
-            Set<Project> uniqueProjects = new HashSet<>(myProjects);
-            uniqueProjects.addAll(invitedProjects);
-            projects = new ArrayList<>(uniqueProjects);
+            projects = projectRepository.findByProjectIdInOrderByUpdatedAtDesc(invitedProjectIds);
         }
 
         if (projects.isEmpty()) {
@@ -168,7 +171,7 @@ public class MainService {
                         );
                     });
             // 정렬 조건 적용
-            if ("oldest".equalsIgnoreCase(sort)) {
+            if ("created".equalsIgnoreCase(sort)) {
                 recordStream = recordStream.sorted(Comparator.comparing(ShowRecordResponseDto::getUpdatedAt));
             } else {
                 recordStream = recordStream.sorted(Comparator.comparing
