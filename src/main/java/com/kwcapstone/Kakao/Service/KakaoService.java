@@ -29,13 +29,13 @@ public class KakaoService {
     public KakaoResponse.KakaoLoginResponse kakaoLogin(String code){
         //kakao token 발급
         OAuthToken oAuthToken = getTokenRequest(code);
-        String socialAccesstoken = oAuthToken.getAccess_token();
+        String socialAccessToken = oAuthToken.getAccess_token();
 
         KaKaoProfile kaKaoProfile;
         //kakao user 정보 가져오기
         try{
             kaKaoProfile
-                    = kaKaoProvider.getProfile(socialAccesstoken);
+                    = kaKaoProvider.getProfile(socialAccessToken);
         }catch (Exception e){
             throw new RuntimeException("카카오 정보 가져오는 과정에서 오류 발생했습니다. "
                     + e.getMessage());
@@ -52,7 +52,7 @@ public class KakaoService {
 
         //존재하면 새로운 access token하고 refresh token만 다시 주는 걸로
         if(queryMember.isPresent()){
-            tokenResponse = getKakaoResponseForPresentUser(queryMember.get(), socialAccesstoken);
+            tokenResponse = getKakaoResponseForPresentUser(queryMember.get(), socialAccessToken);
             return new KakaoResponse.KakaoLoginResponse(queryMember.get().getMemberId(),
                     tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
         }
@@ -68,7 +68,7 @@ public class KakaoService {
                 .role(MemberRole.KAKAO)
                 .build();
 
-        return getKakaoResponseForNewUser(member,socialAccesstoken);
+        return getKakaoResponseForNewUser(member,socialAccessToken);
     }
 
     //token 발급
@@ -84,7 +84,7 @@ public class KakaoService {
     }
 
     //기존 유저
-    private KakaoResponse.KakaoLoginResponse getKakaoResponseForPresentUser(Member member, String socialAccesstoken){
+    private KakaoResponse.KakaoLoginResponse getKakaoResponseForPresentUser(Member member, String socialAccessToken){
         //accessToken  새로 만들기
         String newAccessToken
                 = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().getTitle());
@@ -99,19 +99,19 @@ public class KakaoService {
 
         if(isPresent.isPresent()){
             Token token = isPresent.get();
-            token.changeToken(newAccessToken,newRefreshToken, socialAccesstoken);
+            token.changeToken(newAccessToken,newRefreshToken, socialAccessToken);
             System.out.println("저장된 refreshToken: " + newRefreshToken);
             tokenRepository.save(token);
         }else{
             tokenRepository.save(
-                    new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccesstoken));
+                    new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
         }
 
         return new KakaoResponse.KakaoLoginResponse(member.getMemberId(), newAccessToken, newRefreshToken);
     }
 
     //새로운 유저
-    private KakaoResponse.KakaoLoginResponse getKakaoResponseForNewUser(Member member, String socialAccessToekn){
+    private KakaoResponse.KakaoLoginResponse getKakaoResponseForNewUser(Member member, String socialAccessToken){
         //member 새로 저장(save)를 해야 저장된다고 함.
         Member savedMember = memberRepository.save(member);
 
@@ -124,7 +124,7 @@ public class KakaoService {
                 = jwtTokenProvider.createRefreshToken(member.getMemberId(),"kakao");
 
 
-        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToekn));
+        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
 
         return new KakaoResponse.KakaoLoginResponse(member.getMemberId(),newAccessToken, newRefreshToken);
     }

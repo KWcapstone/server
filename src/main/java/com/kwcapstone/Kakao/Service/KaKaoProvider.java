@@ -153,7 +153,7 @@ public class KaKaoProvider {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "카카오 연동 해체 과정에서 토큰이 존재하지 않는 오류가 발생했습니다.");
         }
 
-        String accessToken = token.get().getAccessToken();
+        String accessToken = token.get().getSocialAccessToken();
         try{
             jwtTokenProvider.isTokenValid(accessToken);
         }catch(ResponseStatusException e){
@@ -202,6 +202,24 @@ public class KaKaoProvider {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서버가 응답하지 않습니다.");
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "카카오 연동 해체 중 예기치 못한 오류가 발생했습니다.");
+        }
+    }
+
+    //isValidAccessToken
+    public boolean validateAccessToken(String accessToken){
+        String uri = "https://kapi.kakao.com/v1/user/access_token_info";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        try{
+            ResponseEntity<String> response = new RestTemplate().exchange(
+                    uri, HttpMethod.GET, request, String.class);
+            return response.getStatusCode().is2xxSuccessful();
+        }catch(RestClientException e){
+            return false;
         }
     }
 }

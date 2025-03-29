@@ -173,26 +173,39 @@ public class MemberService {
     public BaseResponse<MemberLoginResponseDto> handleGoogleLogin
         (String authorizationCode, HttpServletResponse response) throws IOException {
         // jwt를 위한 코드를 받으러감
-        BaseResponse<String> tokenResponse = googleOAuthService.getAccessToken(authorizationCode);
+        //BaseResponse<String> tokenResponse = googleOAuthService.getAccessToken(authorizationCode);
+
+        String accessToken = googleOAuthService.getAccessToken(authorizationCode);
 
         // 실제 accessToken 값 꺼내기
-        if (tokenResponse.getStatus() != HttpStatus.OK.value()) {
+        /*if (tokenResponse.getStatus() != HttpStatus.OK.value()) {
             return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Google OAuth 오류 : " + tokenResponse.getMessage(), null);
+        }*/
+
+        if(accessToken == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Google OAuth 오류 : acesstoken null");
         }
 
-        String googleAccessToken = tokenResponse.getData();
-        BaseResponse<GoogleUser> userResponse = googleOAuthService.getUserInfo(googleAccessToken);
+       //String googleAccessToken = tokenResponse.getData();
+        //BaseResponse<GoogleUser> userResponse = googleOAuthService.getUserInfo(googleAccessToken);
+        GoogleUser googleUser = googleOAuthService.getUserInfo(accessToken);
 
-        if (userResponse.getStatus() != HttpStatus.OK.value()) {
+        /*if (userResponse.getStatus() != HttpStatus.OK.value()) {
             return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Google 사용자 정보 요청 오류: " + userResponse.getMessage(), null);
+        }*/
+
+        if(googleUser == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Google 사용자 정보 요청 오류: userResponse null");
         }
 
-        GoogleUser googleUser = userResponse.getData();
+        //Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
         Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
 
-        Map<String, String> tokens;
+        //Map<String, String> tokens;
         MemberLoginResponseDto tokenResponseDto;
 
         // 새로운 멤버인 경우 저장
@@ -212,23 +225,26 @@ public class MemberService {
             response.sendRedirect("/auth/agree");
             return null;
         }
-        httpSession.setAttribute("member", new SessionUser(member));
+
         // jwt 사용할 것
-        tokenResponseDto = getMemberToken(member);
+        tokenResponseDto = getMemberToken(member, accessToken);
+
+        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+        httpSession.setAttribute("member", new SessionUser(member));
 
         return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN,tokenResponseDto);
     }
 
-    private MemberLoginResponseDto getMemberToken(Member member) {
+    private MemberLoginResponseDto getMemberToken(Member member, String socialAccessToken) {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
 
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 
         if (present.isPresent()) {
-            present.get().changeToken(newAccessToken, newRefreshToken);
+            present.get().changeToken(newAccessToken, newRefreshToken, socialAccessToken);
         } else {
-            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
             memberRepository.save(member);
         }
         return new MemberLoginResponseDto(member.getMemberId(), newAccessToken);
@@ -237,6 +253,7 @@ public class MemberService {
     // 약관 동의 (새로운 Google User)
     public BaseResponse<MemberLoginResponseDto> agreeNewMember() {
         Member tempMember = (Member) httpSession.getAttribute("tempMember");
+        MemberLoginResponseDto tokenResponseDto = (MemberLoginResponseDto) httpSession.getAttribute("tokenResponseDto");
 
         if (tempMember == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "임시 회원 정보가 없습니다.");
@@ -246,7 +263,7 @@ public class MemberService {
         tempMember.setAgreement(true);
         memberRepository.save(tempMember);
 
-        MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember);
+        //MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember);
 
         httpSession.setAttribute("tempMember", new SessionUser(tempMember));
         httpSession.removeAttribute("tempMember");
@@ -264,7 +281,7 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
         }
 
-        return getMemberToken(member.get());
+        return getMemberToken(member.get(),null);
     }
 
     public BaseResponse userLogout(HttpServletRequest request) {

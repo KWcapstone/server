@@ -150,7 +150,7 @@ public class NaverProvider {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "네이버 연동 해체 과정에서 토큰이 존재하지 않는 오류가 발생했습니다.");
         }
 
-        String accessToken = token.get().getAccessToken();
+        String accessToken = token.get().getSocialAccessToken();
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client", clientId);
