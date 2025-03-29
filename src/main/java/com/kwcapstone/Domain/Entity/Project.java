@@ -36,7 +36,7 @@ public class Project {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Script{
+    public static class Script {
         private String content;
         private String fileUrl;
     }

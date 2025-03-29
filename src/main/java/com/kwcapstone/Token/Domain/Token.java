@@ -22,14 +22,16 @@ public class Token {
     private ObjectId memberId; //memberId 참조
 
     @Builder
-    public Token(String accessToken, String refreshToken, ObjectId memberId){
+    public Token(String accessToken, String refreshToken, ObjectId memberId,String socialAccessToken) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.memberId = memberId;
+        this.socialAccessToken = socialAccessToken;
     }
 
-    public void changeToken(String accessToken, String refreshToken){
+    public void changeToken(String accessToken, String refreshToken, String socialAccessToken){
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
+        this.socialAccessToken = socialAccessToken;
     }
 }
