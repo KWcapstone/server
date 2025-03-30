@@ -84,7 +84,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             //기타 에러
             setJsonResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-                    "jwt 검증에 대한 예기치 않은 오류가 발생했습니다.");
+                    ex.getMessage());
         }
     }
 
@@ -97,6 +97,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 ("{\"message\":\"%s\"}", message);
         response.getWriter().write(jsonResponse);
     }
+
     //token 필요 없는 url
     private boolean isPermitAllPath(String path) {
         return path.startsWith("/swagger-ui")

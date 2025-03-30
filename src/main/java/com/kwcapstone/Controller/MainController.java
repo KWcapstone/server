@@ -2,8 +2,10 @@ package com.kwcapstone.Controller;
 
 import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.Response.SuccessStatus;
+import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.MainService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
