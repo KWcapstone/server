@@ -6,6 +6,7 @@ import com.kwcapstone.Common.PasswordGenerator;
 import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
+import com.kwcapstone.Domain.Dto.Response.ProfileResponseDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
@@ -433,5 +434,23 @@ public class MemberService {
 
         //비밀번호 변경
         member.get().changePw(passwordRequestDto.getChangePassword());
+    }
+
+    //프로필 보이기
+    public ProfileResponseDto showProfile(ObjectId memberId){
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+
+        if(!member.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
+        }
+
+        String strmemberId = memberId.toString();
+        ProfileResponseDto profileResponseDto = new ProfileResponseDto(
+                strmemberId,
+                member.get().getName(),
+                member.get().getEmail(),
+                member.get().getImage());
+
+        return profileResponseDto;
     }
 }
