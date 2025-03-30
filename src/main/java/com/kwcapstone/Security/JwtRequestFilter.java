@@ -123,7 +123,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 || path.equals("/auth/agree")
                 || path.equals("/auth/find_id")
                 || path.equals("/auth/find_pw")
-                || path.equals("/auth/change_pw")
                 || path.equals("/auth/refresh")
                 || path.startsWith("/test")
 
