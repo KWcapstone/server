@@ -28,11 +28,27 @@ public class MainController {
         return BaseResponse.res(SuccessStatus.NOTICE_DETAIL_CONFIRM, mainService.showDetailNotice(memberId, noticeId));
     }
 
+    // [모든 회의] 메인화면
+    @GetMapping("/{memberId}")
+    public BaseResponse mainShow (@PathVariable("memberId") String memberId,
+                                  @RequestParam(value = "sort", defaultValue = "latest") String sort,
+                                  @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
+        return BaseResponse.res(SuccessStatus.MAIN_SHOW , mainService.showMain(memberId, sort, filterType));
+    }
+
     // [녹음파일 + 녹음본] 메인화면
     @GetMapping("/recordings/{memberId}")
     public BaseResponse recordingShow (@PathVariable("memberId") String memberId,
                                        @RequestParam(value = "sort", defaultValue = "latest") String sort,
                                        @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
         return BaseResponse.res(SuccessStatus.MAIN_RECORDING, mainService.showRecording(memberId, sort, filterType));
+    }
+
+    // 탭별로 프로젝트 검색
+    @GetMapping("/search/{memberId}")
+    public BaseResponse projectSearch (@PathVariable("memberId") String memberId,
+                                       @RequestParam(value = "tap", defaultValue = "entire") String tap,
+                                       @RequestParam(value = "keyword") String keyword) {
+        return BaseResponse.res(SuccessStatus.MAIN_SEARCH, mainService.searchProject(memberId, tap, keyword));
     }
 }

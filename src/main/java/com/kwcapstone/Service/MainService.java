@@ -1,8 +1,6 @@
 package com.kwcapstone.Service;
 
-import com.kwcapstone.Domain.Dto.Response.NoticeDetailReadResponseDto;
-import com.kwcapstone.Domain.Dto.Response.NoticeReadResponseDto;
-import com.kwcapstone.Domain.Dto.Response.ShowRecordResponseDto;
+import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberToProject;
 import com.kwcapstone.Domain.Entity.Notice;
@@ -107,8 +105,7 @@ public class MainService {
         );
     }
 
-    // [녹음파일 + 녹음본] 메인화면
-    public List<ShowRecordResponseDto> showRecording(String memberId, String sort, String filterType) {
+    private List<Project> getProjects(String memberId, String filterType) {
         ObjectId memberObjectId;
         try {
             memberObjectId = new ObjectId(memberId);
@@ -136,8 +133,6 @@ public class MainService {
                     .collect(Collectors.toList());
 
             projects.addAll(filteredProjects);
-
-            System.out.println("조회된 초대된 프로젝트 수: " + projects.size());
         } else {  // "전체 회의"인 경우
             List<MemberToProject> invitedProjectMappings = memberToProjectRepository
                     .findByMemberId(memberObjectId);
@@ -148,6 +143,49 @@ public class MainService {
 
             projects = projectRepository.findByProjectIdInOrderByUpdatedAtDesc(invitedProjectIds);
         }
+
+        return projects;
+    }
+
+    // [모든 회의] 메인화면
+    public List<ShowMainResponseDto> showMain(String memberId, String sort, String filterType) {
+        List<Project> projects = getProjects(memberId, filterType);
+
+        if (projects.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
+        }
+
+        try {
+            Stream<ShowMainResponseDto> mainStream = projects.stream()
+                    .map(project -> {
+                        String creatorName = memberRepository.findByMemberId(project.getCreator())
+                                .map(Member::getName)
+                                .orElse("Unknown");
+                        return new ShowMainResponseDto(
+                                project.getProjectId(),
+                                project.getProjectName(),
+                                project.getUpdatedAt(),
+                                creatorName,
+                                project.getProjectImage()
+                        );
+                    });
+
+            if ("created".equalsIgnoreCase(sort)){
+                mainStream = mainStream.sorted(Comparator.comparing(ShowMainResponseDto::getUpdatedAt));
+            } else {
+                mainStream = mainStream.sorted(Comparator.comparing(ShowMainResponseDto::getUpdatedAt).reversed());
+            }
+
+            return mainStream.collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "프로젝트 데이터를 불러오는 중 서버에서 예상치 못한 오류가 발생했습니다.");
+        }
+    }
+
+    // [녹음파일 + 녹음본] 메인화면
+    public List<ShowRecordResponseDto> showRecording(String memberId, String sort, String filterType) {
+        List<Project> projects = getProjects(memberId, filterType);
 
         if (projects.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 녹음 데이터를 찾을 수 없습니다.");
@@ -162,9 +200,8 @@ public class MainService {
 
                         return new ShowRecordResponseDto(
                                 project.getProjectId(),
-                                project.getProjectName(),
+                                project.getRecord().getFileName(),
                                 project.getUpdatedAt(),
-                                // project.getRecord().getFileName(),  // 음성파일 name 필요한지 잘 모르겠음
                                 project.getRecord().getLength(),
                                 project.getScript().getSizeInBytes(),
                                 creatorName
@@ -183,5 +220,87 @@ public class MainService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "녹음 데이터를 불러오는 중 서버에서 예상치 못한 오류가 발생했습니다.");
         }
+    }
+
+    // 탭별로 검색
+    public List<SearchResponseWrapperDto> searchProject(String memberId, String tap, String keyword) {
+        // 1. 멤버의 아이디를 통해 이게 존재하는 아이디인지 검색
+        ObjectId memberObjectId;
+        try {
+            memberObjectId = new ObjectId(memberId);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
+        }
+
+        // 2. 그 멤버의 프로젝트를 가져옴.
+        List<MemberToProject> invitedProjectMappings = memberToProjectRepository
+                .findByMemberId(memberObjectId);
+
+        List<ObjectId> invitedProjectIds = invitedProjectMappings.stream()
+                .map(MemberToProject::getProjectId)
+                .collect(Collectors.toList());
+
+        List<Project> projects = projectRepository.findByProjectIdInOrderByUpdatedAtDesc(invitedProjectIds);
+
+        if (projects.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
+        }
+
+        // 3. 탭으로 필터링
+        List<SearchResponseWrapperDto> result = new ArrayList<>();
+
+        for (Project project : projects) {
+            SearchResponseWrapperDto dto = new SearchResponseWrapperDto();
+            dto.setTap(tap);
+            dto.setProjectId(project.getProjectId());
+            dto.setProjectName(project.getProjectName());
+            dto.setUpdatedAt(project.getUpdatedAt());
+            dto.setCreator(project.getCreator().toHexString());
+
+            if ("entire".equalsIgnoreCase(tap)) {
+                if (keyword != null && !keyword.isBlank()
+                        && (project.getProjectName() == null
+                        || !project.getProjectName().toLowerCase().contains(keyword.toLowerCase()))) {
+                    continue;
+                }
+                dto.setResult(List.of(new SearchResponseWrapperDto.EntireDto(project.getProjectImage())));
+                result.add(dto);
+            } else if ("record".equalsIgnoreCase(tap)) {
+                Project.Record record = project.getRecord();
+                if (record == null) continue;
+
+                if (keyword != null && !keyword.isBlank()
+                        && (project.getProjectName() == null
+                        || !record.getFileName().toLowerCase().contains(keyword.toLowerCase()))) {
+                    continue;
+                }
+
+                dto.setResult(List.of(
+                        new SearchResponseWrapperDto.RecordDto(
+                                record.getLength(),
+                                project.getScript() != null ? project.getScript().getSizeInBytes(): 0L
+                        )
+                ));
+                result.add(dto);
+            } else if ("summary".equalsIgnoreCase(tap)) {
+                Project.Summary summary = project.getSummary();
+                if (summary == null) continue;
+
+                if (keyword != null && !keyword.isBlank()
+                        && (project.getProjectName() == null
+                        || !summary.getContent().toLowerCase().contains(keyword.toLowerCase()))) {
+                    continue;
+                }
+
+                dto.setResult(List.of(new SearchResponseWrapperDto.SummaryDto(summary.getSizeInBytes())));
+                result.add(dto);
+            }
+        }
+
+        if (result.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
+        }
+
+        return result;
     }
 }
