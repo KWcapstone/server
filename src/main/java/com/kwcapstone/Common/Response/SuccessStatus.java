@@ -28,6 +28,9 @@ public enum SuccessStatus implements BaseCode{
     USER_RESET_PW(HttpStatus.OK,"이메일에 발송된 비밀번호를 확인하세요."),
     USER_AlREADY_SOCIAL_LOGIN(HttpStatus.OK,"소셜 로그인으로 가입돈 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요."),
 
+    //비밀번호 변경
+    USER_PW_PATCH(HttpStatus.OK, "비밀번호 변경이 완료되었습니다."),
+
     //로그아웃
     USER_LOGOUT(HttpStatus.OK,"로그아웃이 완료되었습니다."),
 

@@ -70,6 +70,10 @@ public class Member {
         return this;
     }
 
+    public void changePw(String password){
+        this.password = password;
+    }
+
     public String getRoleKey() {
         return this.role.getKey();
     }
