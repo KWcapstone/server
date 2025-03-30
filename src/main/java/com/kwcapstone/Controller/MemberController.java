@@ -1,8 +1,7 @@
 package com.kwcapstone.Controller;
 
-import com.kwcapstone.Common.BaseErrorResponse;
-import com.kwcapstone.Common.BaseResponse;
-import com.kwcapstone.Common.code.SuccessStatus;
+import com.kwcapstone.Common.Response.BaseResponse;
+import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;

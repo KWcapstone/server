@@ -1,7 +1,7 @@
 package com.kwcapstone.Kakao.Controller;
 
-import com.kwcapstone.Common.BaseResponse;
-import com.kwcapstone.Common.code.SuccessStatus;
+import com.kwcapstone.Common.Response.BaseResponse;
+import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Kakao.Dto.KakaoResponse;
 import com.kwcapstone.Kakao.Service.KakaoService;
 import io.swagger.v3.oas.annotations.Operation;

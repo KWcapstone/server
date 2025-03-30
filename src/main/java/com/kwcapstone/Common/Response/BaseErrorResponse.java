@@ -1,4 +1,4 @@
-package com.kwcapstone.Common;
+package com.kwcapstone.Common.Response;
 
 import com.kwcapstone.Exception.BaseException;
 import lombok.Getter;

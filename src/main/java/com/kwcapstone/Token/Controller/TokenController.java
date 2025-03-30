@@ -1,7 +1,7 @@
 package com.kwcapstone.Token.Controller;
 
-import com.kwcapstone.Common.BaseResponse;
-import com.kwcapstone.Common.code.SuccessStatus;
+import com.kwcapstone.Common.Response.BaseResponse;
+import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Token.Domain.Dto.TokenResponse;
 import com.kwcapstone.Token.Service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
