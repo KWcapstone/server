@@ -220,7 +220,11 @@ public class MemberService {
                     .build();
             memberRepository.save(member);
 
-            httpSession.setAttribute("tempMember", member);
+            // jwt 사용할 것
+            tokenResponseDto = getMemberToken(member, accessToken);
+
+            httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+            httpSession.setAttribute("member", new SessionUser(member));
 
             response.sendRedirect("/auth/agree");
             return null;
@@ -247,7 +251,7 @@ public class MemberService {
             tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
             memberRepository.save(member);
         }
-        return new MemberLoginResponseDto(member.getMemberId(), newAccessToken);
+        return new MemberLoginResponseDto(member.getMemberId(), newAccessToken, newRefreshToken);
     }
 
     // 약관 동의 (새로운 Google User)
@@ -267,6 +271,8 @@ public class MemberService {
 
         httpSession.setAttribute("tempMember", new SessionUser(tempMember));
         httpSession.removeAttribute("tempMember");
+        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+        httpSession.removeAttribute("tokenResponseDto");
 
         return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN,tokenResponseDto);
     }

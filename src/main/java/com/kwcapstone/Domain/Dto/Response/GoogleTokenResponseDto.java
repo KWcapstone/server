@@ -11,4 +11,5 @@ import org.bson.types.ObjectId;
 public class GoogleTokenResponseDto {
     private ObjectId memberId;
     private String accessToken;
+    private String refreshToken;
 }

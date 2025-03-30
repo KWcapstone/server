@@ -14,9 +14,11 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -151,25 +153,23 @@ public class NaverProvider {
 
         String accessToken = token.get().getSocialAccessToken();
 
+        validateAccessToken(accessToken);
+
+//        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+//        params.add("client", clientId);
+//        params.add("client_secret", clientSecret);
+//        params.add("access_token",accessToken);
+//        params.add("grant_type", "authorization_code");
+        URI uri = UriComponentsBuilder
+                .fromUriString("https://nid.naver.com/oauth2.0/token")
+                .queryParam("client", clientId)
+                .queryParam("client_secret", clientSecret)
+                .queryParam("access_token", accessToken)
+                .queryParam("grant_type", "authorization_code")
+                .build()
+                .toUri();
+
         try{
-            validateAccessToken(accessToken);
-        }catch(ResponseStatusException e){
-            if(e.getStatusCode() == HttpStatus.UNAUTHORIZED && e.getReason().contains("토큰이 만료되었습니다.")){
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"AccessToken 이 만료되었습니다.");
-            }
-            throw e;
-        }
-
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("client", clientId);
-        params.add("client_secret", clientSecret);
-        params.add("access_token",accessToken);
-        params.add("grant_type", "authorization_code");
-
-
-        try{
-            URI uri = new URI("https://nid.naver.com/oauth2.0/token" + params);
-
             ResponseEntity<String> response;
             response = restTemplate.exchange(uri,
                     HttpMethod.GET, null, String.class);
@@ -182,9 +182,7 @@ public class NaverProvider {
             }
         }catch (RestClientException e){
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 서버가 응답하지 않습니다.");
-        } catch (URISyntaxException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "네이버 연동 해체 요청 URI 가 잘못된 형식입니다.");
-        }catch (Exception e){
+        } catch (Exception e){
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 연동 해체 중 예기치 못한 오류가 발생했습니다.");
         }
     }
@@ -203,13 +201,18 @@ public class NaverProvider {
                     new RestTemplate().exchange(uri, HttpMethod.GET, request, String.class);
 
 
-            if(response == null){
-                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 socialAccessToken 유효성을 확인하지 못했습니다.");
+            if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "네이버 socialAccessToken 이 유효하지 않습니다.");
             }
 
             return response.getStatusCode().is2xxSuccessful();
-        }catch (RestClientException e){
-            return false;
+        }catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "AccessToken 이 만료되었습니다.");
+            }
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 AccessToken 확인 중 오류가 발생했습니다.");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 서버 응답 오류");
         }
     }
 }
