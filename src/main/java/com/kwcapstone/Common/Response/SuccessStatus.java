@@ -28,6 +28,9 @@ public enum SuccessStatus implements BaseCode{
     USER_RESET_PW(HttpStatus.OK,"이메일에 발송된 비밀번호를 확인하세요."),
     USER_AlREADY_SOCIAL_LOGIN(HttpStatus.OK,"소셜 로그인으로 가입돈 이메일입니다. 일반 로그인이 아닌 소셜 로그인을 사용해 주세요."),
 
+    //비밀번호 변경
+    USER_PW_PATCH(HttpStatus.OK, "비밀번호 변경이 완료되었습니다."),
+
     //로그아웃
     USER_LOGOUT(HttpStatus.OK,"로그아웃이 완료되었습니다."),
 
@@ -41,7 +44,7 @@ public enum SuccessStatus implements BaseCode{
     NOTICE_DETAIL_CONFIRM(HttpStatus.OK, "알림 세부 조회입니다."),
 
     // 메인화면 녹음파일 + 스크립트 확인
-    MAIN_RECORDING(HttpStatus.OK, "모든 녹음 리스트를 불러왔습니다.")
+    MAIN_RECORDING(HttpStatus.OK, "모든 녹음 리스트를 불러왔습니다."),
     ;
 
     private final HttpStatus httpStatus;
