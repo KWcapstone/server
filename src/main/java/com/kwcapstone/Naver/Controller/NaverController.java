@@ -1,7 +1,7 @@
 package com.kwcapstone.Naver.Controller;
 
-import com.kwcapstone.Common.BaseResponse;
-import com.kwcapstone.Common.code.SuccessStatus;
+import com.kwcapstone.Common.Response.BaseResponse;
+import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Naver.Dto.NaverResponse;
 import com.kwcapstone.Naver.Service.NaverService;
 import io.swagger.v3.oas.annotations.Operation;

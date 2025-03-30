@@ -1,9 +1,9 @@
 package com.kwcapstone.Service;
 
-import com.kwcapstone.Common.BaseErrorResponse;
-import com.kwcapstone.Common.BaseResponse;
+import com.kwcapstone.Common.Response.BaseErrorResponse;
+import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
-import com.kwcapstone.Common.code.SuccessStatus;
+import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.AuthResetRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
@@ -38,7 +38,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 

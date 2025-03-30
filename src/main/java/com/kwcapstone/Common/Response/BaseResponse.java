@@ -1,8 +1,7 @@
-package com.kwcapstone.Common;
+package com.kwcapstone.Common.Response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.kwcapstone.Common.code.BaseCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

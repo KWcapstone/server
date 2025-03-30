@@ -1,7 +1,7 @@
 package com.kwcapstone.Controller;
 
-import com.kwcapstone.Common.BaseResponse;
-import com.kwcapstone.Common.code.SuccessStatus;
+import com.kwcapstone.Common.Response.BaseResponse;
+import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Service.MainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
