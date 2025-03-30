@@ -2,6 +2,7 @@ package com.kwcapstone.Security;
 
 import com.kwcapstone.Domain.Entity.Member;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -61,8 +62,7 @@ public class PrincipalDetails implements UserDetails {
         return true; //모든 사용자가 활성화 상태
     }
 
-    //사용자의  social Id 추가
-    public String getSocialId() {
-        return member.getSocialId();
+    public ObjectId getId(){
+        return member.getMemberId();
     }
 }

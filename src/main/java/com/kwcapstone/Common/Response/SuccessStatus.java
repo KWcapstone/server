@@ -31,6 +31,9 @@ public enum SuccessStatus implements BaseCode{
     //로그아웃
     USER_LOGOUT(HttpStatus.OK,"로그아웃이 완료되었습니다."),
 
+    //회원탈퇴
+    USER_WITHDRAW(HttpStatus.OK, "회원 탈퇴가 완료되었습니다."),
+
     // 알림창 조회
     NOTICE_CONFIRM(HttpStatus.OK, "모든 알림을 조회합니다."),
 

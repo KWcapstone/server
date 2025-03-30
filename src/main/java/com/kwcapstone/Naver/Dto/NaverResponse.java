@@ -12,10 +12,12 @@ public class NaverResponse {
     public static class NaverLoginResponse{
         private String id;
         private String accessToken;
+        private String refreshToken;
 
-        public NaverLoginResponse(ObjectId id, String accessToken){
+        public NaverLoginResponse(ObjectId id, String accessToken, String refreshToken) {
             this.id = id.toHexString();
             this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
         }
     }
 }

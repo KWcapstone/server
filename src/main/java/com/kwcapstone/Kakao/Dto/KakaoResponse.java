@@ -13,10 +13,12 @@ public class KakaoResponse {
     public static class KakaoLoginResponse{
         private String id;
         private String accessToken;
+        private String refreshToken;
 
-        public KakaoLoginResponse(ObjectId id, String accessToken) {
+        public KakaoLoginResponse(ObjectId id, String accessToken, String refreshToken) {
             this.id=id.toHexString();
             this.accessToken=accessToken;
+            this.refreshToken=refreshToken;
         }
     }
 }

@@ -39,6 +39,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException{
 
+
         //1. 인증이 필요 없는 url checking
         String path = request.getRequestURI();
 
@@ -49,7 +50,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         //2. jwt 검증이 필요한 경우, 추출해서 유효성 검사 및 securityContext 설정
         try {
             //jwt 추출
-            String token = jwtTokenProvider.extractToken(request);
+            String token = jwtTokenProvider.extractToken(request).trim();
 
             //token이 유효한지, 만료되지 않았는지 checking
             if (jwtTokenProvider.isTokenValid(token)) {
@@ -82,7 +83,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             setJsonResponse(response, ex.getStatusCode(), ex.getMessage());
         } catch (Exception ex) {
             //기타 에러
-            setJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+            setJsonResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                     "jwt 검증에 대한 예기치 않은 오류가 발생했습니다.");
         }
     }

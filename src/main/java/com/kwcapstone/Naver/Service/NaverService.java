@@ -34,13 +34,14 @@ public class NaverService {
     public NaverResponse.NaverLoginResponse naverLogin(String code){
         //naver token 발급
         OAuthToken oAuthToken = getTokenRequest(code);
+        String socialAccessToken = oAuthToken.getAccess_token();
 
         //네이버 프로필 정보 불러오기
         NaverProfile naverProfile;
 
         try{
             naverProfile
-                    = naverProvider.getProfile(oAuthToken.getAccess_token());
+                    = naverProvider.getProfile(socialAccessToken);
         }catch (HttpClientErrorException e){
             if(e.getStatusCode() == HttpStatus.BAD_REQUEST){
                 throw new ResponseStatusException
@@ -68,13 +69,14 @@ public class NaverService {
 
         //존재하면 새로운 accessToken + refresh만 발급
         if(queryMember.isPresent()){
-            tokenResponse = getNaverResponseForUser(queryMember.get());
+            tokenResponse = getNaverResponseForPresentUser(queryMember.get(), socialAccessToken);
             return new NaverResponse.NaverLoginResponse(queryMember.get().getMemberId(),
-                    tokenResponse.getAccessToken());
+                    tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
         }
 
         //존재하지 않음
         //약관 동의 생기면 변경해야 함
+        //System.out.println(naverProfile.getResponse().getEmail());
         Member member = Member.builder()
                 .name(naverProfile.getResponse().getNickname())
                 .email(naverProfile.getResponse().getEmail())
@@ -84,7 +86,7 @@ public class NaverService {
                 .role(MemberRole.NAVER)
                 .build();
 
-        return getNaverResponseForNewUser(member);
+        return getNaverResponseForNewUser(member, socialAccessToken);
     }
 
     //토큰 발급
@@ -115,7 +117,7 @@ public class NaverService {
     }
 
     //기존 유저
-    private NaverResponse.NaverLoginResponse getNaverResponseForUser(Member member){
+    private NaverResponse.NaverLoginResponse getNaverResponseForPresentUser(Member member, String socialAccessToken){
         //accessToken 새로 만들기
         String newAccessToken
                 = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().getTitle());
@@ -129,16 +131,16 @@ public class NaverService {
                 = tokenRepository.findByMemberId(member.getMemberId());
 
         if(tokenIsPresent.isPresent()){
-            tokenIsPresent.get().changeToken(newAccessToken, newrefreshToken);
+            tokenIsPresent.get().changeToken(newAccessToken, newrefreshToken, socialAccessToken);
         }else{
             tokenRepository.save(
-                    new Token(newAccessToken, newrefreshToken, member.getMemberId()));
+                    new Token(newAccessToken, newrefreshToken, member.getMemberId(), socialAccessToken));
         }
-        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken);
+        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken, newrefreshToken);
     }
 
     //새로운 유저
-    private NaverResponse.NaverLoginResponse getNaverResponseForNewUser(Member member){
+    private NaverResponse.NaverLoginResponse getNaverResponseForNewUser(Member member, String socialAccessToken){
         //member 새로 저장
         Member savedMember = memberRepository.save(member);
 
@@ -151,8 +153,8 @@ public class NaverService {
                 = jwtTokenProvider.createRefreshToken(member.getMemberId(), MemberRole.NAVER.getTitle());
 
         //token 저장
-        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+        tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
 
-        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken);
+        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken, newRefreshToken);
     }
 }
