@@ -155,7 +155,7 @@ public class KaKaoProvider {
 
         String accessToken = token.get().getSocialAccessToken();
         try{
-            jwtTokenProvider.isTokenValid(accessToken);
+            validateAccessToken(accessToken);
         }catch(ResponseStatusException e){
             if(e.getStatusCode() == HttpStatus.UNAUTHORIZED && e.getReason().contains("토큰이 만료되었습니다.")){
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"AccessToken 이 만료되었습니다.");
@@ -217,6 +217,9 @@ public class KaKaoProvider {
         try{
             ResponseEntity<String> response = new RestTemplate().exchange(
                     uri, HttpMethod.GET, request, String.class);
+            if(response == null){
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "카카오 socialAccessToken 유효성을 확인하지 못했습니다.");
+            }
             return response.getStatusCode().is2xxSuccessful();
         }catch(RestClientException e){
             return false;

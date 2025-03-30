@@ -49,7 +49,9 @@ public class JwtTokenProvider {
 
         if (authorizationHeader != null &&
                 authorizationHeader.startsWith(HEADER_STRING_PREFIX)) {
-            return authorizationHeader.substring(7);
+            //고침
+            String token = authorizationHeader.substring(7).trim();
+            return token;
         }
         throw new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED, "Auth_001 : refresh 토큰 추출에 실패하였습니다.");
@@ -124,8 +126,9 @@ public class JwtTokenProvider {
                     HttpStatus.UNAUTHORIZED,
                     "AUTH_003 : 토큰의 서명이 손상되었거나 위변조 되었습니다.");
         } catch (MalformedJwtException e) {
+            System.out.println("❌ MalformedJwtException: " + e.getMessage());
             throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
+                    HttpStatus.INTERNAL_SERVER_ERROR,
                     "AUTH_004 : Jwt 형식이 올바르지 않습니다.");
         } catch (UnsupportedJwtException e) {
             throw new ResponseStatusException(

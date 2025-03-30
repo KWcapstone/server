@@ -7,6 +7,7 @@ import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.GoogleLogin.Auth.GoogleUser;
+import com.kwcapstone.Naver.Dto.NaverProfile;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
@@ -169,5 +170,19 @@ public class GoogleOAuthService {
         }
 
     }
-    
+
+    //isValidAccessToken
+    public boolean validateAccesstoken(String accessToken) {
+        String uri = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + accessToken;
+
+        try{
+            ResponseEntity<String> response = new RestTemplate().getForEntity(uri, String.class);
+            if(response == null){
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "구글 socialAccessToken 유효성을 확인하지 못했습니다.");
+            }
+            return response.getStatusCode().is2xxSuccessful();
+        }catch (RestClientException e){
+            return false;
+        }
+    }
 }

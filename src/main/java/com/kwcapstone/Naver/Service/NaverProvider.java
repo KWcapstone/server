@@ -141,7 +141,6 @@ public class NaverProvider {
         return naverProfile;
     }
 
-
     //네이버 연동 해체
     public boolean naverUnLink(Member member) {
         RestTemplate restTemplate = new RestTemplate();
@@ -151,6 +150,15 @@ public class NaverProvider {
         }
 
         String accessToken = token.get().getSocialAccessToken();
+
+        try{
+            validateAccessToken(accessToken);
+        }catch(ResponseStatusException e){
+            if(e.getStatusCode() == HttpStatus.UNAUTHORIZED && e.getReason().contains("토큰이 만료되었습니다.")){
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"AccessToken 이 만료되었습니다.");
+            }
+            throw e;
+        }
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client", clientId);

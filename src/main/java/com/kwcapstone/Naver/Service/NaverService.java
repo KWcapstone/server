@@ -71,7 +71,7 @@ public class NaverService {
         if(queryMember.isPresent()){
             tokenResponse = getNaverResponseForPresentUser(queryMember.get(), socialAccessToken);
             return new NaverResponse.NaverLoginResponse(queryMember.get().getMemberId(),
-                    tokenResponse.getAccessToken());
+                    tokenResponse.getAccessToken(), tokenResponse.getRefreshToken());
         }
 
         //존재하지 않음
@@ -136,7 +136,7 @@ public class NaverService {
             tokenRepository.save(
                     new Token(newAccessToken, newrefreshToken, member.getMemberId(), socialAccessToken));
         }
-        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken);
+        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken, newrefreshToken);
     }
 
     //새로운 유저
@@ -155,6 +155,6 @@ public class NaverService {
         //token 저장
         tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
 
-        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken);
+        return new NaverResponse.NaverLoginResponse(member.getMemberId(), newAccessToken, newRefreshToken);
     }
 }

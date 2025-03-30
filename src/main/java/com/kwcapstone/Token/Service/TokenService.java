@@ -1,6 +1,9 @@
 package com.kwcapstone.Token.Service;
 
+import com.kwcapstone.Kakao.Service.KaKaoProvider;
+import com.kwcapstone.Naver.Service.NaverProvider;
 import com.kwcapstone.Repository.MemberRepository;
+import com.kwcapstone.Service.GoogleOAuthService;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.Domain.Dto.TokenResponse;
 import com.kwcapstone.Token.JwtTokenProvider;
@@ -24,7 +27,9 @@ import java.util.Optional;
 public class TokenService {
     private final TokenRepository tokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
-
+    private final KaKaoProvider kaKaoProvider;
+    private final NaverProvider naverProvider;
+    private final GoogleOAuthService googleOAuthService;
     //String -> obejctId
     public ObjectId ConvertToObjectId(String memberId){
         return new ObjectId(memberId);
@@ -45,9 +50,19 @@ public class TokenService {
 
         System.out.println(role);
         ObjectId memberId = ConvertToObjectId(stringMemberId);
+
         //SocialAccesstoken이 만료되엇는지 확인하기
+        if(isSocialRole(role)){
+            String socialAccessToken = token.getSocialAccessToken();
 
+            if(isSocialAccessTokenExpired(socialAccessToken, role)){
+                throw new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "소셜 accessToken이 만료되었습니다. 다시 로그인 해주세요."
+                );
 
+            }
+        }
 
         String newAccessToken
                 = jwtTokenProvider.createAccessToken(memberId, role);
@@ -55,20 +70,36 @@ public class TokenService {
                 = jwtTokenProvider.createRefreshToken(memberId, role);
 
         // refreshToken 업데이트
-        token.changeToken(newAccessToken, newRefreshToken);
+        token.changeToken(newAccessToken, newRefreshToken,token.getSocialAccessToken());
         tokenRepository.save(token);
         return TokenConvert
                 .toTokenRefreshResponse(newAccessToken,newRefreshToken);
     }
 
+    //role 확인하기
+    private  boolean isSocialRole(String role){
+        return role.equals("KAKAO") ||
+                role.equals("NAVER") ||
+                role.equals("GOOGLE");
+    }
+
     //socialAccesstoken이 만료되었는지 확인하기
-    private boolean isSocialAccessTokenExpired(String token, String role){
+    private boolean isSocialAccessTokenExpired(String accessToken, String role){
         try{
             switch(role){
                 case "KAKAO":
-                    return
+                    return !kaKaoProvider.validateAccessToken(accessToken); // 만료된 것이 true로 나오게 하기
+                case "NAVER" :
+                    return !naverProvider.validateAccessToken(accessToken);
+                case "GOOGLE" :
+                    return !googleOAuthService.validateAccesstoken(accessToken);
+                default:
+                    return false;
             }
-        }catch ()
+        }catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "isSocialAccesstoken 만료에서 오류가 발생했습니다." + e.getMessage());
+        }
     }
 
     private Token getToken(String refreshToken) {
