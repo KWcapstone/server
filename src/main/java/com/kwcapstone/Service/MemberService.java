@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -58,6 +59,7 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final NaverProvider naverProvider;
     private final KaKaoProvider kaKaoProvider;
+    private final PasswordEncoder passwordEncoder;
 
     // 회원가입
     @Transactional
@@ -403,14 +405,29 @@ public class MemberService {
 
     //비밀번호 변경
     public void changePassword(ObjectId memberId, String changePw){
+        // 비밀번호 유효성 검사
+        if (changePw == null || changePw.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비밀번호는 비어 있을 수 없습니다.");
+        }
+
         //memberId로 찾기
         Optional<Member> member = memberRepository.findByMemberId(memberId);
         if(!member.isPresent()){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
         }
 
-        //비밀번호 변경
-        member.get().
+        //pw validate
+        if (!Pattern.matches(passwordPattern, changePw)) {
+            throw new BaseException(422, "비밀번호는 6자 이상 12자 이하이며, " +
+                    "영문자, 숫자, 특수문자(@$!%*?&)를 각각 최소 1개 이상 포함해야 합니다.");
+        }
 
+        // 같은 비밀번호인지 확인
+        if (passwordEncoder.matches(changePw, member.get().getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이전 비밀번호와 동일한 비밀번호로는 변경할 수 없습니다.");
+        }
+
+        //비밀번호 변경
+        member.get().changePw(changePw);
     }
 }

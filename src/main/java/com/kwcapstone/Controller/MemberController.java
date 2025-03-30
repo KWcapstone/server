@@ -97,7 +97,6 @@ public class MemberController {
     @DeleteMapping("/withdraw")
     public BaseResponse withdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
-        System.out.println(memberId);
         return memberService.userWithdraw(memberId);
     }
 
@@ -105,6 +104,7 @@ public class MemberController {
     @Operation(summary = "비밀번호 변경")
     @PatchMapping("/change_pw")
     public BaseResponse changePw(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody ) {
+        ObjectId memberId = principalDetails.getId();
 
     }
 
