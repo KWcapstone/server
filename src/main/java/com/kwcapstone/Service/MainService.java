@@ -342,6 +342,9 @@ public class MainService {
 
     //프로필 보이기
     public ProfileResponseDto showProfile(ObjectId memberId){
+        if(memberId == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "memberId가 null 입니다.");
+        }
         Optional<Member> member = memberRepository.findByMemberId(memberId);
 
         if(!member.isPresent()){
