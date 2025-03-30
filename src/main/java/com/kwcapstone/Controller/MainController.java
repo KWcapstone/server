@@ -69,6 +69,6 @@ public class MainController {
     public BaseResponse showProfile(@AuthenticationPrincipal PrincipalDetails principalDetails){
         ObjectId memberId = principalDetails.getId();
 
-
+        return Base
     }
 }
