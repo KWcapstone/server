@@ -4,14 +4,11 @@ import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Common.code.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.*;
-import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
-import com.kwcapstone.Domain.Entity.Member;
-import com.kwcapstone.Domain.Entity.MemberRole;
-import com.kwcapstone.Exception.BaseException;
-import com.kwcapstone.GoogleLogin.Auth.SessionUser;
 import com.kwcapstone.Repository.MemberRepository;
+import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -19,11 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -100,4 +94,14 @@ public class MemberController {
     public BaseResponse logout(HttpServletRequest request) {
         return memberService.userLogout(request);
     }
+
+    //회원 탈퇴
+    @Operation(summary = "회원 탈퇴")
+    @DeleteMapping("/withdraw")
+    public BaseResponse withdraw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        ObjectId memberId = principalDetails.getId();
+        System.out.println(memberId);
+        return memberService.userWithdraw(memberId);
+    }
+
 }

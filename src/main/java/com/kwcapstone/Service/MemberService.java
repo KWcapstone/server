@@ -1,6 +1,5 @@
 package com.kwcapstone.Service;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.kwcapstone.Common.BaseErrorResponse;
 import com.kwcapstone.Common.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
@@ -9,7 +8,6 @@ import com.kwcapstone.Domain.Dto.Request.AuthResetRequestDto;
 import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
-import com.kwcapstone.Domain.Dto.Response.GoogleTokenResponseDto;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
@@ -17,25 +15,29 @@ import com.kwcapstone.Domain.Entity.MemberRole;
 import com.kwcapstone.Exception.BaseException;
 import com.kwcapstone.GoogleLogin.Auth.GoogleUser;
 import com.kwcapstone.GoogleLogin.Auth.SessionUser;
+import com.kwcapstone.Kakao.Service.KaKaoProvider;
+import com.kwcapstone.Naver.Service.NaverProvider;
 import com.kwcapstone.Repository.EmailVerificationRepository;
 import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Token.Domain.Token;
 import com.kwcapstone.Token.JwtTokenProvider;
 import com.kwcapstone.Token.Repository.TokenRepository;
-import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -46,13 +48,17 @@ import java.util.regex.Pattern;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final EmailVerificationRepository emailVerificationRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final TokenRepository tokenRepository;
 
     private final EmailService emailService;
     private final GoogleOAuthService googleOAuthService;
+
     private final HttpSession httpSession;
-    private final Filter springSecurityFilterChain;
+    private final MongoTemplate mongoTemplate;
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final NaverProvider naverProvider;
+    private final KaKaoProvider kaKaoProvider;
 
     // 회원가입
     @Transactional
@@ -167,26 +173,39 @@ public class MemberService {
     public BaseResponse<MemberLoginResponseDto> handleGoogleLogin
         (String authorizationCode, HttpServletResponse response) throws IOException {
         // jwt를 위한 코드를 받으러감
-        BaseResponse<String> tokenResponse = googleOAuthService.getAccessToken(authorizationCode);
+        //BaseResponse<String> tokenResponse = googleOAuthService.getAccessToken(authorizationCode);
+
+        String accessToken = googleOAuthService.getAccessToken(authorizationCode);
 
         // 실제 accessToken 값 꺼내기
-        if (tokenResponse.getStatus() != HttpStatus.OK.value()) {
+        /*if (tokenResponse.getStatus() != HttpStatus.OK.value()) {
             return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Google OAuth 오류 : " + tokenResponse.getMessage(), null);
+        }*/
+
+        if(accessToken == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Google OAuth 오류 : acesstoken null");
         }
 
-        String googleAccessToken = tokenResponse.getData();
-        BaseResponse<GoogleUser> userResponse = googleOAuthService.getUserInfo(googleAccessToken);
+       //String googleAccessToken = tokenResponse.getData();
+        //BaseResponse<GoogleUser> userResponse = googleOAuthService.getUserInfo(googleAccessToken);
+        GoogleUser googleUser = googleOAuthService.getUserInfo(accessToken);
 
-        if (userResponse.getStatus() != HttpStatus.OK.value()) {
+        /*if (userResponse.getStatus() != HttpStatus.OK.value()) {
             return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Google 사용자 정보 요청 오류: " + userResponse.getMessage(), null);
+        }*/
+
+        if(googleUser == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Google 사용자 정보 요청 오류: userResponse null");
         }
 
-        GoogleUser googleUser = userResponse.getData();
+        //Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
         Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
 
-        Map<String, String> tokens;
+        //Map<String, String> tokens;
         MemberLoginResponseDto tokenResponseDto;
 
         // 새로운 멤버인 경우 저장
@@ -201,36 +220,44 @@ public class MemberService {
                     .build();
             memberRepository.save(member);
 
-            httpSession.setAttribute("tempMember", member);
+            // jwt 사용할 것
+            tokenResponseDto = getMemberToken(member, accessToken);
+
+            httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+            httpSession.setAttribute("member", new SessionUser(member));
 
             response.sendRedirect("/auth/agree");
             return null;
         }
-        httpSession.setAttribute("member", new SessionUser(member));
+
         // jwt 사용할 것
-        tokenResponseDto = getMemberToken(member);
+        tokenResponseDto = getMemberToken(member, accessToken);
+
+        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+        httpSession.setAttribute("member", new SessionUser(member));
 
         return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN,tokenResponseDto);
     }
 
-    private MemberLoginResponseDto getMemberToken(Member member) {
+    private MemberLoginResponseDto getMemberToken(Member member, String socialAccessToken) {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId(), member.getRole().name());
 
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 
         if (present.isPresent()) {
-            present.get().changeToken(newAccessToken, newRefreshToken);
+            present.get().changeToken(newAccessToken, newRefreshToken, socialAccessToken);
         } else {
-            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId()));
+            tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
             memberRepository.save(member);
         }
-        return new MemberLoginResponseDto(member.getMemberId(), newAccessToken);
+        return new MemberLoginResponseDto(member.getMemberId(), newAccessToken, newRefreshToken);
     }
 
     // 약관 동의 (새로운 Google User)
     public BaseResponse<MemberLoginResponseDto> agreeNewMember() {
         Member tempMember = (Member) httpSession.getAttribute("tempMember");
+        MemberLoginResponseDto tokenResponseDto = (MemberLoginResponseDto) httpSession.getAttribute("tokenResponseDto");
 
         if (tempMember == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "임시 회원 정보가 없습니다.");
@@ -240,10 +267,12 @@ public class MemberService {
         tempMember.setAgreement(true);
         memberRepository.save(tempMember);
 
-        MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember);
+        //MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember);
 
         httpSession.setAttribute("tempMember", new SessionUser(tempMember));
         httpSession.removeAttribute("tempMember");
+        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+        httpSession.removeAttribute("tokenResponseDto");
 
         return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN,tokenResponseDto);
     }
@@ -258,7 +287,7 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
         }
 
-        return getMemberToken(member.get());
+        return getMemberToken(member.get(),null);
     }
 
     public BaseResponse userLogout(HttpServletRequest request) {
@@ -309,5 +338,67 @@ public class MemberService {
 
         // 로그아웃 완료 응답 반환
         return BaseResponse.res(SuccessStatus.USER_LOGOUT,null);
+    }
+
+    //탈퇴
+    //만들어둔 class 이용하기
+    @Transactional
+    public BaseResponse userWithdraw(ObjectId memberId) {
+        //회원 관련 정보 삭제
+        //1. Member의 이름 제외 다 삭제
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        if(!member.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 유저입니다.");
+        }
+
+        //OAuth 계정 연동 해체(api 요청 참고해야 함)
+        Unlink(member.get());
+
+        //2. Member의 이름 unknown으로 정보 변경
+        updateMember(memberId);
+
+        //accessToken, refreshToken 삭제하기
+        tokenRepository.deleteByMemberId(memberId);
+
+        return BaseResponse.res(SuccessStatus.USER_WITHDRAW, null);
+    }
+
+    //member 정보 update를 위함(회원탈퇴 때 사용)
+    @Transactional
+    public void updateMember(ObjectId memberId){
+        Query query = new Query(Criteria.where("_id").is(memberId));
+
+        Update update = new Update()
+                .set("name", "unknown")
+                .unset("email")
+                .unset("agreement")
+                .unset("image")
+                .unset("socialId")
+                .unset("role");
+
+        mongoTemplate.updateFirst(query, update, Member.class);
+    }
+
+    //연동 해체
+    private void Unlink(Member member) {
+        boolean isSuccess;
+
+        switch (member.getRole()){
+            case NAVER:
+                isSuccess = naverProvider.naverUnLink(member);
+                break;
+            case KAKAO:
+                isSuccess = kaKaoProvider.kakaoUnLink(member);
+                break;
+            case GOOGLE:
+                isSuccess = googleOAuthService.googleUnLink(member);
+                break;
+            default:
+                isSuccess = true;
+        }
+
+        if(!isSuccess){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "연동 해체를 실패하였습니다.");
+        }
     }
 }

@@ -2,8 +2,11 @@ package com.kwcapstone.Naver.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Naver.Dto.NaverProfile;
 import com.kwcapstone.Token.Domain.Dto.OAuthToken;
+import com.kwcapstone.Token.Domain.Token;
+import com.kwcapstone.Token.Repository.TokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,15 +14,22 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
 
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class NaverProvider {
+    private final TokenRepository tokenRepository;
     //필요한 필드값
     @Value("${NAVER_CLIENT_ID}")
     private String clientId;
@@ -73,13 +83,13 @@ public class NaverProvider {
         //응답데이터는 OAuthToken으로 변환
         ObjectMapper objectMapper = new ObjectMapper();
         OAuthToken oAuthToken = null;
-        System.out.println("response body " + response.getBody());
+
         try{
             oAuthToken = objectMapper.readValue(
                     response.getBody(),OAuthToken.class);
-            System.out.println("oAuthToken : " + oAuthToken);
         }catch (JsonProcessingException e){
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 응답을 JSON으로 변환하는 중 오류 발생");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "네이버 응답을 JSON으로 변환하는 중 오류 발생");
         }
 
         return oAuthToken;
@@ -127,9 +137,82 @@ public class NaverProvider {
             naverProfile = objectMapper.readValue(
                     response.getBody(),NaverProfile.class);
         }catch (JsonProcessingException e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "네이버 유저 정보 불러오는 것에 실패했습니다.(서버 오류)");
         }
         return naverProfile;
+    }
+
+    //네이버 연동 해체
+    public boolean naverUnLink(Member member) {
+        RestTemplate restTemplate = new RestTemplate();
+        Optional<Token> token = tokenRepository.findByMemberId(member.getMemberId());
+        if(!token.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "네이버 연동 해체 과정에서 토큰이 존재하지 않는 오류가 발생했습니다.");
+        }
+
+        String accessToken = token.get().getSocialAccessToken();
+
+        validateAccessToken(accessToken);
+
+//        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+//        params.add("client", clientId);
+//        params.add("client_secret", clientSecret);
+//        params.add("access_token",accessToken);
+//        params.add("grant_type", "authorization_code");
+        URI uri = UriComponentsBuilder
+                .fromUriString("https://nid.naver.com/oauth2.0/token")
+                .queryParam("client", clientId)
+                .queryParam("client_secret", clientSecret)
+                .queryParam("access_token", accessToken)
+                .queryParam("grant_type", "authorization_code")
+                .build()
+                .toUri();
+
+        try{
+            ResponseEntity<String> response;
+            response = restTemplate.exchange(uri,
+                    HttpMethod.GET, null, String.class);
+
+            if(response == null){
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 연동 해체 응답을 받지 못했습니다.");
+            }
+            else{
+                return true;
+            }
+        }catch (RestClientException e){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 서버가 응답하지 않습니다.");
+        } catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 연동 해체 중 예기치 못한 오류가 발생했습니다.");
+        }
+    }
+
+    //isValidAccessToken
+    public boolean validateAccessToken(String accessToken) {
+        String uri = "https://openapi.naver.com/v1/nid/me";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        try{
+            ResponseEntity<String> response =
+                    new RestTemplate().exchange(uri, HttpMethod.GET, request, String.class);
+
+
+            if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "네이버 socialAccessToken 이 유효하지 않습니다.");
+            }
+
+            return response.getStatusCode().is2xxSuccessful();
+        }catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "AccessToken 이 만료되었습니다.");
+            }
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 AccessToken 확인 중 오류가 발생했습니다.");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "네이버 서버 응답 오류");
+        }
     }
 }

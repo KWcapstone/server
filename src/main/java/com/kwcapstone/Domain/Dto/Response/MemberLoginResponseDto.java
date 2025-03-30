@@ -10,9 +10,11 @@ import org.bson.types.ObjectId;
 public class MemberLoginResponseDto {
     private String memberId;
     private String accessToken;
+    private String refreshToken;
 
-    public MemberLoginResponseDto(ObjectId memberId, String accessToken) {
+    public MemberLoginResponseDto(ObjectId memberId, String accessToken,String refreshToken) {
         this.memberId = memberId.toHexString();
         this.accessToken=accessToken;
+        this.refreshToken=refreshToken;
     }
 }

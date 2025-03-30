@@ -39,7 +39,7 @@ public class Project {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Script{
+    public static class Script {
         private String content;
         private long sizeInBytes;  // 스크립트 파일 크기 (바이트 단위)
     }
