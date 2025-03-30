@@ -103,9 +103,10 @@ public class MemberController {
     //비밀번호 변경
     @Operation(summary = "비밀번호 변경")
     @PatchMapping("/change_pw")
-    public BaseResponse changePw(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody ) {
+    public BaseResponse changePw(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody String changePw) {
         ObjectId memberId = principalDetails.getId();
-
+        memberService.changePassword(memberId, changePw);
+        return BaseResponse.res(SuccessStatus.USER_PW_PATCH, null);
     }
 
 }
