@@ -4,10 +4,7 @@ import com.kwcapstone.Common.Response.BaseErrorResponse;
 import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.PasswordGenerator;
 import com.kwcapstone.Common.Response.SuccessStatus;
-import com.kwcapstone.Domain.Dto.Request.AuthResetRequestDto;
-import com.kwcapstone.Domain.Dto.Request.EmailRequestDto;
-import com.kwcapstone.Domain.Dto.Request.MemberLoginRequestDto;
-import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
+import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
@@ -404,9 +401,12 @@ public class MemberService {
     }
 
     //비밀번호 변경
-    public void changePassword(ObjectId memberId, String changePw){
+    public void changePassword(ObjectId memberId, PasswordRequestDto passwordRequestDto){
         // 비밀번호 유효성 검사
-        if (changePw == null || changePw.trim().isEmpty()) {
+        if (passwordRequestDto.getOriginalPassword() == null
+                || passwordRequestDto.getOriginalPassword().trim().isEmpty()
+            ||passwordRequestDto.getChangePassword() == null
+            || passwordRequestDto.getChangePassword().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비밀번호는 비어 있을 수 없습니다.");
         }
 
@@ -416,18 +416,22 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
         }
 
+        if(passwordEncoder.matches(member.get().getPassword(), passwordRequestDto.getOriginalPassword())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "기존 비밀번호가 틀렸습니다.");
+        }
+
         //pw validate
-        if (!Pattern.matches(passwordPattern, changePw)) {
+        if (!Pattern.matches(passwordPattern, passwordRequestDto.getChangePassword())) {
             throw new BaseException(422, "비밀번호는 6자 이상 12자 이하이며, " +
                     "영문자, 숫자, 특수문자(@$!%*?&)를 각각 최소 1개 이상 포함해야 합니다.");
         }
 
         // 같은 비밀번호인지 확인
-        if (passwordEncoder.matches(changePw, member.get().getPassword())) {
+        if (passwordEncoder.matches(passwordRequestDto.getChangePassword(), member.get().getPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이전 비밀번호와 동일한 비밀번호로는 변경할 수 없습니다.");
         }
 
         //비밀번호 변경
-        member.get().changePw(changePw);
+        member.get().changePw(passwordRequestDto.getChangePassword());
     }
 }

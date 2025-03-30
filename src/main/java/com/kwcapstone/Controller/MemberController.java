@@ -104,10 +104,9 @@ public class MemberController {
     @Operation(summary = "비밀번호 변경")
     @PatchMapping("/change_pw")
     public BaseResponse changePw(@AuthenticationPrincipal PrincipalDetails principalDetails,
-                                 @RequestBody String originalPw,
-                                 @RequestBody String changePw) {
+                                 @RequestBody PasswordRequestDto passwordRequestDto) {
         ObjectId memberId = principalDetails.getId();
-        memberService.changePassword(memberId, originalPw, changePw);
+        memberService.changePassword(memberId, passwordRequestDto);
         return BaseResponse.res(SuccessStatus.USER_PW_PATCH, null);
     }
 
