@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
@@ -23,14 +22,14 @@ public class Project {
     private String projectImage;
     private Record record;
     private Script script;
-    private String summary;
+    private Summary summary;
     private LocalDateTime updatedAt;
     private ObjectId creator;
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Record{
+    public static class Record {
         private String fileUrl;
         private String fileName;
         private long length;
@@ -42,5 +41,13 @@ public class Project {
     public static class Script {
         private String content;
         private long sizeInBytes;  // 스크립트 파일 크기 (바이트 단위)
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Summary {
+        private String content;
+        private long sizeInBytes;
     }
 }

@@ -33,4 +33,12 @@ public class MainController {
                                        @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
         return BaseResponse.res(SuccessStatus.MAIN_RECORDING, mainService.showRecording(memberId, sort, filterType));
     }
+
+    // 탭별로 프로젝트 검색
+    @GetMapping("/search/{memberId}")
+    public BaseResponse projectSearch (@PathVariable("memberId") String memberId,
+                                       @RequestParam(value = "tap", defaultValue = "entire") String tap,
+                                       @RequestParam(value = "keyword") String keyword) {
+        return BaseResponse.res(SuccessStatus.MAIN_SEARCH, mainService.searchProject(memberId, tap, keyword));
+    }
 }
