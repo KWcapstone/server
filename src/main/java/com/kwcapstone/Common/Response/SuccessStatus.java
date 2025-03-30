@@ -1,4 +1,4 @@
-package com.kwcapstone.Common.code;
+package com.kwcapstone.Common.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
