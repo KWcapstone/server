@@ -222,6 +222,42 @@ public class MainService {
         }
     }
 
+    // [요약본] 메인화면
+    public List<ShowSummaryResponseDto> showSummary(String memberId, String sort, String filterType) {
+        List<Project> projects = getProjects(memberId, filterType);
+
+        if (projects.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 요약본 데이터를 찾을 수 없습니다.");
+        }
+
+        try {
+            Stream<ShowSummaryResponseDto> summaryStream = projects.stream()
+                    .map(project -> {
+                        String creatorName = memberRepository.findByMemberId(project.getCreator())
+                                .map(Member::getName)
+                                .orElse("Unknown");
+                        return new ShowSummaryResponseDto(
+                                project.getProjectId(),
+                                project.getProjectName(),
+                                project.getUpdatedAt(),
+                                creatorName,
+                                project.getSummary().getSizeInBytes()
+                        );
+                    });
+            if ("created".equalsIgnoreCase(sort)) {
+                summaryStream = summaryStream.sorted(Comparator.comparing(ShowSummaryResponseDto::getUpdatedAt));
+            } else {
+                summaryStream = summaryStream.sorted(Comparator.comparing
+                        (ShowSummaryResponseDto::getUpdatedAt).reversed());
+            }
+
+            return summaryStream.collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "요약본 데이터를 불러오는 중 서버에서 예상치 못한 오류가 발생했습니다.");
+        }
+    }
+
     // 탭별로 검색
     public List<SearchResponseWrapperDto> searchProject(String memberId, String tap, String keyword) {
         // 1. 멤버의 아이디를 통해 이게 존재하는 아이디인지 검색

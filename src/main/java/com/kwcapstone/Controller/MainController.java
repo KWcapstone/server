@@ -42,6 +42,14 @@ public class MainController {
         return BaseResponse.res(SuccessStatus.MAIN_RECORDING, mainService.showRecording(memberId, sort, filterType));
     }
 
+    // [요약본] 메인화면
+    @GetMapping("/summary/{memberId}")
+    public BaseResponse summaryShow (@PathVariable("memberId") String memberId,
+                                     @RequestParam(value = "sort", defaultValue = "latest") String sort,
+                                     @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
+        return BaseResponse.res(SuccessStatus.MAIN_SUMMARY, mainService.showSummary(memberId, sort, filterType));
+    }
+
     // 탭별로 프로젝트 검색
     @GetMapping("/search/{memberId}")
     public BaseResponse projectSearch (@PathVariable("memberId") String memberId,
