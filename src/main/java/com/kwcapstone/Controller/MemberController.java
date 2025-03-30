@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -105,6 +106,10 @@ public class MemberController {
     @PatchMapping("/change_pw")
     public BaseResponse changePw(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                  @RequestBody PasswordRequestDto passwordRequestDto) {
+        if (principalDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+
         ObjectId memberId = principalDetails.getId();
         memberService.changePassword(memberId, passwordRequestDto);
         return BaseResponse.res(SuccessStatus.USER_PW_PATCH, null);
