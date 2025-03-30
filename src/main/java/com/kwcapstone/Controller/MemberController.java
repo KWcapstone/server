@@ -104,7 +104,7 @@ public class MemberController {
     //비밀번호 변경
     @Operation(summary = "비밀번호 변경")
     @PatchMapping("/change_pw")
-    public BaseResponse changePw(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+    public BaseResponse changePw(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody ) {
 
     }
 
