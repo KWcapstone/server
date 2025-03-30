@@ -400,4 +400,17 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "연동 해체를 실패하였습니다.");
         }
     }
+
+    //비밀번호 변경
+    public void changePassword(ObjectId memberId, String changePw){
+        //memberId로 찾기
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        if(!member.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
+        }
+
+        //비밀번호 변경
+        member.get().
+
+    }
 }
