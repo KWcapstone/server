@@ -339,4 +339,22 @@ public class MainService {
 
         return result;
     }
+
+    //프로필 보이기
+    public ProfileResponseDto showProfile(ObjectId memberId){
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+
+        if(!member.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
+        }
+
+        String strmemberId = memberId.toString();
+        ProfileResponseDto profileResponseDto = new ProfileResponseDto(
+                strmemberId,
+                member.get().getName(),
+                member.get().getEmail(),
+                member.get().getImage());
+
+        return profileResponseDto;
+    }
 }
