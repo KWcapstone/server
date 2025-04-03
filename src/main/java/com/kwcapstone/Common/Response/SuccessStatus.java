@@ -57,6 +57,9 @@ public enum SuccessStatus implements BaseCode{
 
     //프로필 조회
     SHOW_PROFILE(HttpStatus.OK, "프로필를 조회했습니다."),
+
+    //api test
+    API_TEST(HttpStatus.OK, "API TEST에 성공하였습니다."),
     ;
 
     private final HttpStatus httpStatus;

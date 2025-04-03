@@ -71,4 +71,12 @@ public class MainController {
 
         return BaseResponse.res(SuccessStatus.SHOW_PROFILE, mainService.showProfile(memberId));
     }
+
+    //그냥 return 하기
+    @Operation(summary = "테스트")
+    @GetMapping("/apiTest")
+    public String retrunString(){
+        return "테스트 성공";
+    }
+
 }
