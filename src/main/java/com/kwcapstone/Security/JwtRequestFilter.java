@@ -125,6 +125,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 || path.equals("/auth/find_pw")
                 || path.equals("/auth/refresh")
                 || path.equals("/main/{memberId}")
+                || path.equals("/main/apiTest")
                 || path.startsWith("/test")
 
                 // 필요하다면 다른 permitAll 경로들도 추가
