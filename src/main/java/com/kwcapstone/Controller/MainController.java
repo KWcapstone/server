@@ -4,7 +4,9 @@ import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.MainService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -60,4 +62,22 @@ public class MainController {
                                        @RequestParam(value = "keyword") String keyword) {
         return BaseResponse.res(SuccessStatus.MAIN_SEARCH, mainService.searchProject(memberId, tap, keyword));
     }
+
+
+    //프로필 띄우기
+    @Operation(summary = "프로필 띄우기")
+    @GetMapping("/profile")
+    public BaseResponse showProfile(@AuthenticationPrincipal PrincipalDetails principalDetails){
+        ObjectId memberId = principalDetails.getId();
+
+        return BaseResponse.res(SuccessStatus.SHOW_PROFILE, mainService.showProfile(memberId));
+    }
+
+    //그냥 return 하기
+    @Operation(summary = "테스트")
+    @GetMapping("/apiTest")
+    public String retrunString(){
+        return "테스트 성공";
+    }
+
 }

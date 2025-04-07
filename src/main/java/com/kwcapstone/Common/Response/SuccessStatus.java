@@ -53,7 +53,13 @@ public enum SuccessStatus implements BaseCode{
     MAIN_SUMMARY(HttpStatus.OK, "모든 요약본 리스트를 불러왔습니다."),
 
     // 탭별로 검색
-    MAIN_SEARCH(HttpStatus.OK, "프로젝트 조회 결과입니다.")
+    MAIN_SEARCH(HttpStatus.OK, "프로젝트 조회 결과입니다."),
+
+    //프로필 조회
+    SHOW_PROFILE(HttpStatus.OK, "프로필를 조회했습니다."),
+
+    //api test
+    API_TEST(HttpStatus.OK, "API TEST에 성공하였습니다."),
     ;
 
     private final HttpStatus httpStatus;
