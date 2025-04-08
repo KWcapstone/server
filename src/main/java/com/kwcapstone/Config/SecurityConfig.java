@@ -19,7 +19,8 @@ public class SecurityConfig {
     private String[] possibleAccess = {
             "/api/error", "/api", "/error", "/auth/**", "/api/**",
     "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs",
-    "/oauth2/**", "/terms.html", "/auth/agree", "/auth/logout", "/main/**"};
+    "/oauth2/**", "/terms.html", "/auth/agree", "/auth/logout", "/main/**",
+    "/conference/**"};
 
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }

@@ -1,9 +1,6 @@
 package com.kwcapstone.Domain.Entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -12,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Document(collection = "project")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

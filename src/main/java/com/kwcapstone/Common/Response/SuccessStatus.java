@@ -60,6 +60,9 @@ public enum SuccessStatus implements BaseCode{
 
     //api test
     API_TEST(HttpStatus.OK, "API TEST에 성공하였습니다."),
+
+    // 새로운 프로젝트 생성
+    NEW_PROJECT(HttpStatus.OK, "새로운 프로젝트 생성에 성공하였습니다.")
     ;
 
     private final HttpStatus httpStatus;
