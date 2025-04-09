@@ -80,7 +80,7 @@ public class MainController {
     @PatchMapping("/profile")
     public BaseResponse editProfile(@AuthenticationPrincipal PrincipalDetails principalDetails){
         ObjectId memberId = principalDetails.getId();
-        return BaseResponse.res(SuccessStatus.)
+        return BaseResponse.res(SuccessStatus.EDIT_PROFILE, )
     }
 
     //그냥 return 하기
