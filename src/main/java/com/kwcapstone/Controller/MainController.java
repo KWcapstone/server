@@ -67,13 +67,20 @@ public class MainController {
     }
 
 
-    //프로필 띄우기
-    @Operation(summary = "프로필 띄우기")
+    //프로필 모달
+    @Operation(summary = "프로필 모달 띄우기")
     @GetMapping("/profile")
     public BaseResponse showProfile(@AuthenticationPrincipal PrincipalDetails principalDetails){
         ObjectId memberId = principalDetails.getId();
 
         return BaseResponse.res(SuccessStatus.SHOW_PROFILE, mainService.showProfile(memberId));
+    }
+
+    @Operation(summary = "프로필 수정하기")
+    @PatchMapping("/profile")
+    public BaseResponse editProfile(@AuthenticationPrincipal PrincipalDetails principalDetails){
+        ObjectId memberId = principalDetails.getId();
+        return BaseResponse.res(SuccessStatus.)
     }
 
     //그냥 return 하기
