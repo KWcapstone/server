@@ -2,6 +2,7 @@ package com.kwcapstone.Controller;
 
 import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.Response.SuccessStatus;
+import com.kwcapstone.Domain.Dto.Request.ProfileEditRequestDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.MainService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,7 +79,8 @@ public class MainController {
 
     @Operation(summary = "프로필 수정하기")
     @PatchMapping("/profile")
-    public BaseResponse editProfile(@AuthenticationPrincipal PrincipalDetails principalDetails){
+    public BaseResponse editProfile(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                    ProfileEditRequestDto profileEditRequestDto){
         ObjectId memberId = principalDetails.getId();
         return BaseResponse.res(SuccessStatus.EDIT_PROFILE, )
     }

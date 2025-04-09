@@ -1,5 +1,6 @@
 package com.kwcapstone.Service;
 
+import com.kwcapstone.Domain.Dto.Request.ProfileEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberToProject;
@@ -12,6 +13,7 @@ import com.kwcapstone.Repository.ProjectRepository;
 import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -371,5 +373,20 @@ public class MainService {
     }
 
     //프로필 수정하기
+    public ProfileResponseDto editProfile(ObjectId memberId, ProfileEditRequestDto profileEditRequestDto){
+        if(memberId == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "memberId가 null 입니다.");
+        }
 
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        if(!member.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
+        }
+
+        if(profileEditRequestDto.getImageUrl() == null){
+            member
+        }
+
+
+    }
 }

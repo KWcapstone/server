@@ -74,6 +74,15 @@ public class Member {
         this.password = password;
     }
 
+    public void updateProfie(String name, String iamgeUrl){
+        if(name != null){
+            this.name = name;
+        }
+        if(image != null){
+            this.image = iamgeUrl;
+        }
+    }
+
     public String getRoleKey() {
         return this.role.getKey();
     }
