@@ -111,8 +111,8 @@ public class MemberController {
         }
 
         ObjectId memberId = principalDetails.getId();
-        memberService.changePassword(memberId, passwordRequestDto);
-        return BaseResponse.res(SuccessStatus.USER_PW_PATCH, null);
+        memberService.changePassword(memberId, passwordRequestDto)
+        return BaseResponse.res(SuccessStatus.USER_PW_PATCH,null);
     }
 
 }
