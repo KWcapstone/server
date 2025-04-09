@@ -417,7 +417,7 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
         }
 
-        if(passwordEncoder.matches(member.get().getPassword(), passwordRequestDto.getOriginalPassword())){
+        if(passwordEncoder.matches(passwordRequestDto.getOriginalPassword(), member.get().getPassword())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "기존 비밀번호가 틀렸습니다.");
         }
 
@@ -428,11 +428,12 @@ public class MemberService {
         }
 
         // 같은 비밀번호인지 확인
-        if (passwordEncoder.matches(passwordRequestDto.getChangePassword(), member.get().getPassword())) {
+        if (passwordEncoder.matches(member.get().getPassword(), passwordRequestDto.getChangePassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이전 비밀번호와 동일한 비밀번호로는 변경할 수 없습니다.");
         }
 
         //비밀번호 변경
+        //비밀번호 암호화 후 저장을 해야한다고 합니다.
         member.get().changePw(passwordRequestDto.getChangePassword());
         memberRepository.save(member.get());
     }
