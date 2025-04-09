@@ -383,10 +383,16 @@ public class MainService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
         }
 
-        member.get().editProfie(profileEditRequestDto.getName(), profileEditRequestDto.getImageUrl());
+        member.get().editProfie(profileEditRequestDto);
 
-        member.sa
+        memberRepository.save(member.get());
 
-
+        String strmemberId = memberId.toString();
+        return new ProfileResponseDto(
+                strmemberId,
+                member.get().getName(),
+                member.get().getEmail(),
+                member.get().getImage()
+        );
     }
 }
