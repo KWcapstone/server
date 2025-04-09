@@ -5,6 +5,7 @@ import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.ProfileEditRequestDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.MainService;
+import com.kwcapstone.Service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/main")
 public class MainController {
     private final MainService mainService;
+    private final MemberService memberService;
 
     // 알림창 전체 조회
     @GetMapping("/notice")
@@ -82,7 +84,7 @@ public class MainController {
     public BaseResponse editProfile(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                     ProfileEditRequestDto profileEditRequestDto){
         ObjectId memberId = principalDetails.getId();
-        return BaseResponse.res(SuccessStatus.EDIT_PROFILE, )
+        return BaseResponse.res(SuccessStatus.EDIT_PROFILE, mainService.editProfile(memberId, profileEditRequestDto));
     }
 
     //그냥 return 하기
