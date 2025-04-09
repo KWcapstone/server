@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.EnumNaming;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.kwcapstone.Domain.Dto.Request.MemberRequestDto;
+import com.kwcapstone.Domain.Dto.Request.ProfileEditRequestDto;
 import com.kwcapstone.Token.Domain.Token;
 import lombok.*;
 import org.bson.types.ObjectId;
@@ -74,12 +75,12 @@ public class Member {
         this.password = password;
     }
 
-    public void updateProfie(String name, String iamgeUrl){
-        if(name != null){
-            this.name = name;
+    public void editProfie(ProfileEditRequestDto profileEditRequestDto){
+        if(profileEditRequestDto.getName()!= null){
+            this.name = profileEditRequestDto.getName();
         }
-        if(image != null){
-            this.image = iamgeUrl;
+        if(profileEditRequestDto.getImageUrl() != null){
+            this.image = profileEditRequestDto.getImageUrl();
         }
     }
 

@@ -383,9 +383,9 @@ public class MainService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "존재하지 않는 회원입니다.");
         }
 
-        if(profileEditRequestDto.getImageUrl() == null){
-            member
-        }
+        member.get().editProfie(profileEditRequestDto.getName(), profileEditRequestDto.getImageUrl());
+
+        member.sa
 
 
     }
