@@ -18,49 +18,52 @@ public class MainController {
     private final MainService mainService;
 
     // 알림창 전체 조회
-    @GetMapping("/notice/{memberId}")
-    public BaseResponse noticeShow (@PathVariable("memberId") String memberId,
+    @GetMapping("/notice")
+    public BaseResponse noticeShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                     @RequestParam(value = "type", defaultValue = "all") String type) {
-        return BaseResponse.res(SuccessStatus.NOTICE_CONFIRM, mainService.showNotice(memberId, type));
+        return BaseResponse.res(SuccessStatus.NOTICE_CONFIRM, mainService.showNotice(principalDetails, type));
     }
 
     // 알림창 세부 조회
-    @GetMapping("/notice/{memberId}/{noticeId}")
-    public BaseResponse detailNoticeShow (@PathVariable("memberId") String memberId,
+    @GetMapping("/notice/{noticeId}")
+    public BaseResponse detailNoticeShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                           @PathVariable("noticeId") String noticeId) {
-        return BaseResponse.res(SuccessStatus.NOTICE_DETAIL_CONFIRM, mainService.showDetailNotice(memberId, noticeId));
+        return BaseResponse.res(SuccessStatus.NOTICE_DETAIL_CONFIRM,
+                mainService.showDetailNotice(principalDetails, noticeId));
     }
 
     // [모든 회의] 메인화면
-    @GetMapping("/{memberId}")
-    public BaseResponse mainShow (@PathVariable("memberId") String memberId,
+    @GetMapping
+    public BaseResponse mainShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                   @RequestParam(value = "sort", defaultValue = "latest") String sort,
                                   @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
-        return BaseResponse.res(SuccessStatus.MAIN_SHOW , mainService.showMain(memberId, sort, filterType));
+        return BaseResponse.res(SuccessStatus.MAIN_SHOW , mainService.showMain(principalDetails, sort, filterType));
     }
 
     // [녹음파일 + 녹음본] 메인화면
-    @GetMapping("/recordings/{memberId}")
-    public BaseResponse recordingShow (@PathVariable("memberId") String memberId,
+    @GetMapping("/recordings")
+    public BaseResponse recordingShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                        @RequestParam(value = "sort", defaultValue = "latest") String sort,
                                        @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
-        return BaseResponse.res(SuccessStatus.MAIN_RECORDING, mainService.showRecording(memberId, sort, filterType));
+        return BaseResponse.res(SuccessStatus.MAIN_RECORDING,
+                mainService.showRecording(principalDetails, sort, filterType));
     }
 
     // [요약본] 메인화면
-    @GetMapping("/summary/{memberId}")
-    public BaseResponse summaryShow (@PathVariable("memberId") String memberId,
+    @GetMapping("/summary")
+    public BaseResponse summaryShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                      @RequestParam(value = "sort", defaultValue = "latest") String sort,
                                      @RequestParam(value = "filterType", defaultValue = "all") String filterType) {
-        return BaseResponse.res(SuccessStatus.MAIN_SUMMARY, mainService.showSummary(memberId, sort, filterType));
+        return BaseResponse.res(SuccessStatus.MAIN_SUMMARY,
+                mainService.showSummary(principalDetails, sort, filterType));
     }
 
     // 탭별로 프로젝트 검색
-    @GetMapping("/search/{memberId}")
-    public BaseResponse projectSearch (@PathVariable("memberId") String memberId,
+    @GetMapping("/search")
+    public BaseResponse projectSearch (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                        @RequestParam(value = "tap", defaultValue = "entire") String tap,
                                        @RequestParam(value = "keyword") String keyword) {
-        return BaseResponse.res(SuccessStatus.MAIN_SEARCH, mainService.searchProject(memberId, tap, keyword));
+        return BaseResponse.res(SuccessStatus.MAIN_SEARCH, mainService.searchProject(principalDetails, tap, keyword));
     }
 
 

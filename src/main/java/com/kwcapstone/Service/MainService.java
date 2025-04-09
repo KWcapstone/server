@@ -9,6 +9,7 @@ import com.kwcapstone.Repository.MemberRepository;
 import com.kwcapstone.Repository.MemberToProjectRepository;
 import com.kwcapstone.Repository.NoticeRepository;
 import com.kwcapstone.Repository.ProjectRepository;
+import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
@@ -30,11 +31,12 @@ public class MainService {
     private final MemberToProjectRepository memberToProjectRepository;
 
     // 알림창 전체 조회
-    public List<NoticeReadResponseDto> showNotice(String memberId, String type) {
+    public List<NoticeReadResponseDto> showNotice(PrincipalDetails principalDetails, String type) {
         ObjectId objectId;
+        ObjectId memberId = principalDetails.getId();
 
         try {
-            objectId = new ObjectId(memberId);
+            objectId = new ObjectId(String.valueOf(memberId));
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식입니다.");
         }
@@ -70,12 +72,13 @@ public class MainService {
     }
 
     // 알림창 세부 조회
-    public NoticeDetailReadResponseDto showDetailNotice(String memberId, String noticeId) {
+    public NoticeDetailReadResponseDto showDetailNotice(PrincipalDetails principalDetails, String noticeId) {
         ObjectId memberObjectId;
         ObjectId noticeObjectId;
+        ObjectId memberId = principalDetails.getId();
 
         try {
-            memberObjectId = new ObjectId(memberId);
+            memberObjectId = new ObjectId(String.valueOf(memberId));
             noticeObjectId = new ObjectId(noticeId);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식입니다.");
@@ -148,8 +151,9 @@ public class MainService {
     }
 
     // [모든 회의] 메인화면
-    public List<ShowMainResponseDto> showMain(String memberId, String sort, String filterType) {
-        List<Project> projects = getProjects(memberId, filterType);
+    public List<ShowMainResponseDto> showMain(PrincipalDetails principalDetails, String sort, String filterType) {
+        ObjectId memberId = principalDetails.getId();
+        List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
@@ -184,8 +188,10 @@ public class MainService {
     }
 
     // [녹음파일 + 녹음본] 메인화면
-    public List<ShowRecordResponseDto> showRecording(String memberId, String sort, String filterType) {
-        List<Project> projects = getProjects(memberId, filterType);
+    public List<ShowRecordResponseDto> showRecording(PrincipalDetails principalDetails,
+                                                     String sort, String filterType) {
+        ObjectId memberId = principalDetails.getId();
+        List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 녹음 데이터를 찾을 수 없습니다.");
@@ -223,8 +229,10 @@ public class MainService {
     }
 
     // [요약본] 메인화면
-    public List<ShowSummaryResponseDto> showSummary(String memberId, String sort, String filterType) {
-        List<Project> projects = getProjects(memberId, filterType);
+    public List<ShowSummaryResponseDto> showSummary(PrincipalDetails principalDetails,
+                                                    String sort, String filterType) {
+        ObjectId memberId = principalDetails.getId();
+        List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 요약본 데이터를 찾을 수 없습니다.");
@@ -259,11 +267,12 @@ public class MainService {
     }
 
     // 탭별로 검색
-    public List<SearchResponseWrapperDto> searchProject(String memberId, String tap, String keyword) {
+    public List<SearchResponseWrapperDto> searchProject(PrincipalDetails principalDetails, String tap, String keyword) {
         // 1. 멤버의 아이디를 통해 이게 존재하는 아이디인지 검색
         ObjectId memberObjectId;
+        ObjectId memberId = principalDetails.getId();
         try {
-            memberObjectId = new ObjectId(memberId);
+            memberObjectId = new ObjectId(String.valueOf(memberId));
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
         }
