@@ -177,24 +177,12 @@ public class MemberService {
         String accessToken = googleOAuthService.getAccessToken(authorizationCode);
 
         // 실제 accessToken 값 꺼내기
-        /*if (tokenResponse.getStatus() != HttpStatus.OK.value()) {
-            return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Google OAuth 오류 : " + tokenResponse.getMessage(), null);
-        }*/
-
         if(accessToken == null){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Google OAuth 오류 : acesstoken null");
         }
 
-       //String googleAccessToken = tokenResponse.getData();
-        //BaseResponse<GoogleUser> userResponse = googleOAuthService.getUserInfo(googleAccessToken);
         GoogleUser googleUser = googleOAuthService.getUserInfo(accessToken);
-
-        /*if (userResponse.getStatus() != HttpStatus.OK.value()) {
-            return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Google 사용자 정보 요청 오류: " + userResponse.getMessage(), null);
-        }*/
 
         if(googleUser == null){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -204,7 +192,6 @@ public class MemberService {
         //Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
         Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
 
-        //Map<String, String> tokens;
         MemberLoginResponseDto tokenResponseDto;
 
         // 새로운 멤버인 경우 저장

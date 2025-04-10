@@ -34,7 +34,7 @@ public class PrincipalDetails implements UserDetails {
 
     //사용자 이름 반환
     @Override
-    public  String getUsername() {
+    public String getUsername() {
         return member.getName();
     }
 

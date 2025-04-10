@@ -62,7 +62,13 @@ public enum SuccessStatus implements BaseCode{
     API_TEST(HttpStatus.OK, "API TEST에 성공하였습니다."),
 
     // 새로운 프로젝트 생성
-    NEW_PROJECT(HttpStatus.OK, "새로운 프로젝트 생성에 성공하였습니다.")
+    NEW_PROJECT(HttpStatus.OK, "새로운 프로젝트 생성에 성공하였습니다."),
+
+    // 이메일로 사용자를 프로젝트에 추가
+    INVITE_EMAIL(HttpStatus.OK, "이메일로 사용자를 초대했습니다."),
+
+    // 사용자가 프로젝트 초대 수락
+    ACCEPT_INVITE(HttpStatus.OK, "프로젝트에 성공적으로 초대되었습니다.")
     ;
 
     private final HttpStatus httpStatus;

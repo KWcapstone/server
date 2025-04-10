@@ -17,6 +17,7 @@ import java.util.List;
 @Builder  // 어.. 필요한가...?
 @Document(collection = "member")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Member {
