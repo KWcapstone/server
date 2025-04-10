@@ -17,4 +17,6 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
     List<Project> findByProjectIdInOrderByUpdatedAtDesc(List<ObjectId> projectIds);
 
     boolean existsByProjectName(String projectName);
+
+    Project findByProjectId(ObjectId projectId);
 }

@@ -66,6 +66,12 @@ public enum SuccessStatus implements BaseCode{
 
     //프로필 수정
     EDIT_PROFILE(HttpStatus.OK, "프로필이 수정되었습니다."),
+
+    // 이메일로 사용자를 프로젝트에 추가
+    INVITE_EMAIL(HttpStatus.OK, "이메일로 사용자를 초대했습니다."),
+
+    // 사용자가 프로젝트 초대 수락
+    ACCEPT_INVITE(HttpStatus.OK, "프로젝트에 성공적으로 초대되었습니다.")
     ;
 
     private final HttpStatus httpStatus;
