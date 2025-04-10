@@ -64,6 +64,9 @@ public enum SuccessStatus implements BaseCode{
     // 새로운 프로젝트 생성
     NEW_PROJECT(HttpStatus.OK, "새로운 프로젝트 생성에 성공하였습니다."),
 
+    //프로필 수정
+    EDIT_PROFILE(HttpStatus.OK, "프로필이 수정되었습니다."),
+
     // 이메일로 사용자를 프로젝트에 추가
     INVITE_EMAIL(HttpStatus.OK, "이메일로 사용자를 초대했습니다."),
 
