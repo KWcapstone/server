@@ -18,5 +18,5 @@ public interface MemberToProjectRepository extends MongoRepository<MemberToProje
     List<MemberToProject> findByProjectId(ObjectId projectId);
 
     //참여중인가요?
-    Boolean existsByProjectIdAndMemberId(ObjectId projectId);
+    Boolean existsByProjectIdAndMemberId(ObjectId projectId, ObjectId memberId);
 }

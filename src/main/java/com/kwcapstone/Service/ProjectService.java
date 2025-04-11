@@ -248,7 +248,13 @@ public class ProjectService {
     }
 
     //프로젝트 공유링크로 들어왓을 때 사용자 추가
-    public InviteUsersByLinkResponseDto addByLink(String projectId, String code){
+    public InviteUsersByLinkResponseDto addByLink(PrincipalDetails principalDetails,
+                                                  String projectId, String code){
+        ObjectId memberId = principalDetails.getId();
+        if(memberId == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "토큰에서 넘겨진 memberId 가 null 입니다.");
+        }
+
         ObjectId objProjectId = new ObjectId(projectId);
         Project project = projectRepository.findByProjectId(objProjectId);
 
@@ -264,6 +270,34 @@ public class ProjectService {
         }
 
         //이미 참여중인가?
-        boolean alreadyJoined = memberToProjectRepository.
+        boolean alreadyJoined = memberToProjectRepository.existsByProjectIdAndMemberId(objProjectId, memberId);
+
+        if(alreadyJoined){
+            return null;
+        }
+
+        //참여자 등록
+        MemberToProject mapping = MemberToProject.builder()
+                .projectId(objProjectId)
+                .memberId(memberId)
+                .build();
+
+        memberToProjectRepository.save(mapping);
+
+        //사용자 객체에도 rpojectid
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+
+        if(!member.isPresent()){
+           throw new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 MemberId 입니다.");
+        }
+
+        if(member.get().getProjectIds() == null){
+            member.get().setProjectIds(new ArrayList<>());
+        }
+
+        member.get().getProjectIds().add(objProjectId);
+        memberRepository.save(member.get());
+
+        return new InviteUsersByLinkResponseDto(objProjectId);
     }
 }
