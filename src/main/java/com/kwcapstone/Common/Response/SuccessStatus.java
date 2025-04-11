@@ -71,7 +71,10 @@ public enum SuccessStatus implements BaseCode{
     INVITE_EMAIL(HttpStatus.OK, "이메일로 사용자를 초대했습니다."),
 
     // 사용자가 프로젝트 초대 수락
-    ACCEPT_INVITE(HttpStatus.OK, "프로젝트에 성공적으로 초대되었습니다.")
+    ACCEPT_INVITE(HttpStatus.OK, "프로젝트에 성공적으로 초대되었습니다."),
+
+    // 프로젝트 삭제
+    DELETE_PROJECT(HttpStatus.OK, "프로젝트가 삭제되었습니다.");
     ;
 
     private final HttpStatus httpStatus;

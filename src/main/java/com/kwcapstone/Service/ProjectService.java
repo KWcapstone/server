@@ -125,7 +125,7 @@ public class ProjectService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 초대 코드입니다."));
 
         if (!invite.getProjectId().toString().equals(projectId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "초대 코드가 잘못된 프로젝트에 속합니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "초대 코드가 잘못되었습니다.");
         }
 
         return invite;
