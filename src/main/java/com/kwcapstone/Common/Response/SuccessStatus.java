@@ -78,6 +78,9 @@ public enum SuccessStatus implements BaseCode{
 
     //프로젝트 이름 수정
     EDIT_PROJECT_NAME(HttpStatus.OK, "프로젝트 이름이 수정되었습니다."),
+
+    //프로젝트 공유 모달 띄우기
+    SHOW_PROJECTSHARE(HttpStatus.OK,"프로젝트 공유 모달을 띄웠습니다."),
     ;
 
     private final HttpStatus httpStatus;
