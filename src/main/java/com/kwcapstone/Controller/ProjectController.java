@@ -5,6 +5,7 @@ import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ProjectService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -38,5 +39,13 @@ public class ProjectController {
     public BaseResponse projectDelete(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                       @PathVariable String projectId) {
         return BaseResponse.res(SuccessStatus.DELETE_PROJECT, null);
+    }
+
+    //프로젝트 이름 수정
+    @Operation(summary = "프로젝트 이름 수정")
+    @PatchMapping("/{projectId}/edit")
+    public BaseResponse projectNameEdit(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                        @PathVariable String projectId){
+
     }
 }
