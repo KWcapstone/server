@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface InviteRepository extends MongoRepository<Invite, ObjectId> {
     Optional<Invite> findByInviteCode(String code);
+    Optional<Invite> findByProjectId(String projectId);
 }

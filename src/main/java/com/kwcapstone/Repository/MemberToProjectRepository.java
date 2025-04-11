@@ -13,4 +13,7 @@ public interface MemberToProjectRepository extends MongoRepository<MemberToProje
     List<MemberToProject> findByMemberId(ObjectId memberId);
 
     void deleteByProjectId(ObjectId projectId);
+
+    //프로젝트 참여자 목록
+    List<MemberToProject> findByProjectId(ObjectId projectId);
 }
