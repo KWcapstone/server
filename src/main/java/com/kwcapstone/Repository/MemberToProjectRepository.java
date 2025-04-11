@@ -11,4 +11,6 @@ import java.util.List;
 public interface MemberToProjectRepository extends MongoRepository<MemberToProject, ObjectId> {
     // 특정 멤버가 초대된 프로젝트 ID 목록 조회(creator 제외)
     List<MemberToProject> findByMemberId(ObjectId memberId);
+
+    void deleteByProjectId(ObjectId projectId);
 }

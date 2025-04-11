@@ -1,6 +1,7 @@
 package com.kwcapstone.Service;
 
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
+import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.ProjectNameEditResponseDto;
 import com.kwcapstone.Domain.Entity.Invite;
@@ -21,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -132,6 +134,41 @@ public class ProjectService {
         }
 
         return invite;
+    }
+
+    // 프로젝트 삭제 기능
+    public void deleteProject(PrincipalDetails principalDetails, List<ProjectDeleteRequestDto> deleteRequestList) {
+        ObjectId memberId = principalDetails.getId();
+
+        for (ProjectDeleteRequestDto dto : deleteRequestList) {
+            ObjectId projectId = dto.getProjectId();
+            String type = dto.getType().toLowerCase();
+
+            Project project = projectRepository.findByProjectId(projectId);
+            if (project == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 프로젝트를 찾을 수 없습니다.");
+            }
+
+            if (!project.getCreator().equals(memberId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "프로젝트 삭제 권한이 없습니다.");
+            }
+
+            if (type.equals("project")) {
+                projectRepository.deleteById(projectId);
+                memberToProjectRepository.deleteByProjectId(projectId);
+            } else if (type.equals("record")) {
+                project.setRecord(null);
+                project.setScript(null);
+                project.setUpdatedAt(LocalDateTime.now());
+                projectRepository.save(project);
+            } else if (type.equals("summary")) {
+                project.setSummary(null);
+                project.setUpdatedAt(LocalDateTime.now());
+                projectRepository.save(project);
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 삭제 타입입니다.");
+            }
+        }
     }
 
     //프로젝트 이름 수정
