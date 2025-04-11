@@ -48,4 +48,8 @@ public class Project {
         private String content;
         private long sizeInBytes;
     }
+
+    public void editName(String newName){
+        this.projectName = newName;
+    }
 }
