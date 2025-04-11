@@ -230,13 +230,17 @@ public class ProjectService {
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없는 프로젝트 참여자입니다."));
 
                     //회의 생성자일때
-                    if((project.getCreator()) == (member.getMemberId())) {
+                    if((project.getCreator()).equals(conn.getMemberId())) {
                         return new MemberInfoDto(member.getName(), "회의 생성자");
                     }else{
                         return new MemberInfoDto(member.getName(), "참석자");
                     }
-                }).
-                collect(Collectors.toList());
+                }).sorted((a, b) -> {
+                    // "회의 생성자"가 먼저 오도록 정렬
+                    if (a.getRole().equals("회의 생성자")) return -1;
+                    if (b.getRole().equals("회의 생성자")) return 1;
+                    return 0;
+                }).collect(Collectors.toList());
 
         return new GetProjectShareModalResponseDto(inviteLink, sharedMembers);
     }
