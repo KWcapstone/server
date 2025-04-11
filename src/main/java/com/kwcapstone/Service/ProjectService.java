@@ -3,6 +3,7 @@ package com.kwcapstone.Service;
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.GetProjectShareModalResponseDto;
+import com.kwcapstone.Domain.Dto.Response.MemberInfoDto;
 import com.kwcapstone.Domain.Dto.Response.ProjectNameEditResponseDto;
 import com.kwcapstone.Domain.Entity.Invite;
 import com.kwcapstone.Domain.Entity.Member;
@@ -22,8 +23,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -159,17 +162,46 @@ public class ProjectService {
     }
 
     //프로젝트 공유 모달 띄우기
-    public GetProjectShareModalResponseDto getProjectShareModal(String projectId) {
-        //1. 공유 링크 있는지 확인
+    public GetProjectShareModalResponseDto getProjectShareModal(String projectId,
+                                                                PrincipalDetails principalDetails) {
+        ObjectId memberId = principalDetails.getId();
+        ObjectId ObjprojectId = new ObjectId(projectId);
 
-        //2. 유효 기간 적절한지 링크 보기
+        Project project = projectRepository.findByProjectId(ObjprojectId);
 
-        //3. 링크를 변수에 저장하기
+        if(project == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
+        }
+
+        // 1. 초대 코드 생성 (UUID 또는 토큰)
+        String inviteCode = UUID.randomUUID().toString();
+
+        // 2. 이메일 전송
+        String inviteLink = "https://moaba.vercel.app/main/projects/" + projectId + "accept?code=" + inviteCode;
+
+        saveInviteCode(inviteCode, projectId, null, memberId);
 
         //4. 참여자 목록 가져오기
+        List<MemberToProject> connections = memberToProjectRepository.findByProjectId(ObjprojectId);
 
-        //5. creator 은 role이 회의 생성자 이도로 하기
+        if(connections == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "프로젝트 참여자 목록에 null 값입니다.");
+        }
 
-        //6. 나머지는 참여자 뜨도록 하기
+        List<MemberInfoDto> sharedMembers = connections.stream()
+                .map(conn -> {
+                    Member member = memberRepository.findByMemberId(conn.getMemberId())
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없는 프로젝트 참여자입니다."));
+
+                    //회의 생성자일때
+                    if((project.getCreator()) == (member.getMemberId())) {
+                        return new MemberInfoDto(member.getName(), "회의 생성자");
+                    }else{
+                        return new MemberInfoDto(member.getName(), "참석자");
+                    }
+                }).
+                collect(Collectors.toList());
+
+        return new GetProjectShareModalResponseDto(inviteLink, sharedMembers);
     }
 }

@@ -51,4 +51,12 @@ public class ProjectController {
         return BaseResponse.res(SuccessStatus.EDIT_PROJECT_NAME,
                 projectService.editProjectName(projectId, projectNameEditRequestDto));
     }
+
+    //프로젝트 공유모달 띄우기
+    @Operation(summary = "프로젝트 공유모달 띄우기")
+    @GetMapping("/{projectId}")
+    public BaseResponse getProjectShareModel(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                             @PathVariable String projectId) {
+        return BaseResponse.res(SuccessStatus.SHOW_PROJECTSHARE, projectService.getProjectShareModal(projectId, principalDetails));
+    }
 }
