@@ -2,6 +2,7 @@ package com.kwcapstone.Service;
 
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
+import com.kwcapstone.Domain.Dto.Response.GetProjectShareModalResponseDto;
 import com.kwcapstone.Domain.Dto.Response.ProjectNameEditResponseDto;
 import com.kwcapstone.Domain.Entity.Invite;
 import com.kwcapstone.Domain.Entity.Member;
@@ -131,6 +132,10 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "초대 코드가 잘못되었습니다.");
         }
 
+        if(invite.getExpiredAt().isBefore(LocalDateTime.now())){
+            throw new ResponseStatusException(HttpStatus.GONE, "초대 코드가 만료되었습니다.");
+        }
+
         return invite;
     }
 
@@ -151,5 +156,20 @@ public class ProjectService {
         return new ProjectNameEditResponseDto(
                 ObjprojectId,
                 project.getProjectName());
+    }
+
+    //프로젝트 공유 모달 띄우기
+    public GetProjectShareModalResponseDto getProjectShareModal(String projectId) {
+        //1. 공유 링크 있는지 확인
+
+        //2. 유효 기간 적절한지 링크 보기
+
+        //3. 링크를 변수에 저장하기
+
+        //4. 참여자 목록 가져오기
+
+        //5. creator 은 role이 회의 생성자 이도로 하기
+
+        //6. 나머지는 참여자 뜨도록 하기
     }
 }
