@@ -4,6 +4,7 @@ import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.GetProjectShareModalResponseDto;
+import com.kwcapstone.Domain.Dto.Response.InviteUsersByLinkResponseDto;
 import com.kwcapstone.Domain.Dto.Response.MemberInfoDto;
 import com.kwcapstone.Domain.Dto.Response.ProjectNameEditResponseDto;
 import com.kwcapstone.Domain.Entity.Invite;
@@ -18,6 +19,7 @@ import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -243,5 +245,25 @@ public class ProjectService {
                 }).collect(Collectors.toList());
 
         return new GetProjectShareModalResponseDto(inviteLink, sharedMembers);
+    }
+
+    //프로젝트 공유링크로 들어왓을 때 사용자 추가
+    public InviteUsersByLinkResponseDto addByLink(String projectId, String code){
+        ObjectId objProjectId = new ObjectId(projectId);
+        Project project = projectRepository.findByProjectId(objProjectId);
+
+        if(project == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
+        }
+
+        Invite invite = validateInviteCode(code,projectId);
+
+        //공유링크 인지 확인
+        if(invite.getEmail() != null){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 초대 링크는 이메일 전용입니다.");
+        }
+
+        //이미 참여중인가?
+        boolean alreadyJoined = memberToProjectRepository.
     }
 }
