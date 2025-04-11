@@ -1,6 +1,7 @@
 package com.kwcapstone.Service;
 
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
+import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.ProjectNameEditResponseDto;
 import com.kwcapstone.Domain.Entity.Invite;
 import com.kwcapstone.Domain.Entity.Member;
@@ -134,7 +135,8 @@ public class ProjectService {
     }
 
     //프로젝트 이름 수정
-    public ProjectNameEditResponseDto editProjectName(String projectId){
+    public ProjectNameEditResponseDto editProjectName(String projectId,
+                                                      ProjectNameEditRequestDto projectNameEditRequestDto){
         ObjectId ObjprojectId = new ObjectId(projectId);
 
         Project project = projectRepository.findByProjectId(ObjprojectId);
@@ -143,6 +145,11 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
+        project.editName(projectNameEditRequestDto.getProjectName());
+        projectRepository.save(project);
 
+        return new ProjectNameEditResponseDto(
+                ObjprojectId,
+                project.getProjectName());
     }
 }
