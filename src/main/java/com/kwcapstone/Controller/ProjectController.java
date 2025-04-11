@@ -5,10 +5,12 @@ import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
+import com.kwcapstone.Domain.Dto.Response.InviteUsersByLinkResponseDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,5 +64,19 @@ public class ProjectController {
     public BaseResponse getProjectShareModel(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                              @PathVariable String projectId) {
         return BaseResponse.res(SuccessStatus.SHOW_PROJECTSHARE, projectService.getProjectShareModal(projectId, principalDetails));
+    }
+
+    //프로젝트 공유 링크로 사용자 추가
+    @Operation(summary = "프로젝트 공유 링크로 사용자 추가")
+    @PostMapping("/{projectId}/add_by_link")
+    public BaseResponse userAddByLink(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                      @PathVariable String projectId,
+                                      @RequestParam String code){
+        ObjectId objProjectId = new ObjectId(projectId);
+        if(projectService.addByLink(principalDetails, projectId, code) == null){
+            return BaseResponse.res(SuccessStatus.ALREADY_JOINED, new InviteUsersByLinkResponseDto(objProjectId));
+        }
+
+        return BaseResponse.res(SuccessStatus.INVITE_SHARE_LINK, projectService.addByLink(principalDetails, projectId, code));
     }
 }
