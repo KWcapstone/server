@@ -81,6 +81,9 @@ public enum SuccessStatus implements BaseCode{
 
     //프로젝트 공유 모달 띄우기
     SHOW_PROJECTSHARE(HttpStatus.OK,"프로젝트 공유 모달을 띄웠습니다."),
+
+    //프로젝트 공유링크로 공유하기
+    INVITE_SHARE_LINK(HttpStatus.OK, "초대 링크로 프로젝트에 초대가 완료되었습니다."),
     ;
 
     private final HttpStatus httpStatus;
