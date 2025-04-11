@@ -32,4 +32,11 @@ public class ProjectController {
         projectService.acceptInvite(principalDetails, projectId, code);
         return BaseResponse.res(SuccessStatus.ACCEPT_INVITE, null);
     }
+
+    // 프로젝트 삭제
+    @DeleteMapping("/{projectId}/delete")
+    public BaseResponse projectDelete(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                      @PathVariable String projectId) {
+        return BaseResponse.res(SuccessStatus.DELETE_PROJECT, null);
+    }
 }
