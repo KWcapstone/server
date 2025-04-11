@@ -63,4 +63,15 @@ public class ProjectController {
                                              @PathVariable String projectId) {
         return BaseResponse.res(SuccessStatus.SHOW_PROJECTSHARE, projectService.getProjectShareModal(projectId, principalDetails));
     }
+
+    //프로젝트 공유 링크로 사용자 추가
+    @Operation(summary = "프로젝트 공유 링크로 사용자 추가")
+    @PostMapping("/{projectId}/add_by_link")
+    public BaseResponse userAddByLink(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                      @PathVariable String projectId,
+                                      @RequestParam String code){
+        if(projectService.addByLink(principalDetails, projectId, code) == null){
+
+        }
+    }
 }
