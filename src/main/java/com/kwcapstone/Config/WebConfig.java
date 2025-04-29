@@ -1,5 +1,6 @@
 package com.kwcapstone.Config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -13,13 +14,20 @@ public class WebConfig implements WebMvcConfigurer {
                             "http://3.39.11.168:8080", "https://3.39.11.168:8080",
                             "http://localhost:3000", "https://localhost:3000"};
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(accessURL)
-                .allowedMethods("GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS")
-                .allowedHeaders("Content-Type", "Authorization")
-                .maxAge(3000)
-                .allowCredentials(true);
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOriginPatterns(accessURL)
+                        .allowedHeaders("*")
+                        .allowedMethods("GET", "POST", "PATCH", "DELETE", "HEAD", "PUT", "OPTIONS")
+                        .exposedHeaders("Content-Type", "Authorization")
+                        .maxAge(3000);
+                        //.allowCredentials(true);
+            }
+        };
     }
+
 }
