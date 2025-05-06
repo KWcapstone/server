@@ -48,7 +48,7 @@ public class TokenService {
         String stringMemberId = validateRefreshToken(refreshToken);
         String role = findRoleByRefreshToken(refreshToken);
 
-        System.out.println(role);
+        //System.out.println(role);
         ObjectId memberId = ConvertToObjectId(stringMemberId);
 
         //SocialAccesstoken이 만료되엇는지 확인하기
