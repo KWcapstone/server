@@ -2,6 +2,7 @@ package com.kwcapstone.Controller;
 
 import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.Response.SuccessStatus;
+import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.NewProjectResponseDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ConferenceService;
@@ -23,5 +24,13 @@ public class ConferenceController {
     public BaseResponse createProject (@AuthenticationPrincipal PrincipalDetails principalDetails) {
         return BaseResponse.res(SuccessStatus.NEW_PROJECT,
                 conferenceService.projectCreate(principalDetails));
+    }
+
+    // 실시간 스크립트 띄워주기
+    @PostMapping("/script")
+    public BaseResponse<Void> saveScript (@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                    @RequestBody ScriptMessageRequestDto requestDto) {
+        return BaseResponse.res(SuccessStatus.SCRIPT_SAVE_SUCCESS,
+                conferenceService.scriptSave(principalDetails, requestDto));
     }
 }

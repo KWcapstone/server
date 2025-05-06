@@ -1,5 +1,6 @@
 package com.kwcapstone.Service;
 
+import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.NewProjectResponseDto;
 import com.kwcapstone.Domain.Entity.Project;
 import com.kwcapstone.Repository.ProjectRepository;
@@ -48,5 +49,9 @@ public class ConferenceService {
         );
 
         return responseDto;
+    }
+
+    public Void scriptSave(PrincipalDetails principalDetails, ScriptMessageRequestDto requestDto) {
+
     }
 }
