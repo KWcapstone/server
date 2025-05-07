@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -81,6 +82,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         } catch (AuthenticationException ex) {
             //Jwt 검증 과정에서 인증에 실패했을 때 발생하는 예외
             setJsonResponse(response, ex.getStatusCode(), ex.getMessage());
+        }catch(ResponseStatusException ex){
+            setJsonResponse(response, ex.getStatusCode().value(), ex.getReason());
         } catch (Exception ex) {
             //기타 에러
             setJsonResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
