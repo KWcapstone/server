@@ -119,7 +119,7 @@ public class JwtTokenProvider {
             //jwt 만료되었을 때 발생하는 예외
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "AUTH_002 : 토큰이 만료되었습니다.");
+                    "AUTH_002");
         } catch (SecurityException e) {
             //Jwt의 서명이 손상되었거나 위변조 된 경우
             throw new ResponseStatusException(
