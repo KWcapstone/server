@@ -74,7 +74,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     throw new AuthenticationException(HttpStatus.NOT_FOUND.value(), "존재하지 않는 사용자입니다.");
                 }
             } else { //토큰이 유효하지 않음
-                throw new AuthenticationException(HttpStatus.UNAUTHORIZED.value(), "토큰이 유효하지 않습니다.");
+                throw new AuthenticationException(HttpStatus.UNAUTHORIZED.value(), "비정상적인 토큰입니다. (유효하지 않습니다.)");
             }
 
             //다음 필터 실행
