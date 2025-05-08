@@ -18,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry config) {
         //서버가 클라이언트에게 메시지 보낼때, 해당 주소로 시작하는 주소로 브로드캐스트
         config.enableSimpleBroker("/topic");
-        //클라이언트가 서버에서 요청을 보낼 대, 해당 주소로 시작하는 주소로 보냄
+        //클라이언트가 서버에서 요청을 보낼 때, 해당 주소로 시작하는 주소로 보냄
         config.setApplicationDestinationPrefixes("/app");
     }
 
@@ -27,6 +27,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") //cors 문제 방지
-                .withSockJS(); //webSocket을 브라우저가 지원모샇ㄹ 경우 대비한 백업용
+                .withSockJS(); //webSocket을 브라우저가 지원못할 경우 대비한 백업용
     }
 }
