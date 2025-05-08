@@ -65,10 +65,10 @@ public class MemberService {
         validateAuthRequest(memberRequestDto);
         EmailVerification emailVerification = emailVerificationRepository
                 .findLatestByEmail(memberRequestDto.getEmail())
-                .orElseThrow(() -> new BaseException(400, "이메일 인증이 필요합니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "이메일 인증이 필요합니다."));
 
         if (!emailVerification.isVerified()) {
-            throw new BaseException(400, "이메일 인증을 완료해야 회원가입이 가능합니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이메일 인증을 완료해야 회원가입이 가능합니다.");
         }
         memberRepository.save(convertToMember(memberRequestDto));
     }
@@ -78,23 +78,23 @@ public class MemberService {
     String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,12}$";
     private void validateAuthRequest(MemberRequestDto memberRequestDto) {
         if (memberRequestDto.getName() == null) {
-            throw new BaseException(400, "이름을 입력해주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이름을 입력해주세요.");
         }
         if (!Pattern.matches(namePattern, memberRequestDto.getName())) {
-            throw new BaseException(422, "이름은 한글 또는 영어만 입력할 수 있으며, 2자 이상 15자 이하만 입력해야 합니다.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "이름은 한글 또는 영어만 입력할 수 있으며, 2자 이상 15자 이하만 입력해야 합니다.");
         }
         if (memberRequestDto.getEmail() == null) {
-            throw new BaseException(400, "이메일을 입력해주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이메일을 입력해주세요.");
         }
         if (memberRequestDto.getPassword() == null) {
-            throw new BaseException(400, "비밀번호를 입력해주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비밀번호를 입력해주세요.");
         }
         if (!Pattern.matches(passwordPattern, memberRequestDto.getPassword())) {
-            throw new BaseException(422, "비밀번호는 6자 이상 12자 이하이며, " +
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "비밀번호는 6자 이상 12자 이하이며, " +
                     "영문자, 숫자, 특수문자(@$!%*?&)를 각각 최소 1개 이상 포함해야 합니다.");
         }
         if (!memberRequestDto.isAgreement()) {
-            throw new BaseException(400, "약관에 동의해주세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "약관에 동의해주세요.");
         }
     }
 
@@ -105,10 +105,10 @@ public class MemberService {
     // 이메일 중복 체크
     public void checkDuplicateEmail(String email) {
         if (memberRepository.existsByEmail(email)) {
-            throw new BaseException(400, "이미 가입된 이메일입니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 가입된 이메일입니다.");
         }
         if (!Pattern.matches(emailPattern, email)) {
-            throw new BaseException(422, "이메일 형식이 올바르지 않습니다. @를 포함한 올바른 이메일을 입력해주세요.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "이메일 형식이 올바르지 않습니다. @를 포함한 올바른 이메일을 입력해주세요.");
         }
         requestEmailVerification(email);  // 확인 이메일 전송
     }
@@ -117,15 +117,15 @@ public class MemberService {
     public void validateEmail(EmailRequestDto emailRequestDto) {
         EmailVerification emailVerification = emailVerificationRepository
                 .findLatestByEmail(emailRequestDto.getEmail())
-                .orElseThrow(() -> new BaseException(400, "이메일 인증이 필요합니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "이메일 인증이 필요합니다."));
 
         if (emailVerification.getExpirationTime().isBefore(LocalDateTime.now())) {
-            throw new BaseException(400, "인증 번호가 만료되었습니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증 번호가 만료되었습니다.");
         }
 
         if (emailVerification.getVerificationCode() == null ||
             !emailVerification.getVerificationCode().equals(emailRequestDto.getCode())) {
-            throw new BaseException(400, "인증 번호가 일치하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "인증 번호가 일치하지 않습니다.");
         }
         emailVerification.setVerified(true);
         emailVerificationRepository.save(emailVerification);
@@ -276,6 +276,7 @@ public class MemberService {
         return getMemberToken(member.get(),null);
     }
 
+    // 로그아웃
     public BaseResponse userLogout(HttpServletRequest request) {
         String accessToken;
         // Access Token 추출
@@ -320,7 +321,7 @@ public class MemberService {
         }
 
         // db에서 해당 사용자의 refresh token 삭제
-        tokenRepository.deleteById(userId);
+        tokenRepository.deleteByMemberId(userId);
 
         // 로그아웃 완료 응답 반환
         return BaseResponse.res(SuccessStatus.USER_LOGOUT,null);

@@ -51,7 +51,7 @@ public class ConferenceService {
         return responseDto;
     }
 
-    public Void scriptSave(PrincipalDetails principalDetails, ScriptMessageRequestDto requestDto) {
-
-    }
+//    public Void scriptSave(PrincipalDetails principalDetails, ScriptMessageRequestDto requestDto) {
+//
+//    }
 }
