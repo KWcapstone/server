@@ -43,6 +43,10 @@ dependencies {
 	//oauth
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
+	// S3
+	implementation platform('software.amazon.awssdk:bom:2.17.230')
+	implementation 'software.amazon.awssdk:s3'
+
 	//websocket
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 

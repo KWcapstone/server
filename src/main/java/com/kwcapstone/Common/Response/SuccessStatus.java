@@ -87,6 +87,9 @@ public enum SuccessStatus implements BaseCode{
 
     //프로젝트 공유링크로 공유시, 이미 참석자일 때
     ALREADY_JOINED(HttpStatus.OK,"이미 초대된 회원입니다."),
+
+    // 스크립트 저장
+    SCRIPT_SAVE_SUCCESS(HttpStatus.OK, "스크립트가 성공적으로 저장되었습니다.")
     ;
 
     private final HttpStatus httpStatus;
