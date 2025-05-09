@@ -126,7 +126,6 @@ public class JwtTokenProvider {
                     HttpStatus.UNAUTHORIZED,
                     "AUTH_003 : 토큰의 서명이 손상되었거나 위변조 되었습니다.");
         } catch (MalformedJwtException e) {
-            System.out.println("❌ MalformedJwtException: " + e.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "AUTH_004 : Jwt 형식이 올바르지 않습니다.");
