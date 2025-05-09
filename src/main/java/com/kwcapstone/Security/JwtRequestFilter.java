@@ -2,7 +2,6 @@ package com.kwcapstone.Security;
 
 import com.kwcapstone.Exception.AuthenticationException;
 import com.kwcapstone.Token.JwtTokenProvider;
-import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
