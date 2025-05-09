@@ -6,7 +6,6 @@ import com.kwcapstone.Common.PasswordGenerator;
 import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.MemberLoginResponseDto;
-import com.kwcapstone.Domain.Dto.Response.ProfileResponseDto;
 import com.kwcapstone.Domain.Entity.EmailVerification;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
