@@ -1,6 +1,5 @@
 package com.kwcapstone.Token;
 
-import com.kwcapstone.Domain.Entity.MemberRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
