@@ -262,7 +262,7 @@ public class ProjectService {
     }
 
     //프로젝트 공유링크로 들어왓을 때 사용자 추가
-    public InviteUsersByLinkResponseDto addByLink(PrincipalDetails principalDetails,
+    public boolean addByLink(PrincipalDetails principalDetails,
                                                   String projectId, String code){
         ObjectId memberId = principalDetails.getId();
         if(memberId == null){
@@ -286,7 +286,7 @@ public class ProjectService {
         boolean alreadyJoined = memberToProjectRepository.existsByProjectIdAndMemberId(objProjectId, memberId);
 
         if(alreadyJoined){
-            return null;
+            return true;
         }
 
         //참여자 등록
@@ -312,6 +312,6 @@ public class ProjectService {
         memberRepository.save(member.get());
 
 
-        return new InviteUsersByLinkResponseDto(projectId);
+        return false;
     }
 }
