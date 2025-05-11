@@ -72,11 +72,16 @@ public class ProjectController {
     public BaseResponse userAddByLink(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                       @PathVariable String projectId,
                                       @RequestParam String code){
-        ObjectId objProjectId = new ObjectId(projectId);
-        if(projectService.addByLink(principalDetails, projectId, code) == null){
-            return BaseResponse.res(SuccessStatus.ALREADY_JOINED, new InviteUsersByLinkResponseDto(objProjectId));
-        }
+//        if(projectService.addByLink(principalDetails, projectId, code) == null){
+//            return BaseResponse.res(SuccessStatus.ALREADY_JOINED, new InviteUsersByLinkResponseDto(projectId));
+//        }
 
-        return BaseResponse.res(SuccessStatus.INVITE_SHARE_LINK, projectService.addByLink(principalDetails, projectId, code));
+        //alreadyJoin
+        if(projectService.addByLink(principalDetails, projectId, code)){
+            return BaseResponse.res(SuccessStatus.ALREADY_JOINED, null);
+        }
+        else{
+            return BaseResponse.res(SuccessStatus.INVITE_SHARE_LINK, null);
+        }
     }
 }

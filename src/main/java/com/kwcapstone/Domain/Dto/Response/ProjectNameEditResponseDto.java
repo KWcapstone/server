@@ -9,6 +9,6 @@ import org.bson.types.ObjectId;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProjectNameEditResponseDto {
-    private ObjectId projectId;
+    private String projectId;
     private String projectName;
 }
