@@ -360,7 +360,7 @@ public class MainService {
                     }
                 }
                 String imgUrl = project.getProjectImage();
-                if(imgUrl == null && imgUrl.isBlank()) {
+                if(imgUrl == null || imgUrl.isBlank()) {
                     dto.setResult(List.of(new SearchResponseWrapperDto.EntireDto(null)));
                 }
                 else{
@@ -413,6 +413,8 @@ public class MainService {
         if (result.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
         }
+
+        result.sort(Comparator.comparing(SearchResponseWrapperDto::getUpdatedAt).reversed());
 
         return result;
     }
