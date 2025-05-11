@@ -414,6 +414,7 @@ public class MainService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
         }
 
+        //result 정렬하기
         result.sort(Comparator.comparing(SearchResponseWrapperDto::getUpdatedAt).reversed());
 
         return result;
