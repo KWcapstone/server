@@ -349,23 +349,39 @@ public class MainService {
                     .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
             dto.setCreator(creatorName);
 
+            //프로젝트를 불러올 때,
             if ("entire".equalsIgnoreCase(tap)) {
-                if (keyword != null && !keyword.isBlank()
-                        && (project.getProjectName() == null
-                        || !project.getProjectName().toLowerCase().contains(keyword.toLowerCase()))) {
-                    continue;
+                //만약 null 이면 모든 프로젝트를 다 불러오는 거임
+                //keyword 가 있을 경우 null이거나 대소문자 구분없이 keyword 포함되어있지 않은 경우 다 걸러내야 함
+                if(keyword != null && !keyword.isBlank()) {
+                    if ((project.getProjectName() == null
+                            || !project.getProjectName().toLowerCase().contains(keyword.toLowerCase()))) {
+                        continue;
+                    }
                 }
-                dto.setResult(List.of(new SearchResponseWrapperDto.EntireDto(project.getProjectImage())));
+                String imgUrl = project.getProjectImage();
+                if(imgUrl == null && imgUrl.isBlank()) {
+                    dto.setResult(List.of(new SearchResponseWrapperDto.EntireDto(null)));
+                }
+                else{
+                    dto.setResult(List.of(new SearchResponseWrapperDto.EntireDto(project.getProjectImage())));
+                }
                 result.add(dto);
             } else if ("record".equalsIgnoreCase(tap)) {
-                Project.Record record = project.getRecord();
-                if (record == null) continue;
-
-                if (keyword != null && !keyword.isBlank()
-                        && (project.getProjectName() == null
-                        || !record.getFileName().toLowerCase().contains(keyword.toLowerCase()))) {
-                    continue;
+                //만약 null 이면 모든 프로젝트를 다 불러오는 거임
+                //keyword 가 있을 경우 null이거나 대소문자 구분없이 keyword 포함되어있지 않은 경우 다 걸러내야 함
+                if(keyword != null && !keyword.isBlank()) {
+                    if ((project.getProjectName() == null
+                            || !project.getProjectName().toLowerCase().contains(keyword.toLowerCase()))) {
+                        continue;
+                    }
                 }
+
+                Project.Record record = project.getRecord();
+                if (record == null){
+                    dto.setResult(null);
+                }
+
 
                 dto.setResult(List.of(
                         new SearchResponseWrapperDto.RecordDto(
@@ -375,13 +391,18 @@ public class MainService {
                 ));
                 result.add(dto);
             } else if ("summary".equalsIgnoreCase(tap)) {
-                Project.Summary summary = project.getSummary();
-                if (summary == null) continue;
+                //만약 null 이면 모든 프로젝트를 다 불러오는 거임
+                //keyword 가 있을 경우 null이거나 대소문자 구분없이 keyword 포함되어있지 않은 경우 다 걸러내야 함
+                if(keyword != null && !keyword.isBlank()) {
+                    if ((project.getProjectName() == null
+                            || !project.getProjectName().toLowerCase().contains(keyword.toLowerCase()))) {
+                        continue;
+                    }
+                }
 
-                if (keyword != null && !keyword.isBlank()
-                        && (project.getProjectName() == null
-                        || !summary.getContent().toLowerCase().contains(keyword.toLowerCase()))) {
-                    continue;
+                Project.Summary summary = project.getSummary();
+                if (summary == null){
+                    dto.setResult(null);
                 }
 
                 dto.setResult(List.of(new SearchResponseWrapperDto.SummaryDto(summary.getSizeInBytes())));
