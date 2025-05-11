@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ShowSummaryResponseDto {
-    private ObjectId projectId;
+    private String projectId;
     private String projectName;
     private LocalDateTime updatedAt;
     private String creator;

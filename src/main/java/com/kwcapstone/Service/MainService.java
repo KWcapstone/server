@@ -32,6 +32,18 @@ public class MainService {
     private final ProjectRepository projectRepository;
     private final MemberToProjectRepository memberToProjectRepository;
 
+    // creator name 조회
+    private String findCreatorName(ObjectId creatorId) {
+        Optional<Member> member = memberRepository.findById(creatorId);
+
+        //존재 안하면
+        if (!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식입니다.");
+        }
+
+        return member.get().getName();
+    }
+
     // 알림창 전체 조회
     public List<NoticeReadResponseDto> showNotice(PrincipalDetails principalDetails, String type) {
         ObjectId objectId;
@@ -155,11 +167,19 @@ public class MainService {
     // [모든 회의] 메인화면
     public List<ShowMainResponseDto> showMain(PrincipalDetails principalDetails, String sort, String filterType) {
         ObjectId memberId = principalDetails.getId();
+
+        //member가 조재하는지
+        Optional<Member> member = memberRepository.findById(memberId);
+        if(!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
+        }
+
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
         }
+
 
         try {
             Stream<ShowMainResponseDto> mainStream = projects.stream()
@@ -167,8 +187,9 @@ public class MainService {
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");
+                        String strProjectId = project.getProjectId().toString();
                         return new ShowMainResponseDto(
-                                project.getProjectId(),
+                                strProjectId,
                                 project.getProjectName(),
                                 project.getUpdatedAt(),
                                 creatorName,
@@ -193,6 +214,13 @@ public class MainService {
     public List<ShowRecordResponseDto> showRecording(PrincipalDetails principalDetails,
                                                      String sort, String filterType) {
         ObjectId memberId = principalDetails.getId();
+
+        //member가 존재하는지
+        Optional<Member> member = memberRepository.findById(memberId);
+        if(!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
+        }
+
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
@@ -205,9 +233,10 @@ public class MainService {
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
-
+                        //recordId= projectId
+                        String strRecordId = project.getProjectId().toString();
                         return new ShowRecordResponseDto(
-                                project.getProjectId(),
+                                strRecordId,
                                 project.getRecord().getFileName(),
                                 project.getUpdatedAt(),
                                 project.getRecord().getLength(),
@@ -234,6 +263,12 @@ public class MainService {
     public List<ShowSummaryResponseDto> showSummary(PrincipalDetails principalDetails,
                                                     String sort, String filterType) {
         ObjectId memberId = principalDetails.getId();
+        //member가 존재하는지
+        Optional<Member> member = memberRepository.findById(memberId);
+        if(!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
+        }
+
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
@@ -246,8 +281,11 @@ public class MainService {
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");
+                        //recordId= projectId
+                        String strRecordId = project.getProjectId().toString();
+
                         return new ShowSummaryResponseDto(
-                                project.getProjectId(),
+                                strRecordId,
                                 project.getProjectName(),
                                 project.getUpdatedAt(),
                                 creatorName,
@@ -296,13 +334,18 @@ public class MainService {
         // 3. 탭으로 필터링
         List<SearchResponseWrapperDto> result = new ArrayList<>();
 
+
         for (Project project : projects) {
             SearchResponseWrapperDto dto = new SearchResponseWrapperDto();
             dto.setTap(tap);
-            dto.setProjectId(project.getProjectId());
+            String strprojectId = project.getProjectId().toString();
+            dto.setProjectId(strprojectId);
             dto.setProjectName(project.getProjectName());
             dto.setUpdatedAt(project.getUpdatedAt());
-            dto.setCreator(project.getCreator().toHexString());
+            String creatorName = memberRepository.findByMemberId(project.getCreator())
+                    .map(Member::getName)
+                    .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
+            dto.setCreator(creatorName);
 
             if ("entire".equalsIgnoreCase(tap)) {
                 if (keyword != null && !keyword.isBlank()

@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ShowRecordResponseDto {
-    private ObjectId recordId;
+    private String recordId;
     private String name;
     private LocalDateTime updatedAt;
     private long length;
