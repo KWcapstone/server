@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SearchResponseWrapperDto {
     private String tap;  // entire, record, summary
-    private ObjectId projectId;
+    private String projectId;
     private String projectName;
     private LocalDateTime updatedAt;
     private String creator;
