@@ -167,6 +167,13 @@ public class MainService {
     // [모든 회의] 메인화면
     public List<ShowMainResponseDto> showMain(PrincipalDetails principalDetails, String sort, String filterType) {
         ObjectId memberId = principalDetails.getId();
+
+        //member가 조재하는지
+        Optional<Member> member = memberRepository.findById(memberId);
+        if(!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
+        }
+
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
