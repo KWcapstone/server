@@ -184,6 +184,7 @@ public class ProjectService {
     public ProjectNameEditResponseDto editProjectName(String projectId,
                                                       ProjectNameEditRequestDto projectNameEditRequestDto){
         ObjectId ObjprojectId = new ObjectId(projectId);
+        String strProjectId = ObjprojectId.toString();
 
         Project project = projectRepository.findByProjectId(ObjprojectId);
 
@@ -195,7 +196,7 @@ public class ProjectService {
         projectRepository.save(project);
 
         return new ProjectNameEditResponseDto(
-                ObjprojectId,
+                strProjectId,
                 project.getProjectName());
     }
 
