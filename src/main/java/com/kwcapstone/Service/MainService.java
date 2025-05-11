@@ -233,9 +233,10 @@ public class MainService {
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
-
+                        //recordId= projectId
+                        String strRecordId = project.getProjectId().toString();
                         return new ShowRecordResponseDto(
-                                project.getProjectId(),
+                                strRecordId,
                                 project.getRecord().getFileName(),
                                 project.getUpdatedAt(),
                                 project.getRecord().getLength(),
