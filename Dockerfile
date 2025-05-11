@@ -14,6 +14,10 @@ FROM bellsoft/liberica-openjdk-alpine:21
 
 WORKDIR /app
 
+RUN mkdir -p /app/tmp
+
+ENV JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=/app/tmp"
+
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 EXPOSE 8080

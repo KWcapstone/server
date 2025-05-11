@@ -45,6 +45,10 @@ jobs:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
       MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
 
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+
     steps:
     - name: Checkout Source
       uses: actions/checkout@v4
@@ -90,7 +94,8 @@ jobs:
           NAVER_CLIENT_ID,NAVER_CLIENT_SECRET,NAVER_REDIRECT_URI,
           GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,
           JWT_SECRET_KEY,JWT_ACCESS_TOKEN_VALIDITY,JWT_REFRESH_TOKEN_VALIDITY,
-          MONGODB_URI,MONGODB_DATABASE
+          MONGODB_URI,MONGODB_DATABASE,
+          AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_BUCKET_NAME
         script: |
           docker stop kwcapstone-server || true
           docker rm kwcapstone-server || true
@@ -115,6 +120,9 @@ jobs:
             -e JWT_REFRESH_TOKEN_VALIDITY="${JWT_REFRESH_TOKEN_VALIDITY}" \
             -e MONGODB_URI="${MONGODB_URI}" \
             -e MONGODB_DATABASE="${MONGODB_DATABASE}" \
+            -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
+            -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
+            -e S3_BUCKET_NAME="${S3_BUCKET_NAME}" \
             ${{ secrets.DOCKERHUB_USERNAME }}/kwcapstone-server
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
