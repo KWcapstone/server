@@ -180,14 +180,16 @@ public class MainService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
         }
 
+
         try {
             Stream<ShowMainResponseDto> mainStream = projects.stream()
                     .map(project -> {
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");
+                        String strProjectId = project.getProjectId().toString();
                         return new ShowMainResponseDto(
-                                project.getProjectId(),
+                                strProjectId,
                                 project.getProjectName(),
                                 project.getUpdatedAt(),
                                 creatorName,
