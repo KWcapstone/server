@@ -232,7 +232,9 @@ public class MemberService {
         Optional<Token> present = tokenRepository.findByMemberId(member.getMemberId());
 
         if (present.isPresent()) {
-            present.get().changeToken(newAccessToken, newRefreshToken, socialAccessToken);
+            Token token = present.get();
+            token.changeToken(newAccessToken, newRefreshToken, socialAccessToken);
+            tokenRepository.save(token);
         } else {
             tokenRepository.save(new Token(newAccessToken, newRefreshToken, member.getMemberId(), socialAccessToken));
             memberRepository.save(member);

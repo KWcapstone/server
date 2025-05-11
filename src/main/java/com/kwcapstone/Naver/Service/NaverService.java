@@ -2,7 +2,6 @@ package com.kwcapstone.Naver.Service;
 
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberRole;
-import com.kwcapstone.Kakao.Service.KaKaoProvider;
 import com.kwcapstone.Naver.Dto.NaverProfile;
 import com.kwcapstone.Naver.Dto.NaverResponse;
 import com.kwcapstone.Repository.MemberRepository;
