@@ -214,6 +214,13 @@ public class MainService {
     public List<ShowRecordResponseDto> showRecording(PrincipalDetails principalDetails,
                                                      String sort, String filterType) {
         ObjectId memberId = principalDetails.getId();
+
+        //member가 조재하는지
+        Optional<Member> member = memberRepository.findById(memberId);
+        if(!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
+        }
+
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
@@ -325,7 +332,9 @@ public class MainService {
             dto.setProjectId(strprojectId);
             dto.setProjectName(project.getProjectName());
             dto.setUpdatedAt(project.getUpdatedAt());
-            String creatorName = findCreatorName(project.getCreator());
+            String creatorName = memberRepository.findByMemberId(project.getCreator())
+                    .map(Member::getName)
+                    .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
             dto.setCreator(creatorName);
 
             if ("entire".equalsIgnoreCase(tap)) {
