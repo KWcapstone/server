@@ -27,10 +27,10 @@ public class ConferenceController {
     }
 
     // 실시간 스크립트 띄워주기
-//    @PostMapping("/script")
-//    public BaseResponse<Void> saveScript (@AuthenticationPrincipal PrincipalDetails principalDetails,
-//                                    @RequestBody ScriptMessageRequestDto requestDto) {
-//        return BaseResponse.res(SuccessStatus.SCRIPT_SAVE_SUCCESS,
-//                conferenceService.scriptSave(principalDetails, requestDto));
-//    }
+    @PostMapping("/script")
+    public BaseResponse<Void> saveScript (@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                    @RequestBody ScriptMessageRequestDto requestDto) {
+        return BaseResponse.res(SuccessStatus.SCRIPT_SAVE_SUCCESS,
+                conferenceService.scriptSave(principalDetails, requestDto));
+    }
 }
