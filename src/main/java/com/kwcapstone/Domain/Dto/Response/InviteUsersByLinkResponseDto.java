@@ -9,5 +9,5 @@ import org.bson.types.ObjectId;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InviteUsersByLinkResponseDto {
-    private ObjectId projectId;
+    private String projectId;
 }

@@ -82,10 +82,10 @@ public class ProjectService {
         Optional<Project> project = projectRepository.findByProjectId(objProjectId);
 
         if(!project.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "프로젝트를 찾을 수 없습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
-        return projectRepository.findByProjectId(memberId);
+        return project.get();
     }
 
     private void saveInviteCode(String inviteCode, String projectId, String email, ObjectId userId) {
@@ -114,31 +114,36 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "초대된 사용자가 아닙니다.");
         }
 
+        //project가 있는지를 확인하기
         ObjectId projectObjectId = new ObjectId(projectId);
-        Project project = projectRepository.findByProjectId(projectObjectId);
-
-        if (project == null) {
+        Optional<Project> project = projectRepository.findByProjectId(projectObjectId);
+        if(!project.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
+        //member가 있는지 확인하기
         Member member = memberRepository.findByMemberId(principalDetails.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
+        //관계 추가하기
         MemberToProject memberToProject = MemberToProject.builder()
                 .projectId(new ObjectId(projectId))
                 .memberId(member.getMemberId())
                 .build();
         memberToProjectRepository.save(memberToProject);
 
+        //member에도 관계성 추가
         if (member.getProjectIds() == null) {
             member.setProjectIds(new ArrayList<>());
         }
         member.getProjectIds().add(new ObjectId(projectId));
         memberRepository.save(member);
 
-        projectRepository.save(project);
+        //project 추가
+        //projectRepository.save(project.get());
     }
 
+    //유효성 검사
     private Invite validateInviteCode(String code, String projectId) {
         Invite invite = inviteRepository.findByInviteCode(code)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유효하지 않은 초대 코드입니다."));
@@ -162,12 +167,12 @@ public class ProjectService {
             ObjectId projectId = dto.getProjectId();
             String type = dto.getType().toLowerCase();
 
-            Project project = projectRepository.findByProjectId(projectId);
-            if (project == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 프로젝트를 찾을 수 없습니다.");
+            Optional<Project> project = projectRepository.findByProjectId(projectId);
+            if(!project.isPresent()){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
             }
 
-            if (!project.getCreator().equals(memberId)) {
+            if (!project.get().getCreator().equals(memberId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "프로젝트 삭제 권한이 없습니다.");
             }
 
@@ -175,14 +180,14 @@ public class ProjectService {
                 projectRepository.deleteById(projectId);
                 memberToProjectRepository.deleteByProjectId(projectId);
             } else if (type.equals("record")) {
-                project.setRecord(null);
-                project.setScript(null);
-                project.setUpdatedAt(LocalDateTime.now());
-                projectRepository.save(project);
+                project.get().setRecord(null);
+                project.get().setScript(null);
+                project.get().setUpdatedAt(LocalDateTime.now());
+                projectRepository.save(project.get());
             } else if (type.equals("summary")) {
-                project.setSummary(null);
-                project.setUpdatedAt(LocalDateTime.now());
-                projectRepository.save(project);
+                project.get().setSummary(null);
+                project.get().setUpdatedAt(LocalDateTime.now());
+                projectRepository.save(project.get());
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 삭제 타입입니다.");
             }
@@ -193,20 +198,19 @@ public class ProjectService {
     public ProjectNameEditResponseDto editProjectName(String projectId,
                                                       ProjectNameEditRequestDto projectNameEditRequestDto){
         ObjectId ObjprojectId = new ObjectId(projectId);
-        String strProjectId = ObjprojectId.toString();
 
-        Project project = projectRepository.findByProjectId(ObjprojectId);
+        Optional<Project> project = projectRepository.findByProjectId(ObjprojectId);
 
-        if (project == null) {
+        if(!project.isPresent()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
-        project.editName(projectNameEditRequestDto.getProjectName());
-        projectRepository.save(project);
+        project.get().editName(projectNameEditRequestDto.getProjectName());
+        projectRepository.save(project.get());
 
         return new ProjectNameEditResponseDto(
-                strProjectId,
-                project.getProjectName());
+                projectId,
+                project.get().getProjectName());
     }
 
     //프로젝트 공유 모달 띄우기
@@ -215,9 +219,9 @@ public class ProjectService {
         ObjectId memberId = principalDetails.getId();
         ObjectId ObjprojectId = new ObjectId(projectId);
 
-        Project project = projectRepository.findByProjectId(ObjprojectId);
+        Optional<Project> project = projectRepository.findByProjectId(ObjprojectId);
 
-        if(project == null){
+        if(!project.isPresent()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
@@ -242,7 +246,7 @@ public class ProjectService {
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없는 프로젝트 참여자입니다."));
 
                     //회의 생성자일때
-                    if((project.getCreator()).equals(conn.getMemberId())) {
+                    if((project.get().getCreator()).equals(conn.getMemberId())) {
                         return new MemberInfoDto(member.getName(), "회의 생성자");
                     }else{
                         return new MemberInfoDto(member.getName(), "참석자");
@@ -266,9 +270,8 @@ public class ProjectService {
         }
 
         ObjectId objProjectId = new ObjectId(projectId);
-        Project project = projectRepository.findByProjectId(objProjectId);
-
-        if(project == null){
+        Optional<Project> project = projectRepository.findByProjectId(objProjectId);
+        if(!project.isPresent()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
@@ -294,7 +297,7 @@ public class ProjectService {
 
         memberToProjectRepository.save(mapping);
 
-        //사용자 객체에도 rpojectid
+        //사용자 객체에도 pojectid
         Optional<Member> member = memberRepository.findByMemberId(memberId);
 
         if(!member.isPresent()){
@@ -308,6 +311,7 @@ public class ProjectService {
         member.get().getProjectIds().add(objProjectId);
         memberRepository.save(member.get());
 
-        return new InviteUsersByLinkResponseDto(objProjectId);
+
+        return new InviteUsersByLinkResponseDto(projectId);
     }
 }
