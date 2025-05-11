@@ -63,10 +63,9 @@ public class ConferenceService {
             String projectIdStr = requestDto.getProjectId();
             ObjectId projectId = new ObjectId(projectIdStr);
 
-            Project project = projectRepository.findByProjectId(projectId);
-            if (project == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
-            }
+            Project project = projectRepository.findByProjectId(projectId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
             if (!project.getCreator().equals(memberId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 프로젝트 대한 권한이 없습니다.");
             }
