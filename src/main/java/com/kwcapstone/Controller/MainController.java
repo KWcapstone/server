@@ -66,7 +66,7 @@ public class MainController {
     @GetMapping("/search")
     public BaseResponse projectSearch (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                        @RequestParam(value = "tap", defaultValue = "entire") String tap,
-                                       @RequestParam(value = "keyword") String keyword) {
+                                       @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResponse.res(SuccessStatus.MAIN_SEARCH, mainService.searchProject(principalDetails, tap, keyword));
     }
 

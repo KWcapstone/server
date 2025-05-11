@@ -309,26 +309,27 @@ public class MainService {
     // 탭별로 검색
     public List<SearchResponseWrapperDto> searchProject(PrincipalDetails principalDetails, String tap, String keyword) {
         // 1. 멤버의 아이디를 통해 이게 존재하는 아이디인지 검색
-        ObjectId memberObjectId;
         ObjectId memberId = principalDetails.getId();
-        try {
-            memberObjectId = new ObjectId(String.valueOf(memberId));
-        } catch (IllegalArgumentException e) {
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        if(!member.isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
         }
 
         // 2. 그 멤버의 프로젝트를 가져옴.
         List<MemberToProject> invitedProjectMappings = memberToProjectRepository
-                .findByMemberId(memberObjectId);
+                .findByMemberId(memberId);
 
+        //초대돈 프로젝트 ID불러오기
         List<ObjectId> invitedProjectIds = invitedProjectMappings.stream()
                 .map(MemberToProject::getProjectId)
                 .collect(Collectors.toList());
 
+        //그를 토대로 프로젝트 불러오기
         List<Project> projects = projectRepository.findByProjectIdInOrderByUpdatedAtDesc(invitedProjectIds);
 
+        //프로젝트 없을 경우
         if (projects.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
+            return null;
         }
 
         // 3. 탭으로 필터링
@@ -336,6 +337,7 @@ public class MainService {
 
 
         for (Project project : projects) {
+            //dto에 집어넣기
             SearchResponseWrapperDto dto = new SearchResponseWrapperDto();
             dto.setTap(tap);
             String strprojectId = project.getProjectId().toString();
