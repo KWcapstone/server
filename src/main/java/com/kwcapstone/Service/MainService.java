@@ -32,6 +32,18 @@ public class MainService {
     private final ProjectRepository projectRepository;
     private final MemberToProjectRepository memberToProjectRepository;
 
+    // creator name 조회
+    private String findCreatorName(ObjectId creatorId) {
+        Optional<Member> member = memberRepository.findById(creatorId);
+
+        //존재 안하면
+        if (!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식입니다.");
+        }
+
+        return member.get().getName();
+    }
+
     // 알림창 전체 조회
     public List<NoticeReadResponseDto> showNotice(PrincipalDetails principalDetails, String type) {
         ObjectId objectId;
@@ -296,13 +308,16 @@ public class MainService {
         // 3. 탭으로 필터링
         List<SearchResponseWrapperDto> result = new ArrayList<>();
 
+
         for (Project project : projects) {
             SearchResponseWrapperDto dto = new SearchResponseWrapperDto();
             dto.setTap(tap);
-            dto.setProjectId(project.getProjectId());
+            String strprojectId = project.getProjectId().toString();
+            dto.setProjectId(strprojectId);
             dto.setProjectName(project.getProjectName());
             dto.setUpdatedAt(project.getUpdatedAt());
-            dto.setCreator(project.getCreator().toHexString());
+            String creatorName = findCreatorName(project.getCreator());
+            dto.setCreator(creatorName);
 
             if ("entire".equalsIgnoreCase(tap)) {
                 if (keyword != null && !keyword.isBlank()
