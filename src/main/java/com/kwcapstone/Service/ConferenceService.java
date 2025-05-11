@@ -2,7 +2,9 @@ package com.kwcapstone.Service;
 
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.NewProjectResponseDto;
+import com.kwcapstone.Domain.Entity.MemberToProject;
 import com.kwcapstone.Domain.Entity.Project;
+import com.kwcapstone.Repository.MemberToProjectRepository;
 import com.kwcapstone.Repository.ProjectRepository;
 import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class ConferenceService {
 
     private final ProjectRepository projectRepository;
     private final S3Service s3Service;
+    private final MemberToProjectRepository memberToProjectRepository;
 
     public NewProjectResponseDto projectCreate(PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
@@ -43,18 +46,21 @@ public class ConferenceService {
         project.setProjectImage(null);
         project.setUpdatedAt(LocalDateTime.now());
         project.setCreator(memberId);
-
         projectRepository.save(project);
 
-        NewProjectResponseDto responseDto = new NewProjectResponseDto(
+        MemberToProject mapping = MemberToProject.builder()
+                .projectId(project.getProjectId())
+                .memberId(memberId)
+                .build();
+        memberToProjectRepository.save(mapping);
+
+        return new NewProjectResponseDto(
                 project.getProjectId(),
                 project.getProjectName(),
                 project.getProjectImage(),
                 project.getUpdatedAt(),
                 project.getCreator()
         );
-
-        return responseDto;
     }
 
     public Void scriptSave(PrincipalDetails principalDetails, ScriptMessageRequestDto requestDto) {
