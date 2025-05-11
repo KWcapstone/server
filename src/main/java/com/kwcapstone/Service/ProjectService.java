@@ -46,6 +46,14 @@ public class ProjectService {
     public void addByEmailUser(PrincipalDetails principalDetails,
                                String projectId, EmailInviteRequestDto emailInviteRequestDto) {
         ObjectId memberId = principalDetails.getId();
+
+        Optional<Member> member = memberRepository.findById(memberId);
+
+        if(!member.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "잘못된 ObjectId 형식입니다.");
+        }
+
+        //사용자 추가할 때 projectId에 memberId가 회원가입 처리가 되어있어야 함.
         Project project = getProject(projectId);
 
         // 1. 초대 코드 생성 (UUID 또는 토큰)
@@ -68,15 +76,16 @@ public class ProjectService {
     }
 
     // 프로젝트 찾기
-    private Project getProject(String memberId) {
-        ObjectId memberObjectId;
-        try {
-            memberObjectId = new ObjectId(memberId);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식입니다.");
+    private Project getProject(String projectId) {
+        ObjectId objProjectId = new ObjectId(projectId);
+
+        Optional<Project> project = projectRepository.findByProjectId(objProjectId);
+
+        if(!project.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "프로젝트를 찾을 수 없습니다.");
         }
 
-        return projectRepository.findByProjectId(memberObjectId);
+        return projectRepository.findByProjectId(memberId);
     }
 
     private void saveInviteCode(String inviteCode, String projectId, String email, ObjectId userId) {
