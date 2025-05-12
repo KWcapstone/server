@@ -3,10 +3,7 @@ package com.kwcapstone.Service;
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
-import com.kwcapstone.Domain.Dto.Response.GetProjectShareModalResponseDto;
-import com.kwcapstone.Domain.Dto.Response.InviteUsersByLinkResponseDto;
-import com.kwcapstone.Domain.Dto.Response.MemberInfoDto;
-import com.kwcapstone.Domain.Dto.Response.ProjectNameEditResponseDto;
+import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.Invite;
 import com.kwcapstone.Domain.Entity.Member;
 import com.kwcapstone.Domain.Entity.MemberToProject;
@@ -43,10 +40,9 @@ public class ProjectService {
     private final MemberToProjectRepository memberToProjectRepository;
 
     // 이메일로 프로젝트에 사용자 추가하기
-    public void addByEmailUser(PrincipalDetails principalDetails,
+    public InviteEmailResponseDto addByEmailUser(PrincipalDetails principalDetails,
                                String projectId, EmailInviteRequestDto emailInviteRequestDto) {
         ObjectId memberId = principalDetails.getId();
-
         Optional<Member> member = memberRepository.findById(memberId);
 
         if(!member.isPresent()) {
@@ -59,8 +55,8 @@ public class ProjectService {
         // 1. 초대 코드 생성 (UUID 또는 토큰)
         String inviteCode = UUID.randomUUID().toString();
 
-        // 2. 이메일 전송
-        String inviteLink = "https://moaba.vercel.app/main/projects/" + projectId + "accept?code=" + inviteCode;
+        // 2. 이메일 전송 - 이거 올릴땐 다른 주소로 해야함. www.moaba.site로
+        String inviteLink = "https://www.moaba.site/main/project/" + projectId + "/accept?code=" + inviteCode;
 
         String inviterName = principalDetails.getUsername();
         String projectName = project.getProjectName();
@@ -73,6 +69,12 @@ public class ProjectService {
         );
 
         saveInviteCode(inviteCode, projectId, emailInviteRequestDto.getEmail(), memberId);
+
+        return new InviteEmailResponseDto(
+                projectId,
+                emailInviteRequestDto.getEmail(),
+                inviteCode
+        );
     }
 
     // 프로젝트 찾기
@@ -107,7 +109,7 @@ public class ProjectService {
         Invite invite = validateInviteCode(code, projectId);
 
         Member invitedMember = memberRepository.findByEmail(invite.getEmail())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "초대된 사용자가 아닙니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "가입된 사용자가 아닙니다."));
 
         // principalDetails에서 ID를 가져와서 초대된 사용자의 ID와 비교
         if (!invitedMember.getMemberId().equals(principalDetails.getId())) {
@@ -138,9 +140,6 @@ public class ProjectService {
         }
         member.getProjectIds().add(new ObjectId(projectId));
         memberRepository.save(member);
-
-        //project 추가
-        //projectRepository.save(project.get());
     }
 
     //유효성 검사
@@ -229,7 +228,7 @@ public class ProjectService {
         String inviteCode = UUID.randomUUID().toString();
 
         // 2. 이메일 전송
-        String inviteLink = "https://moaba.vercel.app/main/projects/" + projectId + "accept?code=" + inviteCode;
+        String inviteLink = "https://www.moaba.site/main/projects/" + projectId + "/accept?code=" + inviteCode;
 
         saveInviteCode(inviteCode, projectId, null, memberId);
 

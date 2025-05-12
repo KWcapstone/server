@@ -5,6 +5,7 @@ import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
+import com.kwcapstone.Domain.Dto.Response.InviteEmailResponseDto;
 import com.kwcapstone.Domain.Dto.Response.InviteUsersByLinkResponseDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ProjectService;
@@ -27,8 +28,9 @@ public class ProjectController {
     public BaseResponse userAddByEmail(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                        @PathVariable String projectId,
                                        @RequestBody EmailInviteRequestDto emailInviteRequestDto) {
-        projectService.addByEmailUser(principalDetails, projectId, emailInviteRequestDto);
-        return BaseResponse.res(SuccessStatus.INVITE_EMAIL, null);
+        InviteEmailResponseDto responseDto =
+                projectService.addByEmailUser(principalDetails, projectId, emailInviteRequestDto);
+        return BaseResponse.res(SuccessStatus.INVITE_EMAIL, responseDto);
     }
 
     // 초대 수락
