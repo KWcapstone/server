@@ -379,13 +379,12 @@ public class MainService {
 
                 Project.Record record = project.getRecord();
                 if (record == null){
-                    dto.setResult(null);
+                    continue;  // NullPointException 방지
                 }
-
 
                 dto.setResult(List.of(
                         new SearchResponseWrapperDto.RecordDto(
-                                Objects.requireNonNull(record).getLength(),
+                                record.getLength(),
                                 project.getScript() != null ? project.getScript().getSizeInBytes(): 0L,
                                 project.getProjectName() != null ? project.getProjectName() + ".mp3" : "unnamed.mp3"
                         )
@@ -411,6 +410,7 @@ public class MainService {
                                     project.getProjectName() != null ? project.getProjectName() + ".txt" : "unnamed.txt"
                             )
                     ));
+                    result.add(dto);
                 }
             }
         }
