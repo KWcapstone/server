@@ -385,8 +385,9 @@ public class MainService {
 
                 dto.setResult(List.of(
                         new SearchResponseWrapperDto.RecordDto(
-                                record.getLength(),
-                                project.getScript() != null ? project.getScript().getSizeInBytes(): 0L
+                                Objects.requireNonNull(record).getLength(),
+                                project.getScript() != null ? project.getScript().getSizeInBytes(): 0L,
+                                project.getProjectName() != null ? project.getProjectName() + ".mp3" : "unnamed.mp3"
                         )
                 ));
                 result.add(dto);
@@ -403,10 +404,14 @@ public class MainService {
                 Project.Summary summary = project.getSummary();
                 if (summary == null){
                     dto.setResult(null);
+                }else {
+                    dto.setResult(List.of(
+                            new SearchResponseWrapperDto.SummaryDto(
+                                    summary.getSizeInBytes(),
+                                    project.getProjectName() != null ? project.getProjectName() + ".txt" : "unnamed.txt"
+                            )
+                    ));
                 }
-
-                dto.setResult(List.of(new SearchResponseWrapperDto.SummaryDto(summary.getSizeInBytes())));
-                result.add(dto);
             }
         }
 

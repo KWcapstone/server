@@ -32,6 +32,7 @@ public class SearchResponseWrapperDto {
     public static class RecordDto {
         private long length;
         private long sizeInBytes;
+        private String fileName;
     }
 
     @Data
@@ -39,5 +40,6 @@ public class SearchResponseWrapperDto {
     @NoArgsConstructor
     public static class SummaryDto {
         private long sizeInBytes;
+        private String fileName;
     }
 }
