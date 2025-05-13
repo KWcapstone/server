@@ -233,17 +233,30 @@ public class MainService {
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
+                        Project.Record record = project.getRecord();
+                        if (record == null) return null;
+
                         //recordId= projectId
                         String strRecordId = project.getProjectId().toString();
+
+                        String fileName = project.getProjectName() != null
+                                ? project.getProjectName() + ".mp3"
+                                : "unnamed.mp3";
+
+                        long sizeInBytes = project.getScript() != null
+                                ? project.getScript().getSizeInBytes()
+                                : 0L;
+
                         return new ShowRecordResponseDto(
                                 strRecordId,
-                                project.getRecord().getFileName(),
+                                fileName,
                                 project.getUpdatedAt(),
                                 project.getRecord().getLength(),
-                                project.getScript().getSizeInBytes(),
+                                sizeInBytes,
                                 creatorName
                         );
-                    });
+                    })
+                    .filter(Objects::nonNull);
             // 정렬 조건 적용
             if ("created".equalsIgnoreCase(sort)) {
                 recordStream = recordStream.sorted(Comparator.comparing(ShowRecordResponseDto::getUpdatedAt));
@@ -278,20 +291,27 @@ public class MainService {
         try {
             Stream<ShowSummaryResponseDto> summaryStream = projects.stream()
                     .map(project -> {
+                        Project.Summary summary = project.getSummary();
+                        if (summary == null) return null;   // 요약본 없으면 제외
+
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");
                         //recordId= projectId
-                        String strRecordId = project.getProjectId().toString();
+                        String strSummaryId = project.getProjectId().toString();
+                        String name = project.getProjectName() != null
+                                ? project.getProjectName() + ".txt"
+                                : "unnamed.txt";
 
                         return new ShowSummaryResponseDto(
-                                strRecordId,
-                                project.getProjectName(),
+                                strSummaryId,
+                                name,
                                 project.getUpdatedAt(),
                                 creatorName,
                                 project.getSummary().getSizeInBytes()
                         );
-                    });
+                    })
+                    .filter(Objects::nonNull);
             if ("created".equalsIgnoreCase(sort)) {
                 summaryStream = summaryStream.sorted(Comparator.comparing(ShowSummaryResponseDto::getUpdatedAt));
             } else {
