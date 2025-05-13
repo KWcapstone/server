@@ -241,7 +241,7 @@ public class MainService {
 
                         String fileName = project.getProjectName() != null
                                 ? project.getProjectName() + ".zip"
-                                : "unnamed.zip";
+                                : "unnamed.zip";  // 음성+스크립트 파일 zip
 
                         long sizeInBytes = project.getScript() != null
                                 ? project.getScript().getSizeInBytes()
