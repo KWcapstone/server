@@ -240,8 +240,8 @@ public class MainService {
                         String strRecordId = project.getProjectId().toString();
 
                         String fileName = project.getProjectName() != null
-                                ? project.getProjectName() + ".mp3"
-                                : "unnamed.mp3";
+                                ? project.getProjectName() + ".zip"
+                                : "unnamed.zip";
 
                         long sizeInBytes = project.getScript() != null
                                 ? project.getScript().getSizeInBytes()
@@ -406,7 +406,7 @@ public class MainService {
                         new SearchResponseWrapperDto.RecordDto(
                                 record.getLength(),
                                 project.getScript() != null ? project.getScript().getSizeInBytes(): 0L,
-                                project.getProjectName() != null ? project.getProjectName() + ".mp3" : "unnamed.mp3"
+                                project.getProjectName() != null ? project.getProjectName() + ".zip" : "unnamed.zip"
                         )
                 ));
                 result.add(dto);
