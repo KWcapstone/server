@@ -19,8 +19,12 @@ configurations {
 	}
 }
 
+//Gradle 에서 의존성을 다운로드 할 저장소 목록을 설정하는 부분
+//snashop 버전은 저장할 수가 없어서 추가적인 설정이 필요함 -> 그래서 이걸 추가함
 repositories {
 	mavenCentral()
+	maven { url 'https://repo.spring.io/milestone' }
+	maven { url 'https://repo.spring.io/snapshot' }
 }
 
 dependencies {
@@ -50,6 +54,8 @@ dependencies {
 	//websocket
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+	//GPT OPEN API
+	implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:0.8.0-SNAPSHOT'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
