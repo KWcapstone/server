@@ -49,6 +49,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
 
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
     steps:
     - name: Checkout Source
       uses: actions/checkout@v4
@@ -95,7 +97,8 @@ jobs:
           GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI,
           JWT_SECRET_KEY,JWT_ACCESS_TOKEN_VALIDITY,JWT_REFRESH_TOKEN_VALIDITY,
           MONGODB_URI,MONGODB_DATABASE,
-          AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_BUCKET_NAME
+          AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,S3_BUCKET_NAME,
+          OPENAI_API_KEY
         script: |
           docker stop kwcapstone-server || true
           docker rm kwcapstone-server || true
@@ -123,6 +126,7 @@ jobs:
             -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
             -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
             -e S3_BUCKET_NAME="${S3_BUCKET_NAME}" \
+            -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
             ${{ secrets.DOCKERHUB_USERNAME }}/kwcapstone-server
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
