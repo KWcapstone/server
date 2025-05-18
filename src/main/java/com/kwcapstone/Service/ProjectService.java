@@ -240,7 +240,7 @@ public class ProjectService {
         String inviteCode = UUID.randomUUID().toString();
 
         // 2. 이메일 전송
-        String inviteLink = "https://www.moaba.site/main/projects/" + projectId + "/accept?code=" + inviteCode;
+        String inviteLink = "https://www.moaba.site/main/projects/" + projectId + "/add_by_link?code=" + inviteCode;
 
         saveInviteCode(inviteCode, projectId, null, memberId);
 
