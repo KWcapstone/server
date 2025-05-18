@@ -17,9 +17,9 @@ public class GptService {
 
     //토큰 계산하는 함수
     public int estimateMaxTokens(String promptText){
-        int wordCound = promptText.trim().split("\\s+").length;
-        int estimatedTokens = (int) (wordCound * 1.4);
-        if(wordCound > 500) {
+        int wordCount = promptText.trim().split("\\s+").length;
+        int estimatedTokens = (int) (wordCount * 1.4);
+        if(wordCount > 500) {
             estimatedTokens += 200;
         }
 
