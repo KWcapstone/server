@@ -61,6 +61,11 @@ public class ProjectService {
         String inviterName = principalDetails.getUsername();
         String projectName = project.getProjectName();
 
+        Optional<Member> isMember = memberRepository.findByEmail(emailInviteRequestDto.getEmail());
+        if (!isMember.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "회원가입된 사용자가 아닙니다.");
+        }
+
         emailService.sendProjectInviteMessage(
                 emailInviteRequestDto.getEmail(),
                 inviteLink,
@@ -105,6 +110,13 @@ public class ProjectService {
 
     // 초대 수락
     public void acceptInvite(PrincipalDetails principalDetails, String projectId, String code) {
+        ObjectId memberId = principalDetails.getId();
+        Optional<Member> isMember = memberRepository.findById(memberId);
+
+        if(!isMember.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "초대 수락 전 로그인을 먼저 하세요.");
+        }
+
         // 초대 코드 검증
         Invite invite = validateInviteCode(code, projectId);
 
