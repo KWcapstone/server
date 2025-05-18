@@ -2,7 +2,8 @@ package com.kwcapstone.Controller;
 
 import com.kwcapstone.Config.RoomParticipantTracker;
 import com.kwcapstone.Config.WebSocketSessionRegistry;
-import com.kwcapstone.Domain.Dto.Request.ParticipantRequestDto;
+import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
+import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
 import com.kwcapstone.Domain.Dto.Response.ParticipantResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.ChatMessage;
@@ -28,24 +29,30 @@ public class WebSocketController {
     private final RoomParticipantTracker participantTracker;
     private final WebSocketSessionRegistry sessionRegistry;
 
-    @MessageMapping("/{roomId}/addMember")
+    @MessageMapping("/{projectId}/modify_inviting")
     public void addMember(@DestinationVariable String projectId, Principal principal,
-                          @Payload ParticipantRequestDto participantRequestDto,
+                          @Payload ParticipantDto participantDto,
                           Message<?> message) {
         // 1. 참가자 목록에 추가
-        participantTracker.addParticipant(projectId, participantRequestDto);
+        participantTracker.addParticipant(projectId, participantDto);
 
         // 2. 세션 ID 추출 및 sessionRegistry 에 등록
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (accessor != null) {
             String sessionId = accessor.getSessionId();
-            sessionRegistry.register(sessionId, participantRequestDto.getMemberId(), projectId);
+            sessionRegistry.register(sessionId, participantDto.getMemberId(), projectId);
         }
 
-        // 모든 클라이언트에게 현재 참가자 목록 전송
+        // 3. join 이벤트 전송
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId + "/participants",
-                new ParticipantResponseDto("participant", projectId,
+                new ParticipantEventDto("participant_join", projectId, participantDto)
+        );
+
+        // 4. 전체 목록도 갱신
+        messagingTemplate.convertAndSend(
+                "/topic/conference/" + projectId + "/participants",
+                new ParticipantResponseDto("participants", projectId,
                         new ArrayList<>(participantTracker.getParticipants(projectId)))
         );
     }
