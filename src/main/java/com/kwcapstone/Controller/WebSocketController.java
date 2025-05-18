@@ -1,5 +1,7 @@
 package com.kwcapstone.Controller;
 
+import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
+import com.kwcapstone.Service.WebSocketService;
 import com.kwcapstone.Config.RoomParticipantTracker;
 import com.kwcapstone.Config.WebSocketSessionRegistry;
 import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
@@ -10,13 +12,13 @@ import org.springframework.ai.chat.messages.ChatMessage;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 @RequiredArgsConstructor
 @RequestMapping("/conference")
 public class WebSocketController {
+    private final WebSocketService webSocketService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RoomParticipantTracker participantTracker;
     private final WebSocketSessionRegistry sessionRegistry;
@@ -48,7 +51,11 @@ public class WebSocketController {
                 "/topic/conference/" + projectId + "/participants",
                 new ParticipantEventDto("participant_join", projectId, participantDto)
         );
+    }
 
+    @MessageMapping("/summary/{projectId}")
+    public void receiveScript(@DestinationVariable String projectId, ScriptMessageRequestDto dto) {
+        webSocketService.handleScript(projectId, dto);
         // 4. 전체 목록도 갱신
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId + "/participants",

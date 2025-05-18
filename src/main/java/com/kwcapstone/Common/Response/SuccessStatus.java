@@ -89,7 +89,10 @@ public enum SuccessStatus implements BaseCode{
     ALREADY_JOINED(HttpStatus.OK,"이미 초대된 회원입니다."),
 
     // 스크립트 저장
-    SCRIPT_SAVE_SUCCESS(HttpStatus.OK, "스크립트가 성공적으로 저장되었습니다.")
+    SCRIPT_SAVE_SUCCESS(HttpStatus.OK, "스크립트가 성공적으로 저장되었습니다."),
+
+    //gptTest 요약본
+    GPT_SUMMARY_SUCCESS(HttpStatus.OK, "gpt Test 요약")
     ;
 
     private final HttpStatus httpStatus;

@@ -15,7 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker //STOMP 사용할 준비가 되엇다.
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    private final JwtHandShakeInterceptor jwtHandShakeInterceptor;
+//    private final JwtHandShakeInterceptor jwtHandShakeInterceptor;
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         //서버가 클라이언트에게 메시지 보낼때, 해당 주소로 시작하는 주소로 브로드캐스트
@@ -28,7 +28,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                //.addInterceptors(jwtHandShakeInterceptor)
+//                .addInterceptors(jwtHandShakeInterceptor)
                 .setAllowedOriginPatterns("*") //cors 문제 방지
                 .withSockJS(); //webSocket을 브라우저가 지원못할 경우 대비한 백업용
         registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
