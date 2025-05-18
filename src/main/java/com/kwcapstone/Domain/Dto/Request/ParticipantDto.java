@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ParticipantRequestDto {
+public class ParticipantDto {
     private String memberId;
     private String memberName;
     private String profileImage;

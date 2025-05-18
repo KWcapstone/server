@@ -1,6 +1,6 @@
 package com.kwcapstone.Config;
 
-import com.kwcapstone.Domain.Dto.Request.ParticipantRequestDto;
+import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -9,9 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class RoomParticipantTracker {
-    private final Map<String, Set<ParticipantRequestDto>> participants = new ConcurrentHashMap<>();
+    private final Map<String, Set<ParticipantDto>> participants = new ConcurrentHashMap<>();
 
-    public void addParticipant(String projectId, ParticipantRequestDto participantDto) {
+    public void addParticipant(String projectId, ParticipantDto participantDto) {
         participants.computeIfAbsent(projectId, k -> ConcurrentHashMap.newKeySet()).add(participantDto);
     }
 
@@ -19,7 +19,7 @@ public class RoomParticipantTracker {
         participants.getOrDefault(projectId, Set.of()).removeIf(p -> p.getMemberId().equals(memberId));
     }
 
-    public Set<ParticipantRequestDto> getParticipants(String conferenceId) {
+    public Set<ParticipantDto> getParticipants(String conferenceId) {
         return participants.getOrDefault(conferenceId, Set.of());
     }
 }
