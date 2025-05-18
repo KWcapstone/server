@@ -37,7 +37,7 @@ public class ProjectController {
     @GetMapping("/{projectId}/accept")
     public BaseResponse inviteAccept(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                      @PathVariable String projectId,
-                                     @RequestParam String code) {
+                                     @RequestParam(value = "code") String code) {
         projectService.acceptInvite(principalDetails, projectId, code);
         return BaseResponse.res(SuccessStatus.ACCEPT_INVITE, null);
     }
