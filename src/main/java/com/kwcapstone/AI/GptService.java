@@ -30,7 +30,7 @@ public class GptService {
     // open ai 는 max_tokens 생성할 때 최대 토큰 수를 으미함
     // prompt 가 응답 모두 토큰으로 계산되어 얼마나 길게 나올 수 있는지를 제한함
     //prompt 는 누적된 회의 스크립트 전체 텍스트
-    public String callOpenAI(String prompt) {
+    public String callSummaryOpenAI(String prompt) {
         int maxTokens = estimateMaxTokens(prompt);
 
         String promptMessage = """
