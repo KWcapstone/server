@@ -12,7 +12,7 @@ import org.springframework.stereotype.Controller;
 public class WebSocketController {
     private final WebSocketService webSocketService;
 
-    @MessageMapping("/conference/{projectId}")
+    @MessageMapping("/conference/summary/{projectId}")
     public void receiveScript(@DestinationVariable String projectId, ScriptMessageRequestDto dto) {
         webSocketService.handleScript(projectId, dto);
     }
