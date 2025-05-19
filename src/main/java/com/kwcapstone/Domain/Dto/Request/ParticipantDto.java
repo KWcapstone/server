@@ -11,4 +11,8 @@ public class ParticipantDto {
     private String memberId;
     private String memberName;
     private String profileImage;
+
+    public ParticipantDto(String memberId) {
+        this.memberId = memberId;
+    }
 }

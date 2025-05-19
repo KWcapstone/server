@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class ParticipantEventDto {
     private String event;  // "participant_join" or "participant_leave"
     private String projectId;
-    private ParticipantDto participant;
+    private String memberId;
 }
