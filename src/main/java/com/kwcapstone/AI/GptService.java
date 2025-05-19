@@ -63,4 +63,9 @@ public class GptService {
                 .onErrorResume(e -> Mono.just("Error: " + e.getMessage()))
                 .block(); // block은 동기식으로 기다리기 (필요 시 비동기 방식으로 분리 가능)
     }
+
+//    public String callRecommendedKeywords(String prompt) {
+//        // int maxTokens =
+//        String promptMessage = "";
+//    }
 }

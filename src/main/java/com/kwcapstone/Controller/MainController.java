@@ -70,7 +70,6 @@ public class MainController {
         return BaseResponse.res(SuccessStatus.MAIN_SEARCH, mainService.searchProject(principalDetails, tap, keyword));
     }
 
-
     //프로필 모달
     @Operation(summary = "프로필 모달 띄우기")
     @GetMapping("/profile")
