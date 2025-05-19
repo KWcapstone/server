@@ -156,7 +156,5 @@ public class WebSocketService {
         }
     }
 
-//    public RecommendKeywordDto sendRecommendedKeywords(String projectId) {
-//
-//    }
+    //스크립트를 통한
 }
