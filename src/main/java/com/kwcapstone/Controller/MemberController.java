@@ -115,4 +115,17 @@ public class MemberController {
         return BaseResponse.res(SuccessStatus.USER_PW_PATCH,null);
     }
 
+    @Operation(summary = "비밀번호 확인 용")
+    @PostMapping("/check_pw")
+    public BaseResponse checkPw(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                @RequestBody PasswordRequestDto passwordRequestDto) {
+        if(principalDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        }
+
+        ObjectId memberId = principalDetails.getId();
+        memberService.changePassword(memberId, passwordRequestDto);
+        return BaseResponse.res(SuccessStatus.USER_CHECKING_PW,null);
+    }
+
 }
