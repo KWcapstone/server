@@ -56,7 +56,7 @@ public class WebSocketService {
     }
 
     //실시간 회의 스크립트를 websocket으로 받아서 GPT로 요약하고 이 요약한 것을 webSocket을 다시 클라이언트들에게 전달하는 핵심 로직
-    public void handleRecommend(String projectId, ScriptMessageRequestDto dto) {
+    public void handleMain(String projectId, ScriptMessageRequestDto dto) {
         //scriptBuffer는 Map<Project, 스크립트 리스트> 구조
         //스크립트에 새로운 문장 추가
         scriptBuffer.computeIfAbsent(projectId, k -> new ArrayList<>()).add(dto.getScription());

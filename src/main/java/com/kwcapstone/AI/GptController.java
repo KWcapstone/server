@@ -26,7 +26,7 @@ public class GptController {
     @PostMapping("/recommend")
     public BaseResponse mainByGPT(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                       @RequestBody String originalText) {
-        return BaseResponse.res(SuccessStatus.GPT_RECOMMEND_SUCCESS, gptService.callRecommendOpenAI(originalText));
+        return BaseResponse.res(SuccessStatus.GPT_MAIN_SUCCESS, gptService.callMainOpenAI(originalText));
     }
 
 }

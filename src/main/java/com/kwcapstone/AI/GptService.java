@@ -68,12 +68,12 @@ public class GptService {
     // open ai 는 max_tokens 생성할 때 최대 토큰 수를 으미함
     // prompt 가 응답 모두 토큰으로 계산되어 얼마나 길게 나올 수 있는지를 제한함
     //prompt 는 누적된 회의 스크립트 전체 텍스트
-    public String callRecommendOpenAI(String prompt) {
+    public String callMainOpenAI(String prompt) {
         int maxTokens = estimateMaxTokens(prompt);
 
         String promptMessage = """
-            다음 텍스트는 현재 진행 중인 아이디에이션 과정의 스크립트야. 이의 주제를 파악하고 현재 아이디에이션에 대한 추천 키워드를 5개 알려줘.
-            추천 키워드만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마.
+            다음 텍스트는 현재 진행 중인 아이디에이션 과정의 스크립트야. 이의 주제를 파악하고 현재 아이디에이션에 대한 주요 키워드를 5개 알려줘.
+            주요 키워드만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(
