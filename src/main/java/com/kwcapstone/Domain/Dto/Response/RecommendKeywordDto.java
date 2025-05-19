@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RecommendKeywordDto {
-    private String event = "recommended_keywords";
+    private String event;
     private String projectId;
     private List<String> keywords;
 }
