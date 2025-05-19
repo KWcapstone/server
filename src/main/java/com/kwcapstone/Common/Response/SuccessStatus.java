@@ -92,7 +92,10 @@ public enum SuccessStatus implements BaseCode{
     SCRIPT_SAVE_SUCCESS(HttpStatus.OK, "스크립트가 성공적으로 저장되었습니다."),
 
     //gptTest 요약본
-    GPT_SUMMARY_SUCCESS(HttpStatus.OK, "gpt Test 요약")
+    GPT_SUMMARY_SUCCESS(HttpStatus.OK, "gpt Test 요약"),
+
+    // gptTest 추천 키워드
+    GPT_RECOMMEND_SUCCESS(HttpStatus.OK, "gpt 추천 키워드")
     ;
 
     private final HttpStatus httpStatus;

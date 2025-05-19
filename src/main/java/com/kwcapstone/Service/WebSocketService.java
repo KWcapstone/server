@@ -7,17 +7,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class WebSocketService {
     private final GptService gptService;
     private final SimpMessagingTemplate simpMessagingTemplate; // stomp webSocket 메시지를 서버 클라이언트 푸쉬
-
+    private final Map<String, Integer> lastProcessedLineCount = new ConcurrentHashMap<>();
 
     // projectId별로 스크립트를 누적 저장
     //회의 여러개가 동시에 시작되기 때문에
@@ -56,7 +62,55 @@ public class WebSocketService {
         }
     }
 
-//    public RecommendKeywordDto sendRecommendedKeywords(String projectId) {
-//
-//    }
+    public RecommendKeywordDto sendRecommendedKeywords(String projectId) {
+        String filePath = "/tmp/work/script_" + projectId + ".txt";
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            RecommendKeywordDto dto = new RecommendKeywordDto(
+                    "recommended_keywords", projectId, List.of("스크립트 없음"));
+            simpMessagingTemplate.convertAndSend("/topic/recommended_keywords/"+projectId, dto);
+            return dto;
+        }
+
+        try {
+            // 전체 스크립트 줄 읽기
+            List<String> allLines = Files.readAllLines(Path.of(filePath));
+            int totalCount = allLines.size();
+
+            int lastProcessed = lastProcessedLineCount.getOrDefault(projectId, 0);
+            int newLinesSinceLast = totalCount - lastProcessed;
+
+            // 7개 이상의 새 문장이 쌓였을 경우만 전송
+            if (newLinesSinceLast >= 7) {
+                // 최신 줄 수 저장
+                lastProcessedLineCount.put(projectId, totalCount);
+
+                String fullText = String.join(" ", allLines);
+                String keywordResponse = gptService.callRecommendedKeywords(fullText);
+
+                List<String> keywords = Arrays.stream(keywordResponse.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .limit(4)
+                        .collect(Collectors.toList());
+
+                RecommendKeywordDto dto = new RecommendKeywordDto(
+                        "recommended_keywords", projectId, keywords
+                );
+                simpMessagingTemplate.convertAndSend("/topic/keywords" + projectId, dto);
+                return dto;
+            }
+
+            // 아직 7개 추가되지 않음
+            return new RecommendKeywordDto(
+                    "recommended_keywords", projectId, List.of("변경 없음 (" + newLinesSinceLast + "줄 추가됨)")
+            );
+        } catch (IOException e) {
+            RecommendKeywordDto dto = new RecommendKeywordDto(
+                    "recommended_keywords", projectId, List.of("에러 발생"));
+            simpMessagingTemplate.convertAndSend("/topic/recommended_keywords/" + projectId, dto);
+            return dto;
+        }
+    }
 }

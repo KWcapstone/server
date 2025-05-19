@@ -21,4 +21,12 @@ public class GptController {
                                      @RequestBody String originalText) {
         return BaseResponse.res(SuccessStatus.GPT_SUMMARY_SUCCESS, gptService.callSummaryOpenAI(originalText));
     }
+
+    @Operation(summary = "gpt recommended keywords test")
+    @PostMapping("/recommended_keywords")
+    @ResponseBody
+    public BaseResponse recommendByGPT(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                       @RequestBody String originalText) {
+        return BaseResponse.res(SuccessStatus.GPT_RECOMMEND_SUCCESS, gptService.callRecommendedKeywords(originalText));
+    }
 }

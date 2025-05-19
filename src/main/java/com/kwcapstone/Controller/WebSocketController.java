@@ -65,9 +65,9 @@ public class WebSocketController {
         );
     }
 
-//    @MessageMapping("/{projectId}/recommend_keyword")
-//    @SendTo("/topic/{projectId}")
-//    public RecommendKeywordDto recommendedKeywordSend(@DestinationVariable String projectId) {
-//        return webSocketService.sendRecommendedKeywords(projectId);
-//    }
+    @MessageMapping("/{projectId}/recommend_keyword")
+    @SendTo("/topic/{projectId}")
+    public RecommendKeywordDto recommendedKeywordSend(@DestinationVariable String projectId) {
+        return webSocketService.sendRecommendedKeywords(projectId);
+    }
 }
