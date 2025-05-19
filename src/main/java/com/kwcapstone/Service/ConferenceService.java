@@ -1,7 +1,10 @@
 package com.kwcapstone.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kwcapstone.AI.GptService;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
-import com.kwcapstone.Domain.Dto.Response.NewProjectResponseDto;
+import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.MemberToProject;
 import com.kwcapstone.Domain.Entity.Project;
 import com.kwcapstone.Repository.MemberToProjectRepository;
@@ -10,6 +13,7 @@ import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,7 +22,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Transactional
@@ -28,6 +36,16 @@ public class ConferenceService {
     private final ProjectRepository projectRepository;
     private final S3Service s3Service;
     private final MemberToProjectRepository memberToProjectRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final GptService gptService;
+    private final WebSocketService webSocketService;
+
+    private final Map<String, List<String>> scriptBuffer = new ConcurrentHashMap<>();
+    private final Map<String, Integer> newScriptionCounter = new ConcurrentHashMap<>();
+    private final Map<String, List<NodeDto>> sessionNodeBuffer = new ConcurrentHashMap<>();
+    private final int X_BASE = 100; // 위치 기준
+    private final int Y_GAP = 80;   // 노드 간 y 간격
+
 
     public NewProjectResponseDto projectCreate(PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
@@ -65,7 +83,7 @@ public class ConferenceService {
         );
     }
 
-    public Void scriptSave(PrincipalDetails principalDetails, ScriptMessageRequestDto requestDto) {
+    public NodeUpdateResponseDto scriptSave(PrincipalDetails principalDetails, ScriptMessageRequestDto requestDto) {
         ObjectId memberId = principalDetails.getId();
         try {
             String projectIdStr = requestDto.getProjectId();
@@ -98,7 +116,73 @@ public class ConferenceService {
             String s3Path = "scripts/" + fileName;
             s3Service.uploadFileToS3(s3Path, file);
 
-            return null;
+            // 누적
+            scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(content);
+            int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
+            newScriptionCounter.put(projectIdStr, count);
+
+                // GPT 호출 조건 (7문장마다)
+                List<String> scriptList = scriptBuffer.get(projectIdStr);
+                String fullText = String.join(" ", scriptList);
+                String gptResult = gptService.callMindMapNode(fullText);
+
+                ObjectMapper mapper = new ObjectMapper();
+                List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+
+                List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
+                List<NodeDto> newNodes = new ArrayList<>();
+                int baseY = currentNodes.size() * Y_GAP;
+
+                boolean isFirstNode = sessionNodeBuffer.get(projectIdStr) == null || sessionNodeBuffer.get(projectIdStr).isEmpty();
+
+                for (int i = 0; i < keywords.size(); i++) {
+                    String keyword = keywords.get(i);
+
+                    String type;
+                    if (isFirstNode && i == 0) {
+                        type = "input"; // 처음 노드만 input
+                    } else if (i == keywords.size() - 1) {
+                        type = "output"; // 마지막 노드
+                    } else {
+                        type = "default"; // 그 외
+                    }
+
+                    NodeDto node = NodeDto.builder()
+                            .id(UUID.randomUUID().toString())
+                            .type(type)
+                            .data(new DataDto(keyword))
+                            .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
+                            .parentId(null) // 이후 연결할 경우 지정
+                            .build();
+                    currentNodes.add(node);
+                    newNodes.add(node);
+                }
+
+                // 클라이언트에 변경 노드만 전송
+                for (NodeDto node : newNodes) {
+                    messagingTemplate.convertAndSend("/topic/conference/live_on" ,
+                            Map.of("event", "liveOn",
+                                    "projectId", projectIdStr,
+                                    "node", node));
+
+                    // ✅ 콘솔 확인용 로그
+                    System.out.println("[Generated Node]");
+                    System.out.println(" - id: " + node.getId());
+                    System.out.println(" - type: " + node.getType());
+                    System.out.println(" - label: " + node.getData().getLabel());
+                    System.out.println(" - position: (" + node.getPosition().getX() + ", " + node.getPosition().getY() + ")");
+                }
+
+                // 초기화
+                scriptBuffer.put(projectIdStr, new ArrayList<>());
+                newScriptionCounter.put(projectIdStr, 0);
+                NodeUpdateResponseDto update =
+                        NodeUpdateResponseDto.builder()
+                                .event("live_on")
+                                .projectId(projectIdStr)
+                                .nodes(newNodes)
+                                .build();
+            return update;
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다.");
         }

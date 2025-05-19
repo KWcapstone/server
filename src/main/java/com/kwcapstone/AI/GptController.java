@@ -37,4 +37,10 @@ public class GptController {
         return BaseResponse.res(SuccessStatus.GPT_MAIN_SUCCESS, gptService.callMainOpenAI(originalText));
     }
 
+    @Operation(summary = "node")
+    @PostMapping("/mindMapNode")
+    public BaseResponse mindMapNode(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                    @RequestBody String originalText) {
+        return BaseResponse.res(SuccessStatus.GPT_MINDMap_SUCCESS, gptService.callMindMapNode(originalText));
+    }
 }

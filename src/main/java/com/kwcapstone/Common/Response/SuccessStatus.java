@@ -100,7 +100,10 @@ public enum SuccessStatus implements BaseCode{
     // gptTest 추천 키워드
     GPT_RECOMMEND_SUCCESS(HttpStatus.OK, "gpt 추천 키워드"),
     //gptTest MAIN KEYWORD
-    GPT_MAIN_SUCCESS(HttpStatus.OK, "gpt Test 주요 키워드")
+    GPT_MAIN_SUCCESS(HttpStatus.OK, "gpt Test 주요 키워드"),
+    //gptTest mindMap
+    GPT_MINDMap_SUCCESS(HttpStatus.OK, "gpt MindMap Node"),
+
     ;
 
     private final HttpStatus httpStatus;
