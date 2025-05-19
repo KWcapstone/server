@@ -132,6 +132,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 || path.equals("/gptTest/recommended_keywords")
                 || path.equals("/auth/reset_pw")
 
+                || path.equals("/ws")                      // WebSocket 엔드포인트
+                || path.startsWith("/ws/")                 // SockJS or STOMP handshake에 사용될 수 있음
+                || path.startsWith("/topic/")              // STOMP 구독 경로
+                || path.startsWith("/app/")                // STOMP 발행 경로
+
                 // 필요하다면 다른 permitAll 경로들도 추가
                 // ...
                 ;
