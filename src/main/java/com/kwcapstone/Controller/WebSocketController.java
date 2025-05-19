@@ -35,22 +35,22 @@ public class WebSocketController {
 
     @MessageMapping("/{projectId}/modify_inviting")
     public void addMember(@DestinationVariable String projectId, Principal principal,
-                          @Payload ParticipantDto participantDto,
+                          @Payload String memberId,
                           Message<?> message) {
         // 1. 참가자 목록에 추가
-        participantTracker.addParticipant(projectId, participantDto);
+        participantTracker.addParticipant(projectId, memberId);
 
         // 2. 세션 ID 추출 및 sessionRegistry 에 등록
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (accessor != null) {
             String sessionId = accessor.getSessionId();
-            sessionRegistry.register(sessionId, participantDto.getMemberId(), projectId);
+            sessionRegistry.register(sessionId, memberId, projectId);
         }
 
         // 3. join 이벤트 전송
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId + "/participants",
-                new ParticipantEventDto("participant_join", projectId, participantDto)
+                new ParticipantEventDto("participant_join", projectId, memberId)
         );
     }
 
@@ -61,7 +61,7 @@ public class WebSocketController {
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId + "/participants",
                 new ParticipantResponseDto("participants", projectId,
-                        new ArrayList<>(participantTracker.getParticipants(projectId)))
+                        new ArrayList<>(participantTracker.getParticipantDtos(projectId)))
         );
     }
 
