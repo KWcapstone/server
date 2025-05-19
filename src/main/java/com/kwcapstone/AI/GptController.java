@@ -23,7 +23,7 @@ public class GptController {
     }
 
     @Operation(summary = "gpt main keyword test")
-    @PostMapping("/recommend")
+    @PostMapping("/mainKeyword")
     public BaseResponse mainByGPT(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                       @RequestBody String originalText) {
         return BaseResponse.res(SuccessStatus.GPT_MAIN_SUCCESS, gptService.callMainOpenAI(originalText));
