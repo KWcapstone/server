@@ -56,11 +56,11 @@ public class ConferenceService {
         memberToProjectRepository.save(mapping);
 
         return new NewProjectResponseDto(
-                memberIdStr,
+                project.getProjectId().toHexString(),
                 project.getProjectName(),
                 project.getProjectImage(),
                 project.getUpdatedAt(),
-                project.getCreator()
+                project.getCreator().toHexString()
         );
     }
 
@@ -103,3 +103,4 @@ public class ConferenceService {
         }
     }
 }
+// 67b47076c89fe04ae30dc7ba

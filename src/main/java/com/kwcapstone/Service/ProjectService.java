@@ -188,7 +188,7 @@ public class ProjectService {
             }
 
             if (type.equals("project")) {
-                projectRepository.deleteById(projectId);
+                projectRepository.deleteByProjectId(projectId);
                 memberToProjectRepository.deleteByProjectId(projectId);
             } else if (type.equals("record")) {
                 project.get().setRecord(null);
