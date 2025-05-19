@@ -42,8 +42,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         //1. 인증이 필요 없는 url checking
         String path = request.getRequestURI();
+        System.out.println("JWT 필터 진입: " + path);
 
         if (isPermitAllPath(path)) {
+            System.out.println("permitAll 처리됨: " + path);
             filterChain.doFilter(request, response);
             return;}
 
@@ -131,6 +133,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 || path.startsWith("/test")
                 || path.equals("/gptTest/recommended_keywords")
                 || path.equals("/auth/reset_pw")
+
+                || path.startsWith("/ws")                 // SockJS or STOMP handshake에 사용될 수 있음
+                || path.startsWith("/topic/")              // STOMP 구독 경로
+                || path.startsWith("/app/")                // STOMP 발행 경로
 
                 // 필요하다면 다른 permitAll 경로들도 추가
                 // ...

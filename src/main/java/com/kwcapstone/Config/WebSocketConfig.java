@@ -30,7 +30,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
 //                .addInterceptors(jwtHandShakeInterceptor)
                 .setAllowedOriginPatterns("*"); //cors 문제 방지
-//                .withSockJS(); //webSocket을 브라우저가 지원못할 경우 대비한 백업용
-        //registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
+                //.withSockJS(); //webSocket을 브라우저가 지원못할 경우 대비한 백업용
+//        registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
     }
 }
