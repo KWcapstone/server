@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -28,20 +29,16 @@ public class WebSocketEventListener {
         participantTracker.removeParticipant(info.getProjectId(), info.getMemberId());
 
         // 2. 퇴장한 유저 정보 구성
-        ParticipantDto leftUser = new ParticipantDto(info.getMemberId(), null, null);
-
-        // 3. 퇴장 이벤트 전송
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + info.getProjectId() + "/participants-event",
-                new ParticipantEventDto("participant_leave",
-                        info.getProjectId(), leftUser)
+                new ParticipantEventDto("participant_leave", info.getProjectId(), info.getMemberId())
         );
 
         // 3. 전체 목록도 갱신
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + info.getProjectId() + "/participants",
                 new ParticipantResponseDto("participants", info.getProjectId(),
-                        new ArrayList<>(participantTracker.getParticipants(info.getProjectId())))
+                        participantTracker.getParticipantDtos(info.getProjectId()))
         );
     }
 }
