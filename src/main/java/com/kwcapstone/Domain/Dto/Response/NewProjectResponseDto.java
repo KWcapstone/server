@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NewProjectResponseDto {
-    private ObjectId projectId;
+    private String projectId;
     private String projectName;
     private String projectImage;
     private LocalDateTime updatedAt;

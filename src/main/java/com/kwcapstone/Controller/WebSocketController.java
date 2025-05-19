@@ -1,6 +1,7 @@
 package com.kwcapstone.Controller;
 
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
+import com.kwcapstone.Domain.Dto.Response.RecommendKeywordDto;
 import com.kwcapstone.Service.WebSocketService;
 import com.kwcapstone.Config.RoomParticipantTracker;
 import com.kwcapstone.Config.WebSocketSessionRegistry;
@@ -64,9 +65,9 @@ public class WebSocketController {
         );
     }
 
-    @MessageMapping("/chat/{roomId}")
-    @SendTo("/topic/{roomId}")
-    public ChatMessage sendRecommendedKeyword(@DestinationVariable String roomId, ChatMessage message, Principal principal) {
-        return message;
-    }
+//    @MessageMapping("/{projectId}/recommend_keyword")
+//    @SendTo("/topic/{projectId}")
+//    public RecommendKeywordDto recommendedKeywordSend(@DestinationVariable String projectId) {
+//        return webSocketService.sendRecommendedKeywords(projectId);
+//    }
 }

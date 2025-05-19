@@ -30,6 +30,7 @@ public class ConferenceService {
 
     public NewProjectResponseDto projectCreate(PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
+        String memberIdStr = memberId.toString();
 
         // 기본 프로젝트 이름 설정
         String baseProjectName = "새 프로젝트";
@@ -55,7 +56,7 @@ public class ConferenceService {
         memberToProjectRepository.save(mapping);
 
         return new NewProjectResponseDto(
-                project.getProjectId(),
+                memberIdStr,
                 project.getProjectName(),
                 project.getProjectImage(),
                 project.getUpdatedAt(),
