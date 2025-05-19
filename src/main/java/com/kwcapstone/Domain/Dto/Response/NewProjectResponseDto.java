@@ -15,5 +15,5 @@ public class NewProjectResponseDto {
     private String projectName;
     private String projectImage;
     private LocalDateTime updatedAt;
-    private ObjectId creator;
+    private String creator;
 }
