@@ -82,7 +82,7 @@ public class MainController {
     @Operation(summary = "프로필 수정하기")
     @PatchMapping("/profile")
     public BaseResponse editProfile(@AuthenticationPrincipal PrincipalDetails principalDetails,
-                                    ProfileEditRequestDto profileEditRequestDto){
+                                    @RequestBody ProfileEditRequestDto profileEditRequestDto){
         ObjectId memberId = principalDetails.getId();
         return BaseResponse.res(SuccessStatus.EDIT_PROFILE, mainService.editProfile(memberId, profileEditRequestDto));
     }
