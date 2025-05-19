@@ -24,5 +24,9 @@ public class GptController {
 
     @Operation(summary = "get recommend test")
     @PostMapping("/recommend")
+    public BaseResponse recommndByGPT(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                      @RequestBody String originalText) {
+        return BaseResponse.
+    }
 
 }
