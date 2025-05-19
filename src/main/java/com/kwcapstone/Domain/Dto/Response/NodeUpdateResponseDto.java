@@ -14,6 +14,6 @@ import java.util.List;
 public class NodeUpdateResponseDto {
     private String event;
     private String projectId;
-    private String summary;
+    private NodeSummaryResponseDto summary;
     private List<NodeDto> nodes;
 }
