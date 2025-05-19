@@ -121,45 +121,55 @@ public class ConferenceService {
             int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
             newScriptionCounter.put(projectIdStr, count);
 
-                // GPT 호출 조건 (7문장마다)
-                List<String> scriptList = scriptBuffer.get(projectIdStr);
-                String fullText = String.join(" ", scriptList);
-                String gptResult = gptService.callMindMapNode(fullText);
+            // GPT 호출 조건 (7문장마다)
+            List<String> scriptList = scriptBuffer.get(projectIdStr);
+            String fullText = String.join(" ", scriptList);
+            String gptResult = gptService.callMindMapNode(fullText);
+            String summaryJson = gptService.callSummaryOpenAI(fullText);
 
-                ObjectMapper mapper = new ObjectMapper();
-                //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
-                List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
+            ObjectMapper summaryMapper = new ObjectMapper();
+            NodeSummaryResponseDto summary;
 
-                List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
-                List<NodeDto> newNodes = new ArrayList<>();
+            try {
+                summary = summaryMapper.readValue(summaryJson, NodeSummaryResponseDto.class);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "요약 정보를 파싱하는 데 실패했습니다.");
+            }
 
-                Map<String, String> idMapping = new ConcurrentHashMap<>();
+            ObjectMapper mapper = new ObjectMapper();
+            //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+            List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
 
-                for (Map<String, Object> gptNode : gptNodes) {
-                    String originalId = gptNode.get("id").toString();
-                    String newId = UUID.randomUUID().toString();
-                    idMapping.put(originalId, newId);
+            List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
+            List<NodeDto> newNodes = new ArrayList<>();
+
+            Map<String, String> idMapping = new ConcurrentHashMap<>();
+
+            for (Map<String, Object> gptNode : gptNodes) {
+                String originalId = gptNode.get("id").toString();
+                String newId = UUID.randomUUID().toString();
+                idMapping.put(originalId, newId);
+            }
+
+            int baseY = currentNodes.size() * Y_GAP;
+
+            for (int i = 0; i < gptNodes.size(); i++) {
+                Map<String, Object> gptNode = gptNodes.get(i);
+                String originalId = gptNode.get("id").toString();
+                String label = gptNode.get("label").toString();
+                String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
+                String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
+
+                String type;
+                if (parentId == null) {
+                    type = "input";
+                } else if (i == gptNodes.size() - 1) {
+                    type = "output";
+                } else {
+                    type = "default";
                 }
 
-                int baseY = currentNodes.size() * Y_GAP;
-
-                for (int i = 0; i < gptNodes.size(); i++) {
-                    Map<String, Object> gptNode = gptNodes.get(i);
-                    String originalId = gptNode.get("id").toString();
-                    String label = gptNode.get("label").toString();
-                    String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
-                    String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
-
-                    String type;
-                    if (parentId == null) {
-                        type = "input";
-                    } else if (i == gptNodes.size() - 1) {
-                        type = "output";
-                    } else {
-                        type = "default";
-                    }
-
-                    NodeDto node = NodeDto.builder()
+                NodeDto node = NodeDto.builder()
                         .id(idMapping.get(originalId))
                         .type(type)
                         .data(new DataDto(label))
@@ -185,6 +195,7 @@ public class ConferenceService {
             return NodeUpdateResponseDto.builder()
                     .event("live_on")
                     .projectId(projectIdStr)
+                    .summary(summary)
                     .nodes(newNodes)
                     .build();
 
