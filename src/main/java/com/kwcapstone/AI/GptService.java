@@ -73,7 +73,7 @@ public class GptService {
 
         String promptMessage = """
             다음 텍스트는 현재 진행 중인 아이디에이션 과정의 스크립트야. 이의 주제를 파악하고 현재 아이디에이션에 대한 주요 키워드를 5개 알려줘.
-            주요 키워드만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마.
+            주요 키워드만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마. JSON 배열로 추출해줘.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(
