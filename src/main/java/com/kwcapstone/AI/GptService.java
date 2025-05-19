@@ -34,9 +34,19 @@ public class GptService {
         int maxTokens = estimateMaxTokens(prompt);
 
         String promptMessage = """
-            다음 텍스트를 요약해줘.
-            응답은 %d 토큰 이내로 끝나도록 핵심만 간결하게 정리해줘.
-            요약본만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마.
+                아래 회의 스크립트는 아이디어 회의 중 일부야. \s
+                회의 내용을 간결하게 요약해줘.
+                
+                응답은 반드시 아래 JSON 형식으로 출력해줘:
+                {
+                  "title": "핵심 주제를 대표하는 간결한 제목",
+                  "content": "회의의 핵심 흐름과 논의된 주요 사항을 정리한 본문 내용"
+                }
+                
+                주의사항:
+                - title은 15자 이내로, 내용을 대표할 수 있는 요약 문구로 작성해줘.
+                - content는 3~4문장 이내로 회의 핵심 내용을 압축해서 설명해줘.
+                - '더 도와드릴까요?' 같은 멘트는 절대 포함하지 마.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(
@@ -150,10 +160,22 @@ public class GptService {
                 
                 각 노드는 1~2단어 또는 짧은 문장으로 구성되어야 하고,
                 하나의 노드는 하나의 주제나 개념을 담고 있어야 해.
+               
+                각 노드는 다음과 같은 정보가 필요해:
+                - id: 노드 고유 ID (아무 값이나 string으로 설정해도 좋아)
+                - label: 노드에 들어갈 핵심 키워드 또는 문장 요약
+                - parentId: 부모 노드의 ID (루트 노드는 null)
                 
-                총 5~7개의 마인드맵 노드를 뽑아서 **JSON 배열**로 보여줘.
-                답변은 노드만 깔끔하게 출력하고, 설명은 필요 없어.
-                예: ["프로젝트 일정", "기술 스택", "팀 구성", ...]
+                결과는 JSON 배열 형태로 줘. 예시는 다음과 같아:
+                
+                    [
+                      { "id": "1", "label": "졸업작품 아이디에이션", "parentId": null },
+                      { "id": "2", "label": "실시간 마인드맵", "parentId": "1" },
+                      { "id": "3", "label": "토레타 챌린지", "parentId": "1" },
+                      { "id": "4", "label": "구현 난이도", "parentId": "2" }
+                    ]
+                
+                    이렇게 계층 구조를 JSON 배열로 표현해줘.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(

@@ -5,15 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class NodeUpdateResponseDto {
-    private String event;
-    private String projectId;
-    private NodeSummaryResponseDto summary;
-    private List<NodeDto> nodes;
+public class NodeSummaryResponseDto {
+    private String title;
+    private String content;
 }
