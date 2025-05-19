@@ -150,10 +150,22 @@ public class GptService {
                 
                 각 노드는 1~2단어 또는 짧은 문장으로 구성되어야 하고,
                 하나의 노드는 하나의 주제나 개념을 담고 있어야 해.
+               
+                각 노드는 다음과 같은 정보가 필요해:
+                - id: 노드 고유 ID (아무 값이나 string으로 설정해도 좋아)
+                - label: 노드에 들어갈 핵심 키워드 또는 문장 요약
+                - parentId: 부모 노드의 ID (루트 노드는 null)
                 
-                총 5~7개의 마인드맵 노드를 뽑아서 **JSON 배열**로 보여줘.
-                답변은 노드만 깔끔하게 출력하고, 설명은 필요 없어.
-                예: ["프로젝트 일정", "기술 스택", "팀 구성", ...]
+                결과는 JSON 배열 형태로 줘. 예시는 다음과 같아:
+                
+                    [
+                      { "id": "1", "label": "졸업작품 아이디에이션", "parentId": null },
+                      { "id": "2", "label": "실시간 마인드맵", "parentId": "1" },
+                      { "id": "3", "label": "토레타 챌린지", "parentId": "1" },
+                      { "id": "4", "label": "구현 난이도", "parentId": "2" }
+                    ]
+                
+                    이렇게 계층 구조를 JSON 배열로 표현해줘.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(
