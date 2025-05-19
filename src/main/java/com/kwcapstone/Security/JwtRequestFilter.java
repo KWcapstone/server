@@ -129,6 +129,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 || path.equals("/main/{memberId}")
                 || path.equals("/main/apiTest")
                 || path.startsWith("/test")
+                || path.equals("/gptTest/recommended_keywords")
 
                 // 필요하다면 다른 permitAll 경로들도 추가
                 // ...

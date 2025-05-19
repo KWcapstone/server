@@ -37,3 +37,7 @@ out/
 .vscode/
 
 upload-all-secrets.sh
+
+
+### Script files ###
+tmp/work/
