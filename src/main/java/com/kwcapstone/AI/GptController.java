@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class GptController {
     private final GptService gptService;
 
-    @Operation(summary = "gpt summary test")
+    @Operation(summary = "gpt summaryword test")
     @PostMapping("/summary")
     @ResponseBody
     public BaseResponse summaryByGPT(@AuthenticationPrincipal PrincipalDetails principalDetails,
@@ -22,9 +22,9 @@ public class GptController {
         return BaseResponse.res(SuccessStatus.GPT_SUMMARY_SUCCESS, gptService.callSummaryOpenAI(originalText));
     }
 
-    @Operation(summary = "get recommend test")
+    @Operation(summary = "gpt main keyword test")
     @PostMapping("/recommend")
-    public BaseResponse recommndByGPT(@AuthenticationPrincipal PrincipalDetails principalDetails,
+    public BaseResponse mainByGPT(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                       @RequestBody String originalText) {
         return BaseResponse.res(SuccessStatus.GPT_RECOMMEND_SUCCESS, gptService.callRecommendOpenAI(originalText));
     }

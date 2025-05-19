@@ -93,8 +93,8 @@ public enum SuccessStatus implements BaseCode{
 
     //gptTest 요약본
     GPT_SUMMARY_SUCCESS(HttpStatus.OK, "gpt Test 요약"),
-    //gptTest 추천 키워드
-    GPT_RECOMMEND_SUCCESS(HttpStatus.OK, "gpt Test 추천 키워드"),
+    //gptTest MAIN KEYWORD
+    GPT_MAIN_SUCCESS(HttpStatus.OK, "gpt Test 주요 키워드"),
 
     ;
 
