@@ -156,5 +156,5 @@ public class WebSocketService {
         }
     }
 
-    //스크립트를 통한
+
 }

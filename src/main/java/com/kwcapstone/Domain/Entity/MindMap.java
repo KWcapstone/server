@@ -1,5 +1,6 @@
 package com.kwcapstone.Domain.Entity;
 
+import com.kwcapstone.Domain.Dto.Request.EdgeDto;
 import com.kwcapstone.Domain.Dto.Response.NodeDto;
 import lombok.*;
 import org.bson.types.ObjectId;
@@ -21,6 +22,5 @@ public class MindMap {
     private String id;
     private ObjectId projectId;
     private List<NodeDto> nodes;
-    private List<Map<String, Object>> edges;
-
+    private List<EdgeDto> edges;
 }
