@@ -16,8 +16,8 @@ import java.util.Map;
 @Builder
 public class Node {
     @Id
-    private ObjectId nodeId;
-
+    private ObjectId nodeObjectId;
+    private String id;
     private ObjectId projectId;
     private List<Map<String,Object>> nodes;
     private List<Map<String, Object>> edges;
