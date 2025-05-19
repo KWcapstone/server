@@ -352,7 +352,7 @@ public class MemberService {
     }
 
     //비밀번호 학인
-    private void checkingPw(ObjectId memberId, AuthPasswordCheckingRequestDto authPasswordCheckingRequestDto){
+    public void checkingPw(ObjectId memberId, AuthPasswordCheckingRequestDto authPasswordCheckingRequestDto){
         //memberId
         Optional<Member> member = memberRepository.findByMemberId(memberId);
         if(!member.isPresent()){
@@ -363,7 +363,7 @@ public class MemberService {
         if(authPasswordCheckingRequestDto.getPasword() == member.get().getPassword()){
             return;
         }else{
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비밀번호가 일치하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비밀번호를 찾을 수 없습니다.");
         }
 
     }
