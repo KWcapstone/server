@@ -21,4 +21,8 @@ public class GptController {
                                      @RequestBody String originalText) {
         return BaseResponse.res(SuccessStatus.GPT_SUMMARY_SUCCESS, gptService.callSummaryOpenAI(originalText));
     }
+
+    @Operation(summary = "get recommend test")
+    @PostMapping("/recommend")
+
 }
