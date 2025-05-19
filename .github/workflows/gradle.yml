@@ -103,7 +103,7 @@ jobs:
           docker stop kwcapstone-server || true
           docker rm kwcapstone-server || true
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/kwcapstone-server
-          docker run -d -p 80:8080 --name kwcapstone-server \
+          docker run -d -p 8080:8080 --name kwcapstone-server \
             -e MAIL_HOST="${MAIL_HOST}" \
             -e MAIL_PORT="${MAIL_PORT}" \
             -e MAIL_USERNAME="${MAIL_USERNAME}" \
