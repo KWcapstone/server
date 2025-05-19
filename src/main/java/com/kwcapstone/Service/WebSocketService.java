@@ -2,6 +2,7 @@ package com.kwcapstone.Service;
 
 import com.kwcapstone.AI.GptService;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
+import com.kwcapstone.Domain.Dto.Response.RecommendKeywordDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -96,4 +97,8 @@ public class WebSocketService {
             newScriptionCounter.put(projectId, 0);
         }
     }
+
+//    public RecommendKeywordDto sendRecommendedKeywords(String projectId) {
+//
+//    }
 }
