@@ -34,9 +34,19 @@ public class GptService {
         int maxTokens = estimateMaxTokens(prompt);
 
         String promptMessage = """
-            다음 텍스트를 요약해줘.
-            응답은 %d 토큰 이내로 끝나도록 핵심만 간결하게 정리해줘.
-            요약본만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마.
+                아래 회의 스크립트는 아이디어 회의 중 일부야. \s
+                회의 내용을 간결하게 요약해줘.
+                
+                응답은 반드시 아래 JSON 형식으로 출력해줘:
+                {
+                  "title": "핵심 주제를 대표하는 간결한 제목",
+                  "content": "회의의 핵심 흐름과 논의된 주요 사항을 정리한 본문 내용"
+                }
+                
+                주의사항:
+                - title은 15자 이내로, 내용을 대표할 수 있는 요약 문구로 작성해줘.
+                - content는 3~4문장 이내로 회의 핵심 내용을 압축해서 설명해줘.
+                - '더 도와드릴까요?' 같은 멘트는 절대 포함하지 마.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(

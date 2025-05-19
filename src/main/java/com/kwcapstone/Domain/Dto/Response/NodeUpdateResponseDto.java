@@ -14,5 +14,7 @@ import java.util.List;
 public class NodeUpdateResponseDto {
     private String event;
     private String projectId;
+    private String main_keyword;
+    private String recommend_keyword;
     private List<NodeDto> nodes;
 }

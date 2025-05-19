@@ -127,62 +127,117 @@ public class ConferenceService {
                 String gptResult = gptService.callMindMapNode(fullText);
 
                 ObjectMapper mapper = new ObjectMapper();
-                List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+                //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+                List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
 
                 List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
                 List<NodeDto> newNodes = new ArrayList<>();
+
+                Map<String, String> idMapping = new ConcurrentHashMap<>();
+
+                for (Map<String, Object> gptNode : gptNodes) {
+                    String originalId = gptNode.get("id").toString();
+                    String newId = UUID.randomUUID().toString();
+                    idMapping.put(originalId, newId);
+                }
+
                 int baseY = currentNodes.size() * Y_GAP;
 
-                boolean isFirstNode = sessionNodeBuffer.get(projectIdStr) == null || sessionNodeBuffer.get(projectIdStr).isEmpty();
-
-                for (int i = 0; i < keywords.size(); i++) {
-                    String keyword = keywords.get(i);
+                for (int i = 0; i < gptNodes.size(); i++) {
+                    Map<String, Object> gptNode = gptNodes.get(i);
+                    String originalId = gptNode.get("id").toString();
+                    String label = gptNode.get("label").toString();
+                    String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
+                    String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
 
                     String type;
-                    if (isFirstNode && i == 0) {
-                        type = "input"; // 처음 노드만 input
-                    } else if (i == keywords.size() - 1) {
-                        type = "output"; // 마지막 노드
+                    if (parentId == null) {
+                        type = "input";
+                    } else if (i == gptNodes.size() - 1) {
+                        type = "output";
                     } else {
-                        type = "default"; // 그 외
+                        type = "default";
                     }
 
                     NodeDto node = NodeDto.builder()
-                            .id(UUID.randomUUID().toString())
-                            .type(type)
-                            .data(new DataDto(keyword))
-                            .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
-                            .parentId(null) // 이후 연결할 경우 지정
-                            .build();
+                        .id(idMapping.get(originalId))
+                        .type(type)
+                        .data(new DataDto(label))
+                        .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
+                        .parentId(parentId)
+                        .build();
+
                     currentNodes.add(node);
                     newNodes.add(node);
-                }
+            }
 
-                // 클라이언트에 변경 노드만 전송
-                for (NodeDto node : newNodes) {
-                    messagingTemplate.convertAndSend("/topic/conference/live_on" ,
-                            Map.of("event", "liveOn",
-                                    "projectId", projectIdStr,
-                                    "node", node));
+            for (NodeDto node : newNodes) {
+                messagingTemplate.convertAndSend("/topic/conference/live_on",
+                        Map.of("event", "liveOn",
+                                "projectId", projectIdStr,
+                                "node", node));
+            }
 
-                    // ✅ 콘솔 확인용 로그
-                    System.out.println("[Generated Node]");
-                    System.out.println(" - id: " + node.getId());
-                    System.out.println(" - type: " + node.getType());
-                    System.out.println(" - label: " + node.getData().getLabel());
-                    System.out.println(" - position: (" + node.getPosition().getX() + ", " + node.getPosition().getY() + ")");
-                }
+            // 초기화
+            scriptBuffer.put(projectIdStr, new ArrayList<>());
+            newScriptionCounter.put(projectIdStr, 0);
 
-                // 초기화
-                scriptBuffer.put(projectIdStr, new ArrayList<>());
-                newScriptionCounter.put(projectIdStr, 0);
-                NodeUpdateResponseDto update =
-                        NodeUpdateResponseDto.builder()
-                                .event("live_on")
-                                .projectId(projectIdStr)
-                                .nodes(newNodes)
-                                .build();
-            return update;
+            return NodeUpdateResponseDto.builder()
+                    .event("live_on")
+                    .projectId(projectIdStr)
+                    .nodes(newNodes)
+                    .build();
+
+//                boolean isFirstNode = sessionNodeBuffer.get(projectIdStr) == null || sessionNodeBuffer.get(projectIdStr).isEmpty();
+//
+//                for (int i = 0; i < keywords.size(); i++) {
+//                    String keyword = keywords.get(i);
+//
+//                    String type;
+//                    if (isFirstNode && i == 0) {
+//                        type = "input"; // 처음 노드만 input
+//                    } else if (i == keywords.size() - 1) {
+//                        type = "output"; // 마지막 노드
+//                    } else {
+//                        type = "default"; // 그 외
+//                    }
+//
+//                    NodeDto node = NodeDto.builder()
+//                            .id(UUID.randomUUID().toString())
+//                            .type(type)
+//                            .data(new DataDto(keyword))
+//                            .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
+//                            .parentId(null) // 이후 연결할 경우 지정
+//                            .build();
+//                    currentNodes.add(node);
+//                    newNodes.add(node);
+//                }
+//
+//                // 클라이언트에 변경 노드만 전송
+//                for (NodeDto node : newNodes) {
+//                    messagingTemplate.convertAndSend("/topic/conference/live_on" ,
+//                            Map.of("event", "liveOn",
+//                                    "projectId", projectIdStr,
+//                                    "node", node));
+//
+//                    // ✅ 콘솔 확인용 로그
+//                    System.out.println("[Generated Node]");
+//                    System.out.println(" - id: " + node.getId());
+//                    System.out.println(" - type: " + node.getType());
+//                    System.out.println(" - label: " + node.getData().getLabel());
+//                    System.out.println(" - position: (" + node.getPosition().getX() + ", " + node.getPosition().getY() + ")");
+//                }
+//
+//                // 초기화
+//                scriptBuffer.put(projectIdStr, new ArrayList<>());
+//                newScriptionCounter.put(projectIdStr, 0);
+//                NodeUpdateResponseDto update =
+//                        NodeUpdateResponseDto.builder()
+//                                .event("live_on")
+//                                .projectId(projectIdStr)
+//                                .nodes(newNodes)
+//                                .build();
+//            return update;
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다.");
         }
