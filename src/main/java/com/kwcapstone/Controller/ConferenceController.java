@@ -4,6 +4,7 @@ import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.Response.SuccessStatus;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.NewProjectResponseDto;
+import com.kwcapstone.Domain.Dto.Response.NodeUpdateResponseDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ConferenceService;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +35,13 @@ public class ConferenceController {
 
     // 실시간 스크립트 임시저장
     @PostMapping("/script")
-    public BaseResponse<Void> saveScript(@AuthenticationPrincipal PrincipalDetails principalDetails,
+    public BaseResponse<NodeUpdateResponseDto> saveScript(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                          @RequestBody ScriptMessageRequestDto requestDto) {
         return BaseResponse.res(SuccessStatus.SCRIPT_SAVE_SUCCESS,
                 conferenceService.scriptSave(principalDetails, requestDto));
     }
+
+//    @PostMapping("/conference/node")
+//    public BaseResponse<NodeUpdateResponseDto> nodeUpdateMap(@AuthenticationPrincipal PrincipalDetails principalDetails,
+//                                                             @RequestBody )
 }
