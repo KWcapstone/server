@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthPasswordCheckingRequestDto {
-    private String pasword;
+    private String password;
 }

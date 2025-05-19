@@ -359,8 +359,10 @@ public class MemberService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "member 찾을 수 없습니다.");
         }
 
+        String ori = authPasswordCheckingRequestDto.getPassword();
+        String newri = member.get().getPassword();
         //password 있는지 확인
-        if(authPasswordCheckingRequestDto.getPasword() == member.get().getPassword()){
+        if(ori.equals(newri)){
             return;
         }else{
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비밀번호를 찾을 수 없습니다.");
