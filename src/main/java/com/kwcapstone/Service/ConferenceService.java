@@ -296,13 +296,13 @@ public class ConferenceService {
         Project project = projectRepository.findByProjectId(projectObjectId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
-        String nodeFileName = requestDto.getProjectId() + "/node.jpg";
-        String recordFileName = requestDto.getProjectId() + "/record.webm";
-
         try {
             // 확장자 추출
             String nodeExt = getExtension(requestDto.getNode().getOriginalFilename());
             String recordExt = getExtension(requestDto.getRecord().getOriginalFilename());
+
+            String nodeFileName = "node/" + requestDto.getProjectId() + nodeExt;
+            String recordFileName = "record/" + requestDto.getProjectId() + recordExt;
 
             // S3 업로드
             File nodeFile = convertMultipartToFile(requestDto.getNode());
