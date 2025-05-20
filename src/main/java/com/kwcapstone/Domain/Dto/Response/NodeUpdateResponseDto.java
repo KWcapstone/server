@@ -16,4 +16,6 @@ public class NodeUpdateResponseDto {
     private String projectId;
     private NodeSummaryResponseDto summary;
     private List<NodeDto> nodes;
+    private String mainKeywords;
+    private String recommendedKeywords;
 }
