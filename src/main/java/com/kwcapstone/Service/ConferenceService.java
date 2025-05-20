@@ -13,6 +13,7 @@ import com.kwcapstone.Repository.ProjectRepository;
 import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.boot.autoconfigure.ssl.SslProperties;
 import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
@@ -129,68 +130,153 @@ public class ConferenceService {
             int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
             newScriptionCounter.put(projectIdStr, count);
 
-                // GPT 호출 조건 (7문장마다)
-                List<String> scriptList = scriptBuffer.get(projectIdStr);
-                String fullText = String.join(" ", scriptList);
-                String gptResult = gptService.callMindMapNode(fullText);
+            // GPT 호출 조건 (7문장마다)
+            List<String> scriptList = scriptBuffer.get(projectIdStr);
+            String fullText = String.join(" ", scriptList);
+            String gptResult = gptService.callMindMapNode(fullText);
+            String summaryJson = gptService.callSummaryOpenAI(fullText);
 
-                ObjectMapper mapper = new ObjectMapper();
-                List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+            ObjectMapper summaryMapper = new ObjectMapper();
+            NodeSummaryResponseDto summary;
 
-                List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
-                List<NodeDto> newNodes = new ArrayList<>();
-                int baseY = currentNodes.size() * Y_GAP;
+            System.out.println("summary 문제 없음");
+            try {
+                summary = summaryMapper.readValue(summaryJson, NodeSummaryResponseDto.class);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "요약 정보를 파싱하는 데 실패했습니다.");
+            }
 
-                boolean isFirstNode = sessionNodeBuffer.get(projectIdStr) == null || sessionNodeBuffer.get(projectIdStr).isEmpty();
+            ObjectMapper mapper = new ObjectMapper();
+            //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+            List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
+            System.out.println("GPT 결과: " + gptResult);
 
-                for (int i = 0; i < keywords.size(); i++) {
-                    String keyword = keywords.get(i);
+            List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
+            List<NodeDto> newNodes = new ArrayList<>();
 
-                    String type;
-                    if (isFirstNode && i == 0) {
-                        type = "input"; // 처음 노드만 input
-                    } else if (i == keywords.size() - 1) {
-                        type = "output"; // 마지막 노드
-                    } else {
-                        type = "default"; // 그 외
-                    }
+            Map<String, String> idMapping = new ConcurrentHashMap<>();
 
-                    NodeDto node = NodeDto.builder()
-                            .id(UUID.randomUUID().toString())
-                            .type(type)
-                            .data(new DataDto(keyword))
-                            .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
-                            .parentId(null) // 이후 연결할 경우 지정
-                            .build();
+            for (Map<String, Object> gptNode : gptNodes) {
+                String originalId = gptNode.get("id").toString();
+                String newId = UUID.randomUUID().toString();
+                idMapping.put(originalId, newId);
+            }
+
+            System.out.println("new Id 하는게 문제?");
+//
+           int baseY = currentNodes.size() * Y_GAP;
+
+            for (int i = 0; i < gptNodes.size(); i++) {
+                Map<String, Object> gptNode = gptNodes.get(i);
+                String originalId = gptNode.get("id").toString();
+                String label = gptNode.get("label").toString();
+                String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
+                String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
+
+                String type;
+                if (parentId == null) {
+                    type = "input";
+                } else if (i == gptNodes.size() - 1) {
+                    type = "output";
+                } else {
+                    type = "default";
+                }
+
+                System.out.println("parsing이 문제?");
+
+                // position 추출
+                Map<String, Object> positionMap = (Map<String, Object>) gptNode.get("position");
+                int x, y;
+                if (positionMap != null && positionMap.get("x") != null && positionMap.get("y") != null) {
+                    x = ((Number) positionMap.get("x")).intValue();
+                    y = ((Number) positionMap.get("y")).intValue();
+                } else {
+                    // fallback 값 지정 (예: 루트는 0,0 / 나머지는 순서 기반 y축 정렬)
+                    x = X_BASE;
+                    y = baseY + i * Y_GAP;
+                }
+                System.out.println("positon은 문제 없는데,");
+
+                NodeDto node = NodeDto.builder()
+                        .id(idMapping.get(originalId))
+                        .type(type)
+                        .data(new DataDto(label))
+                        .position(new PositionDto(x,y))
+                        .parentId(parentId)
+                        .build();
+
                     currentNodes.add(node);
                     newNodes.add(node);
-                }
+            }
 
-                // 클라이언트에 변경 노드만 전송
-                for (NodeDto node : newNodes) {
-                    messagingTemplate.convertAndSend("/topic/conference/live_on" ,
-                            Map.of("event", "liveOn",
-                                    "projectId", projectIdStr,
-                                    "node", node));
+            for (NodeDto node : newNodes) {
+                messagingTemplate.convertAndSend("/topic/conference/live_on",
+                        Map.of("event", "liveOn",
+                                "projectId", projectIdStr,
+                                "node", node));
+            }
 
-                    // 콘솔 확인용 로그
-                    System.out.println("[Generated Node]");
-                    System.out.println(" - id: " + node.getId());
-                    System.out.println(" - type: " + node.getType());
-                    System.out.println(" - label: " + node.getData().getLabel());
-                    System.out.println(" - position: (" + node.getPosition().getX() + ", " + node.getPosition().getY() + ")");
-                }
+            // 초기화
+            scriptBuffer.put(projectIdStr, new ArrayList<>());
+            newScriptionCounter.put(projectIdStr, 0);
 
-                // 초기화
-                scriptBuffer.put(projectIdStr, new ArrayList<>());
-                newScriptionCounter.put(projectIdStr, 0);
-                NodeUpdateResponseDto update =
-                        NodeUpdateResponseDto.builder()
-                                .event("live_on")
-                                .projectId(projectIdStr)
-                                .nodes(newNodes)
-                                .build();
-            return update;
+            return NodeUpdateResponseDto.builder()
+                    .event("live_on")
+                    .projectId(projectIdStr)
+                    .summary(summary)
+                    .nodes(newNodes)
+                    .build();
+
+//                boolean isFirstNode = sessionNodeBuffer.get(projectIdStr) == null || sessionNodeBuffer.get(projectIdStr).isEmpty();
+//
+//                for (int i = 0; i < keywords.size(); i++) {
+//                    String keyword = keywords.get(i);
+//
+//                    String type;
+//                    if (isFirstNode && i == 0) {
+//                        type = "input"; // 처음 노드만 input
+//                    } else if (i == keywords.size() - 1) {
+//                        type = "output"; // 마지막 노드
+//                    } else {
+//                        type = "default"; // 그 외
+//                    }
+//
+//                    NodeDto node = NodeDto.builder()
+//                            .id(UUID.randomUUID().toString())
+//                            .type(type)
+//                            .data(new DataDto(keyword))
+//                            .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
+//                            .parentId(null) // 이후 연결할 경우 지정
+//                            .build();
+//                    currentNodes.add(node);
+//                    newNodes.add(node);
+//                }
+//
+//                // 클라이언트에 변경 노드만 전송
+//                for (NodeDto node : newNodes) {
+//                    messagingTemplate.convertAndSend("/topic/conference/live_on" ,
+//                            Map.of("event", "liveOn",
+//                                    "projectId", projectIdStr,
+//                                    "node", node));
+//
+//                    // ✅ 콘솔 확인용 로그
+//                    System.out.println("[Generated Node]");
+//                    System.out.println(" - id: " + node.getId());
+//                    System.out.println(" - type: " + node.getType());
+//                    System.out.println(" - label: " + node.getData().getLabel());
+//                    System.out.println(" - position: (" + node.getPosition().getX() + ", " + node.getPosition().getY() + ")");
+//                }
+//
+//                // 초기화
+//                scriptptNodes = mapper.readValue(gptBuffer.put(projectIdStr, new ArrayList<>());
+//                newScriptionCounter.put(projectIdStr, 0);
+//                NodeUpdateResponseDto update =
+//                        NodeUpdateResponseDto.builder()
+//                                .event("live_on")
+//                                .projectId(projectIdStr)
+//                                .nodes(newNodes)
+//                                .build();
+//            return update;
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다.");
         }
