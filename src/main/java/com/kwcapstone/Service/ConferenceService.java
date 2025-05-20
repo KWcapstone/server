@@ -12,6 +12,7 @@ import com.kwcapstone.Repository.ProjectRepository;
 import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -130,6 +131,7 @@ public class ConferenceService {
             ObjectMapper summaryMapper = new ObjectMapper();
             NodeSummaryResponseDto summary;
 
+            System.out.println("summary 문제 없음");
             try {
                 summary = summaryMapper.readValue(summaryJson, NodeSummaryResponseDto.class);
             } catch (Exception e) {
@@ -139,6 +141,7 @@ public class ConferenceService {
             ObjectMapper mapper = new ObjectMapper();
             //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
             List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
+            System.out.println("GPT 결과: " + gptResult);
 
             List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
             List<NodeDto> newNodes = new ArrayList<>();
@@ -151,7 +154,9 @@ public class ConferenceService {
                 idMapping.put(originalId, newId);
             }
 
-            int baseY = currentNodes.size() * Y_GAP;
+            System.out.println("new Id 하는게 문제?");
+//
+           int baseY = currentNodes.size() * Y_GAP;
 
             for (int i = 0; i < gptNodes.size(); i++) {
                 Map<String, Object> gptNode = gptNodes.get(i);
@@ -169,11 +174,26 @@ public class ConferenceService {
                     type = "default";
                 }
 
+                System.out.println("parsing이 문제?");
+
+                // position 추출
+                Map<String, Object> positionMap = (Map<String, Object>) gptNode.get("position");
+                int x, y;
+                if (positionMap != null && positionMap.get("x") != null && positionMap.get("y") != null) {
+                    x = ((Number) positionMap.get("x")).intValue();
+                    y = ((Number) positionMap.get("y")).intValue();
+                } else {
+                    // fallback 값 지정 (예: 루트는 0,0 / 나머지는 순서 기반 y축 정렬)
+                    x = X_BASE;
+                    y = baseY + i * Y_GAP;
+                }
+                System.out.println("positon은 문제 없는데,");
+
                 NodeDto node = NodeDto.builder()
                         .id(idMapping.get(originalId))
                         .type(type)
                         .data(new DataDto(label))
-                        .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
+                        .position(new PositionDto(x,y))
                         .parentId(parentId)
                         .build();
 
@@ -240,7 +260,7 @@ public class ConferenceService {
 //                }
 //
 //                // 초기화
-//                scriptBuffer.put(projectIdStr, new ArrayList<>());
+//                scriptptNodes = mapper.readValue(gptBuffer.put(projectIdStr, new ArrayList<>());
 //                newScriptionCounter.put(projectIdStr, 0);
 //                NodeUpdateResponseDto update =
 //                        NodeUpdateResponseDto.builder()
