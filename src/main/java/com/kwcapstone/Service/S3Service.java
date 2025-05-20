@@ -19,6 +19,13 @@ public class S3Service {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
+    private final String region = "ap-northeast-2";
+
+    // S3 URL 생성 메서드
+    public String getS3FileUrl(String s3Path) {
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + s3Path;
+    }
+
     // 업로드
     public void uploadFileToS3(String s3Path, File file) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()

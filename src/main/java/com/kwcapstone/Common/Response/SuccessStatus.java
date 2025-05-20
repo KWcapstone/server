@@ -104,6 +104,8 @@ public enum SuccessStatus implements BaseCode{
     //gptTest mindMap
     GPT_MINDMap_SUCCESS(HttpStatus.OK, "gpt MindMap Node"),
 
+    // 프로젝트 저장
+    PROJECT_SAVE_SUCCESS(HttpStatus.OK, "프로젝트가 성공적으로 저장되었습니다.")
     ;
 
     private final HttpStatus httpStatus;
