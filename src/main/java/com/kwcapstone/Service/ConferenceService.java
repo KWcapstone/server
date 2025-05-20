@@ -3,6 +3,7 @@ package com.kwcapstone.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kwcapstone.AI.GptService;
+import com.kwcapstone.Domain.Dto.Request.SaveProjectRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.MemberToProject;
@@ -12,16 +13,23 @@ import com.kwcapstone.Repository.ProjectRepository;
 import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.boot.autoconfigure.ssl.SslProperties;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -165,7 +173,7 @@ public class ConferenceService {
                                     "projectId", projectIdStr,
                                     "node", node));
 
-                    // ✅ 콘솔 확인용 로그
+                    // 콘솔 확인용 로그
                     System.out.println("[Generated Node]");
                     System.out.println(" - id: " + node.getId());
                     System.out.println(" - type: " + node.getType());
@@ -187,5 +195,84 @@ public class ConferenceService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다.");
         }
     }
+
+    public void saveProject(PrincipalDetails principalDetails, SaveProjectRequestDto requestDto) {
+        ObjectId memberId = principalDetails.getId();
+
+        try {
+            memberId = new ObjectId(String.valueOf(memberId));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식입니다.");
+        }
+
+        ObjectId projectObjectId = new ObjectId(requestDto.getProjectId());
+
+        Project project = projectRepository.findByProjectId(projectObjectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
+        String nodeFileName = requestDto.getProjectId() + "/node.jpg";
+        String recordFileName = requestDto.getProjectId() + "/record.webm";
+
+        try {
+            // 확장자 추출
+            String nodeExt = getExtension(requestDto.getNode().getOriginalFilename());
+            String recordExt = getExtension(requestDto.getRecord().getOriginalFilename());
+
+            // S3 업로드
+            File nodeFile = convertMultipartToFile(requestDto.getNode());
+            File recordFile = convertMultipartToFile(requestDto.getRecord());
+
+            s3Service.uploadFileToS3(nodeFileName, nodeFile);
+            s3Service.uploadFileToS3(recordFileName, recordFile);
+
+            // GPT 요약 호출
+            String summary = gptService.callSummaryOpenAI(requestDto.getScription());
+
+            // S3 실제 URL 생성
+            String nodeUrl = s3Service.getS3FileUrl(nodeFileName);
+            String recordUrl = s3Service.getS3FileUrl(recordFileName);
+
+            // 프로젝트 객체 업데이트
+            project.setRecord(new Project.Record(
+                    recordUrl,
+                    requestDto.getRecord().getOriginalFilename(),
+                    requestDto.getRecord().getSize()
+            ));
+
+            project.setProjectImage(nodeUrl);
+
+            project.setScript(new Project.Script(
+                    requestDto.getScription(),
+                    requestDto.getScription().getBytes(StandardCharsets.UTF_8).length
+            ));
+
+            project.setSummary(new Project.Summary(
+                    summary,
+                    summary.getBytes(StandardCharsets.UTF_8).length
+            ));
+
+            project.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+            projectRepository.save(project);
+
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 처리 중 오류 발생");
+        }
+    }
+
+    // 확장자 추출 메서드
+    private String getExtension(String fileName) {
+        int lastDot = fileName.lastIndexOf('.');
+        if (lastDot == -1 || lastDot == fileName.length() -1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 파일 형식입니다. " + fileName);
+        }
+        return fileName.substring(lastDot);
+    }
+
+    public File convertMultipartToFile(MultipartFile multipartFile) throws IOException {
+        File file = new File(System.getProperty("java.io.tmpdir") + "/" + multipartFile.getOriginalFilename());
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(multipartFile.getBytes());
+        }
+        return file;
+    }
 }
-// 67b47076c89fe04ae30dc7ba

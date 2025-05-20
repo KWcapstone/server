@@ -2,6 +2,7 @@ package com.kwcapstone.Controller;
 
 import com.kwcapstone.Common.Response.BaseResponse;
 import com.kwcapstone.Common.Response.SuccessStatus;
+import com.kwcapstone.Domain.Dto.Request.SaveProjectRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.NewProjectResponseDto;
 import com.kwcapstone.Domain.Dto.Response.NodeUpdateResponseDto;
@@ -9,14 +10,13 @@ import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ConferenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.ChatMessage;
+import org.springframework.http.MediaType;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 
@@ -44,4 +44,16 @@ public class ConferenceController {
 //    @PostMapping("/conference/node")
 //    public BaseResponse<NodeUpdateResponseDto> nodeUpdateMap(@AuthenticationPrincipal PrincipalDetails principalDetails,
 //                                                             @RequestBody )
+
+    // 프로젝트 저장
+    @PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public BaseResponse projectSave(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                    @RequestParam("projectId") String projectId,
+                                    @RequestParam("scription") String scription,
+                                    @RequestPart("record") MultipartFile record,
+                                    @RequestPart("node") MultipartFile node) {
+        SaveProjectRequestDto requestDto = new SaveProjectRequestDto(projectId, scription, record, node);
+        conferenceService.saveProject(principalDetails, requestDto);
+        return BaseResponse.res(SuccessStatus.PROJECT_SAVE_SUCCESS, null);
+    }
 }
