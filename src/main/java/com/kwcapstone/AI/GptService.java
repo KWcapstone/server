@@ -165,14 +165,20 @@ public class GptService {
                 - id: 노드 고유 ID (아무 값이나 string으로 설정해도 좋아)
                 - label: 노드에 들어갈 핵심 키워드 또는 문장 요약
                 - parentId: 부모 노드의 ID (루트 노드는 null)
+                - position : 마인드맵을 React Flow에서 시각화할 때 사용할 x, y 좌표
+                
+                **주의할 점**
+                    - position은 React Flow에서 사용되는 좌표야. x는 좌우, y는 상하 위치를 의미하고 숫자(px) 단위로 줘.
+                    - 루트 노드는 (x=0, y=0)에서 시작하고, 자식 노드는 y 간격 150씩 아래로 배치하고, 형제 노드는 x 간격 200씩 떨어뜨려서 배치해줘.
+                    - 즉, 계층 구조를 시각적으로 표현하기 좋도록 적절한 위치 값을 계산해서 넣어줘.
                 
                 결과는 JSON 배열 형태로 줘. 예시는 다음과 같아:
                 
                     [
-                      { "id": "1", "label": "졸업작품 아이디에이션", "parentId": null },
-                      { "id": "2", "label": "실시간 마인드맵", "parentId": "1" },
-                      { "id": "3", "label": "토레타 챌린지", "parentId": "1" },
-                      { "id": "4", "label": "구현 난이도", "parentId": "2" }
+                      { "id": "1", "label": "졸업작품 아이디에이션", "parentId": null, "position": { "x": 0, "y": 0 } },
+                      { "id": "2", "label": "실시간 마인드맵", "parentId": "1", "position": { "x": 0, "y": 0 } },
+                      { "id": "3", "label": "토레타 챌린지", "parentId": "1", "position": { "x": 0, "y": 0 } },
+                      { "id": "4", "label": "구현 난이도", "parentId": "2", "position": { "x": 0, "y": 0 } }
                     ]
                 
                     이렇게 계층 구조를 JSON 배열로 표현해줘.
