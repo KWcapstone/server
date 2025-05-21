@@ -26,6 +26,7 @@ public class GptService {
         return Math.min(estimatedTokens, 1000);
     }
 
+
     //gpt에게 요청하는 call를 만들어줘야할 것 같음
     // open ai 는 max_tokens 생성할 때 최대 토큰 수를 으미함
     // prompt 가 응답 모두 토큰으로 계산되어 얼마나 길게 나올 수 있는지를 제한함
