@@ -146,7 +146,16 @@ public class MemberService {
                 authResetRequestDto.getName(), authResetRequestDto.getEmail());
 
         if (memberExist.isEmpty()) {
-            throw new BaseException(404, "가입하지 않은 회원입니다. 이름이나 이메일을 다시 확인해주세요.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "가입하지 않은 회원입니다. 이름이나 이메일을 다시 확인해주세요.");
+        }
+
+        if(authResetRequestDto.getName() != memberExist.get().getName()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이름이 일치하지 않습니다.");
+        }
+
+
+        if(authResetRequestDto.getName() != memberExist.get().getName()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이름이 일치하지 않습니다.");
         }
 
         Member member = memberExist.get();
