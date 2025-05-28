@@ -13,6 +13,7 @@ import org.springframework.ai.chat.messages.ChatMessage;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -24,16 +25,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.security.Principal;
 import java.util.ArrayList;
 
-@RestController
+@Controller
 @RequiredArgsConstructor
-@RequestMapping("/conference")
 public class WebSocketController {
     private final WebSocketService webSocketService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RoomParticipantTracker participantTracker;
     private final WebSocketSessionRegistry sessionRegistry;
 
-    @MessageMapping("/{projectId}/modify_inviting")
+    @MessageMapping("/conference/{projectId}/modify_inviting")
     public void addMember(@DestinationVariable String projectId, Principal principal,
                           @Payload String memberId,
                           Message<?> message) {
@@ -54,7 +54,7 @@ public class WebSocketController {
         );
     }
 
-    @MessageMapping("/summary/{projectId}")
+    @MessageMapping("/conference/summary/{projectId}")
     public void receiveScript(@DestinationVariable String projectId, ScriptMessageRequestDto dto) {
         webSocketService.handleScript(projectId, dto);
         // 4. 전체 목록도 갱신
@@ -65,7 +65,7 @@ public class WebSocketController {
         );
     }
 
-    @MessageMapping("/{projectId}/recommend_keyword")
+    @MessageMapping("/conference/{projectId}/recommend_keyword")
     @SendTo("/topic/{projectId}")
     public RecommendKeywordDto recommendedKeywordSend(@DestinationVariable String projectId) {
         return webSocketService.sendRecommendedKeywords(projectId);
