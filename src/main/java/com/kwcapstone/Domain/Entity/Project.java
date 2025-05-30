@@ -37,6 +37,7 @@ public class Project {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Script {
+        private String scriptUrl;
         private String content;
         private long sizeInBytes;  // 스크립트 파일 크기 (바이트 단위)
     }
@@ -45,6 +46,7 @@ public class Project {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Summary {
+        private String summaryUrl;
         private String content;
         private long sizeInBytes;
     }

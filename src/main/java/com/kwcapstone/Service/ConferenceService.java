@@ -22,11 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.IOException;
+import java.io.BufferedWriter;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -257,8 +256,10 @@ public class ConferenceService {
             String nodeExt = getExtension(requestDto.getNode().getOriginalFilename());
             String recordExt = getExtension(requestDto.getRecord().getOriginalFilename());
 
-            String nodeFileName = "node/" + requestDto.getProjectId() + nodeExt;
-            String recordFileName = "record/" + requestDto.getProjectId() + recordExt;
+            String projectId = requestDto.getProjectId();
+
+            String nodeFileName = "node/" + projectId + nodeExt;
+            String recordFileName = "record/" + projectId + recordExt;
 
             // S3 업로드
             File nodeFile = convertMultipartToFile(requestDto.getNode());
@@ -267,8 +268,18 @@ public class ConferenceService {
             s3Service.uploadFileToS3(nodeFileName, nodeFile);
             s3Service.uploadFileToS3(recordFileName, recordFile);
 
-            // GPT 요약 호출
-            String summary = gptService.callSummaryOpenAI(requestDto.getScription());
+            String scriptText = requestDto.getScription();
+            String summaryText = gptService.callSummaryOpenAI(scriptText);
+
+            String scriptFileName = "script/" + projectId + ".txt";
+            File scriptFile = createTempTextFile(scriptText);
+            s3Service.uploadFileToS3(scriptFileName, scriptFile);
+            String scriptUrl = s3Service.getS3FileUrl(scriptFileName);
+
+            String summaryFileName = "summary/" + projectId + ".txt";
+            File summaryFile = createTempTextFile(summaryText);
+            s3Service.uploadFileToS3(summaryFileName, summaryFile);
+            String summaryUrl = s3Service.getS3FileUrl(summaryFileName);
 
             // S3 실제 URL 생성
             String nodeUrl = s3Service.getS3FileUrl(nodeFileName);
@@ -284,13 +295,15 @@ public class ConferenceService {
             project.setProjectImage(nodeUrl);
 
             project.setScript(new Project.Script(
-                    requestDto.getScription(),
-                    requestDto.getScription().getBytes(StandardCharsets.UTF_8).length
+                    scriptUrl,
+                    scriptText,
+                    scriptText.getBytes(StandardCharsets.UTF_8).length
             ));
 
             project.setSummary(new Project.Summary(
-                    summary,
-                    summary.getBytes(StandardCharsets.UTF_8).length
+                    summaryUrl,
+                    summaryText,
+                    summaryText.getBytes(StandardCharsets.UTF_8).length
             ));
 
             project.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
@@ -299,6 +312,15 @@ public class ConferenceService {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 처리 중 오류 발생");
         }
+    }
+
+    // .txt 파일
+    private File createTempTextFile(String content) throws IOException {
+        File tempFile = File.createTempFile("temp", ".txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+            writer.write(content);
+        }
+        return tempFile;
     }
 
     // 확장자 추출 메서드
