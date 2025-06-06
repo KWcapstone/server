@@ -55,7 +55,8 @@ public class SecurityConfig {
                 "https://moaba.vercel.app", "https://www.moaba.site",
                 "https://moaba.site",
                 "http://3.39.11.168:8080", "https://3.39.11.168:8080",
-                "http://localhost:3000", "https://localhost:3000"
+                "http://localhost:3000", "https://localhost:3000",
+                "http://43.201.65.48"
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
