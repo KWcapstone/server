@@ -13,5 +13,6 @@ import java.util.List;
 public class ParticipantResponseDto {
     private String event;
     private String projectId;
+    private String count;
     private List<ParticipantDto> participants;
 }
