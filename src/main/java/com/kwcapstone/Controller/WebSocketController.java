@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -35,33 +36,45 @@ public class WebSocketController {
 
     @MessageMapping("/conference/{projectId}/modify_inviting")
     public void addMember(@DestinationVariable String projectId, Principal principal,
-                          @Payload String memberId,
+                          @Payload ParticipantEventDto dto,
                           Message<?> message) {
         // 1. 참가자 목록에 추가
-        participantTracker.addParticipant(projectId, memberId);
+        if (dto.getEvent().equals("participant_join")) {
+            participantTracker.addParticipant(projectId, dto.getMemberId());
+        }
+
+        // 1-2. 참가자 제외
+        if (dto.getEvent().equals("participant_leave")) {
+            participantTracker.removeParticipant(projectId, dto.getMemberId());
+        }
 
         // 2. 세션 ID 추출 및 sessionRegistry 에 등록
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         if (accessor != null) {
             String sessionId = accessor.getSessionId();
-            sessionRegistry.register(sessionId, memberId, projectId);
+            sessionRegistry.register(sessionId, dto.getMemberId(), dto.getProjectId());
         }
 
-        // 3. join 이벤트 전송
+        // 3. 참가자 목록 전체 전송
+        List<ParticipantDto> participants = participantTracker.getParticipantDtos(dto.getProjectId());
+
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId + "/participants",
-                new ParticipantEventDto("participant_join", projectId, memberId)
+                new ParticipantResponseDto("participants", dto.getProjectId(),
+                        String.valueOf((long) participants.size()), participants)
         );
     }
 
     @MessageMapping("/conference/summary/{projectId}")
     public void receiveScript(@DestinationVariable String projectId, ScriptMessageRequestDto dto) {
         webSocketService.handleScript(projectId, dto);
+
+        List<ParticipantDto> participants = participantTracker.getParticipantDtos(dto.getProjectId());
         // 4. 전체 목록도 갱신
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId + "/participants",
-                new ParticipantResponseDto("participants", projectId,
-                        new ArrayList<>(participantTracker.getParticipantDtos(projectId)))
+                new ParticipantResponseDto("participants", projectId, String.valueOf((long) participants.size()),
+                        new ArrayList<>(participants))
         );
     }
 
