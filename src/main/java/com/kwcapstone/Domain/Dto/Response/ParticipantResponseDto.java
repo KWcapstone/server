@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ParticipantResponseDto {
-    private String event = "participants";
+    private String event;
     private String projectId;
     private List<ParticipantDto> participants;
 }
