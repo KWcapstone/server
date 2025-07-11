@@ -39,16 +39,11 @@ public class WebSocketController {
     public void memberModify(@DestinationVariable String projectId, Principal principal,
                           @Payload ParticipantEventDto dto,
                           Message<?> message) {
-        List<ParticipantDto> participants = webSocketService.modifyMembers(projectId, dto, message);
-
-        messagingTemplate.convertAndSend(
-                "/topic/conference/" + projectId + "/participants",
-                new ParticipantResponseDto("participants", dto.getProjectId(),
-                        String.valueOf((long) participants.size()), participants)
-        );
+        webSocketService.modifyMembers(projectId, dto, message);
     }
 
     // 실시간 스크립트 저장
+    // 추천 키워드 +
     @MessageMapping("/conference/{projectId}/script")
     public void scriptSave(@DestinationVariable String projectId, Principal principal,
                            @Payload ScriptMessageRequestDto dto) {
@@ -66,11 +61,5 @@ public class WebSocketController {
                 new ParticipantResponseDto("participants", projectId, String.valueOf((long) participants.size()),
                         new ArrayList<>(participants))
         );
-    }
-
-    @MessageMapping("/conference/{projectId}/recommend_keyword")
-    @SendTo("/topic/{projectId}")
-    public RecommendKeywordDto recommendedKeywordSend(@DestinationVariable String projectId) {
-        return webSocketService.sendRecommendedKeywords(projectId);
     }
 }

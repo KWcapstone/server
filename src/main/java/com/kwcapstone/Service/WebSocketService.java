@@ -41,8 +41,9 @@ public class WebSocketService {
     private final RoomParticipantTracker participantTracker;
     private final WebSocketSessionRegistry sessionRegistry;
     private final ProjectRepository projectRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public List<ParticipantDto> modifyMembers(String projectId, ParticipantEventDto dto, Message<?> message) {
+    public void modifyMembers(String projectId, ParticipantEventDto dto, Message<?> message) {
         // 참가자 추가하는 경우
         if (dto.getEvent().equals("participant_join")) {
             participantTracker.addParticipant(projectId, dto.getMemberId());
@@ -60,7 +61,13 @@ public class WebSocketService {
             sessionRegistry.register(sessionId, dto.getMemberId(), dto.getProjectId());
         }
 
-        return participantTracker.getParticipantDtos(dto.getProjectId());
+        List<ParticipantDto> participants = participantTracker.getParticipantDtos(dto.getProjectId());
+
+        messagingTemplate.convertAndSend(
+                "/topic/conference/" + projectId,
+                new ParticipantResponseDto("participants", dto.getProjectId(),
+                        String.valueOf((long) participants.size()), participants)
+        );
     }
 
     public void saveScript(String projectIdStr, ScriptMessageRequestDto dto) {
@@ -92,12 +99,47 @@ public class WebSocketService {
                 int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
                 newScriptionCounter.put(projectIdStr, count);
 
+                // 추천 키워드 전송
+                sendRecommendedKeywords(projectIdStr);
+
                 // 초기화
                 scriptBuffer.put(projectIdStr, new ArrayList<>());
                 newScriptionCounter.put(projectIdStr, 0);
             } catch (IOException e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
             }
+        }
+    }
+
+    // 추천 키워드
+    public void sendRecommendedKeywords(String projectId) {
+        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            try {
+                // 전체 스크립트 줄 읽기
+                List<String> allLines = Files.readAllLines(Path.of(filePath));
+                String fullText = String.join(" ", allLines);
+                String keywordResponse = gptService.callRecommendedKeywords(fullText);
+
+                List<String> keywords = Arrays.stream(keywordResponse.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .limit(5)
+                        .collect(Collectors.toList());
+
+                messagingTemplate.convertAndSend(
+                        "/topic/conference/" + projectId,
+                        new RecommendKeywordDto("recommended_keywords", projectId, keywords));
+                } catch (IOException e) {
+                messagingTemplate.convertAndSend(
+                        "/topic/conference/" + projectId,
+                        new RecommendKeywordDto("recommended_keywords", projectId, List.of("에러 발생"))
+                );
+            }
+        } else {
+            System.out.println("파일 없음: " + filePath); // 디버깅용 로그
         }
     }
 
@@ -148,57 +190,6 @@ public class WebSocketService {
         }
     }
 
-    public RecommendKeywordDto sendRecommendedKeywords(String projectId) {
-        String filePath = "/tmp/work/script_" + projectId + ".txt";
-        File file = new File(filePath);
-
-        if (!file.exists()) {
-            RecommendKeywordDto dto = new RecommendKeywordDto(
-                    "recommended_keywords", projectId, List.of("스크립트 없음"));
-            simpMessagingTemplate.convertAndSend("/topic/recommended_keywords/"+projectId, dto);
-            return dto;
-        }
-
-        try {
-            // 전체 스크립트 줄 읽기
-            List<String> allLines = Files.readAllLines(Path.of(filePath));
-            int totalCount = allLines.size();
-
-            int lastProcessed = lastProcessedLineCount.getOrDefault(projectId, 0);
-            int newLinesSinceLast = totalCount - lastProcessed;
-
-            // 7개 이상의 새 문장이 쌓였을 경우만 전송
-            if (newLinesSinceLast >= 7) {
-                // 최신 줄 수 저장
-                lastProcessedLineCount.put(projectId, totalCount);
-
-                String fullText = String.join(" ", allLines);
-                String keywordResponse = gptService.callRecommendedKeywords(fullText);
-
-                List<String> keywords = Arrays.stream(keywordResponse.split(","))
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .limit(4)
-                        .collect(Collectors.toList());
-
-                RecommendKeywordDto dto = new RecommendKeywordDto(
-                        "recommended_keywords", projectId, keywords
-                );
-                simpMessagingTemplate.convertAndSend("/topic/keywords" + projectId, dto);
-                return dto;
-            }
-
-            // 아직 7개 추가되지 않음
-            return new RecommendKeywordDto(
-                    "recommended_keywords", projectId, List.of("변경 없음 (" + newLinesSinceLast + "줄 추가됨)")
-            );
-        } catch (IOException e) {
-            RecommendKeywordDto dto = new RecommendKeywordDto(
-                    "recommended_keywords", projectId, List.of("에러 발생"));
-            simpMessagingTemplate.convertAndSend("/topic/recommended_keywords/" + projectId, dto);
-            return dto;
-        }
-    }
     //실시간 회의 스크립트를 websocket으로 받아서 GPT로 요약하고 이 요약한 것을 webSocket을 다시 클라이언트들에게 전달하는 핵심 로직
     public void handleMain(String projectId, ScriptMessageRequestDto dto) {
         //scriptBuffer는 Map<Project, 스크립트 리스트> 구조
