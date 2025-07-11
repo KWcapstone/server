@@ -272,7 +272,7 @@ public class ProjectService {
         return new GetProjectShareModalResponseDto(inviteLink, sharedMembers);
     }
 
-    //프로젝트 공유링크로 들어왓을 때 사용자 추가
+    //프로젝트 공유링크로 들어왔을 때 사용자 추가
     public boolean addByLink(PrincipalDetails principalDetails,
                                                   String projectId, String code){
         ObjectId memberId = principalDetails.getId();
