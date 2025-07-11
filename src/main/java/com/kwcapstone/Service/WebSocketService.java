@@ -1,22 +1,34 @@
 package com.kwcapstone.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.kwcapstone.AI.GptService;
+import com.kwcapstone.Config.RoomParticipantTracker;
+import com.kwcapstone.Config.WebSocketSessionRegistry;
+import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
+import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
-import com.kwcapstone.Domain.Dto.Response.RecommendKeywordDto;
+import com.kwcapstone.Domain.Dto.Response.*;
+import com.kwcapstone.Domain.Entity.Project;
+import com.kwcapstone.Repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
+import org.springframework.http.HttpStatus;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.socket.WebSocketSession;
 
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -26,6 +38,68 @@ public class WebSocketService {
     private final GptService gptService;
     private final SimpMessagingTemplate simpMessagingTemplate; // stomp webSocket 메시지를 서버 클라이언트 푸쉬
     private final Map<String, Integer> lastProcessedLineCount = new ConcurrentHashMap<>();
+    private final RoomParticipantTracker participantTracker;
+    private final WebSocketSessionRegistry sessionRegistry;
+    private final ProjectRepository projectRepository;
+
+    public List<ParticipantDto> modifyMembers(String projectId, ParticipantEventDto dto, Message<?> message) {
+        // 참가자 추가하는 경우
+        if (dto.getEvent().equals("participant_join")) {
+            participantTracker.addParticipant(projectId, dto.getMemberId());
+        }
+
+        // 참가자 제외하는 경우
+        if (dto.getEvent().equals("participant_leave")) {
+            participantTracker.removeParticipant(projectId, dto.getMemberId());
+        }
+
+        // 세션 ID 추출 및 sessionRegistry 에 등록
+        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        if (accessor != null) {
+            String sessionId = accessor.getSessionId();
+            sessionRegistry.register(sessionId, dto.getMemberId(), dto.getProjectId());
+        }
+
+        return participantTracker.getParticipantDtos(dto.getProjectId());
+    }
+
+    public void saveScript(String projectIdStr, ScriptMessageRequestDto dto) {
+        if (dto.getEvent().equals("script")) {
+            try {
+                ObjectId projectId = new ObjectId(projectIdStr);
+                Project project = projectRepository.findByProjectId(projectId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
+                String content = dto.getScription();
+
+                // 임시 디렉토리 경로 확인 및 생성
+                String tmpDirPath = System.getProperty("java.io.tmpdir");
+                File tmpDir = new File(tmpDirPath);
+                if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시 폴더 생성에 실패했습니다.");
+                }
+
+                // 임시 파일에 저장 (append 모드)
+                String fileName = "script_" + projectIdStr + ".txt";
+                File file = new File(System.getProperty("java.io.tmpdir"), fileName);
+
+                try(FileWriter writer = new FileWriter(file, true)) {
+                    writer.write(content + "\n");
+                }
+
+                // 누적
+                scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(content);
+                int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
+                newScriptionCounter.put(projectIdStr, count);
+
+                // 초기화
+                scriptBuffer.put(projectIdStr, new ArrayList<>());
+                newScriptionCounter.put(projectIdStr, 0);
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
+            }
+        }
+    }
 
     public List<String> parseJsonArrayToList(String jsonArray) {
         ObjectMapper mapper = new ObjectMapper();

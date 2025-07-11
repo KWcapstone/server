@@ -34,35 +34,25 @@ public class WebSocketController {
     private final RoomParticipantTracker participantTracker;
     private final WebSocketSessionRegistry sessionRegistry;
 
+    // 참여자 이름/수 업데이트
     @MessageMapping("/conference/{projectId}/modify_inviting")
-    public void addMember(@DestinationVariable String projectId, Principal principal,
+    public void memberModify(@DestinationVariable String projectId, Principal principal,
                           @Payload ParticipantEventDto dto,
                           Message<?> message) {
-        // 1. 참가자 목록에 추가
-        if (dto.getEvent().equals("participant_join")) {
-            participantTracker.addParticipant(projectId, dto.getMemberId());
-        }
-
-        // 1-2. 참가자 제외
-        if (dto.getEvent().equals("participant_leave")) {
-            participantTracker.removeParticipant(projectId, dto.getMemberId());
-        }
-
-        // 2. 세션 ID 추출 및 sessionRegistry 에 등록
-        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        if (accessor != null) {
-            String sessionId = accessor.getSessionId();
-            sessionRegistry.register(sessionId, dto.getMemberId(), dto.getProjectId());
-        }
-
-        // 3. 참가자 목록 전체 전송
-        List<ParticipantDto> participants = participantTracker.getParticipantDtos(dto.getProjectId());
+        List<ParticipantDto> participants = webSocketService.modifyMembers(projectId, dto, message);
 
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId + "/participants",
                 new ParticipantResponseDto("participants", dto.getProjectId(),
                         String.valueOf((long) participants.size()), participants)
         );
+    }
+
+    // 실시간 스크립트 저장
+    @MessageMapping("/conference/{projectId}/script")
+    public void scriptSave(@DestinationVariable String projectId, Principal principal,
+                           @Payload ScriptMessageRequestDto dto) {
+        webSocketService.saveScript(projectId, dto);
     }
 
     @MessageMapping("/conference/summary/{projectId}")
