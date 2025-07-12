@@ -57,6 +57,7 @@ public class SecurityConfig {
                 "http://3.39.11.168:8080", "https://3.39.11.168:8080",
                 "http://localhost:3000", "https://localhost:3000",
                 "http://localhost:80", "http://localhost:3000:80",
+                "http://3.35.152.83/",
                 "http://43.201.65.48", "https://jiangxy.github.io" // 테스트 툴이라 나중엔 지워야
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
