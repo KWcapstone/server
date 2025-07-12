@@ -8,6 +8,7 @@ import com.kwcapstone.Config.WebSocketSessionRegistry;
 import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
 import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
 import com.kwcapstone.Domain.Dto.Response.ParticipantResponseDto;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.ChatMessage;
 import org.springframework.messaging.Message;
@@ -49,4 +50,8 @@ public class WebSocketController {
                            @Payload ScriptMessageRequestDto dto) {
         webSocketService.saveScript(projectId, dto);
     }
+
+    @MessageMapping("/conference/{projectId}/modify_project_name")
+    public void projectNameModify(@DestinationVariable String projectId, Principal principal,
+                                  @)
 }
