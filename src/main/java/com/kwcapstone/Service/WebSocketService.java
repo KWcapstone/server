@@ -157,17 +157,26 @@ public class WebSocketService {
     public void sendMainKeywords(String projectId, ScriptMessageRequestDto dto){
         String content = dto.getScription();
 
-        String summary = gptService.callMainOpenAI(content);
+        String mainKeywords = gptService.callMainOpenAI(content);
 
-        if(summary.startsWith("Error:")){
+        if(mainKeywords.startsWith("Error:")){
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "외부 GPT API 요약 처리 과정 중 오류");
         }
 
-        List<String> result = parseJsonArrayToList(summary);
+        List<String> result = parseJsonArrayToList(mainKeywords);
 
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId,
                 new MainKeywordDtoResponseDto("main_keywords", projectId, result));
+
+    }
+
+    //요약
+    public void sendSummary(String projectId, ScriptMessageRequestDto dto){
+        String content = dto.getScription();
+
+        String summary = gptService.callSummaryOpenAI(content);
+
 
     }
 
