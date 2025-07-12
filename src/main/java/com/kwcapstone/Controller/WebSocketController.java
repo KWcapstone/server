@@ -1,5 +1,6 @@
 package com.kwcapstone.Controller;
 
+import com.kwcapstone.Domain.Dto.Request.ProjectNameRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.RecommendKeywordDto;
 import com.kwcapstone.Service.WebSocketService;
@@ -53,5 +54,7 @@ public class WebSocketController {
 
     @MessageMapping("/conference/{projectId}/modify_project_name")
     public void projectNameModify(@DestinationVariable String projectId, Principal principal,
-                                  @)
+                                  @Payload ProjectNameRequestDto dto){
+        webSocketService.modifyProjectName(projectId, dto);
+    }
 }

@@ -7,6 +7,7 @@ import com.kwcapstone.Config.RoomParticipantTracker;
 import com.kwcapstone.Config.WebSocketSessionRegistry;
 import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
 import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
+import com.kwcapstone.Domain.Dto.Request.ProjectNameRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.Project;
@@ -215,5 +216,10 @@ public class WebSocketService {
 
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId, result);
+    }
+
+    //회의명 변경
+    public void modifyProjectName(String projectId, ProjectNameRequestDto dto){
+
     }
 }
