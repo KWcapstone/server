@@ -21,6 +21,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 
@@ -219,11 +220,15 @@ public class WebSocketService {
     }
 
     //회의명 변경
+    @Transactional
     public void modifyProjectName(String projectIdStr, ProjectNameRequestDto dto){
         String newProjectName = dto.getProjectName();
         String receiveProjectId = dto.getProjectId();
 
-        if(receiveProjectId != projectIdStr){
+        System.out.println(receiveProjectId);
+        System.out.println(projectIdStr);
+
+        if(!receiveProjectId.equals(projectIdStr)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "destination 주소 속 projectId와 message 속 projectId가 다릅니다.");
         }
 
@@ -235,6 +240,8 @@ public class WebSocketService {
 
             project.setProjectName(newProjectName);
             projectRepository.save(project);
+
+            System.out.println(project.getProjectName());
 
             messagingTemplate.convertAndSend("/topic/conference/" + projectIdStr,
                     new ProjectNameModifyResponseDto("modifying", projectIdStr, newProjectName));
