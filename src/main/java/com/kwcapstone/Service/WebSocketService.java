@@ -178,6 +178,8 @@ public class WebSocketService {
         String summary = gptService.callSummaryOpenAI(content);
 
 
+
+
     }
 
     // projectId별로 스크립트를 누적 저장
