@@ -77,7 +77,8 @@ public class WebSocketService {
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
                 String content = dto.getScription();
-
+                //주요키워드
+                sendMainKeywords(projectIdStr, dto);
                 // 임시 디렉토리 경로 확인 및 생성
                 String tmpDirPath = System.getProperty("java.io.tmpdir");
                 File tmpDir = new File(tmpDirPath);
@@ -156,7 +157,7 @@ public class WebSocketService {
     public void sendMainKeywords(String projectId, ScriptMessageRequestDto dto){
         String content = dto.getScription();
 
-        String summary = gptService.callSummaryOpenAI(content);
+        String summary = gptService.callMainOpenAI(content);
 
         if(summary.startsWith("Error:")){
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "외부 GPT API 요약 처리 과정 중 오류");
@@ -165,7 +166,7 @@ public class WebSocketService {
         List<String> result = parseJsonArrayToList(summary);
 
         messagingTemplate.convertAndSend(
-                "topic/conference" + projectId,
+                "/topic/conference/" + projectId,
                 new MainKeywordDtoResponseDto("main_keywords", projectId, result));
 
     }
