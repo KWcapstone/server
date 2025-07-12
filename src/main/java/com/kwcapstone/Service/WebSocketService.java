@@ -219,7 +219,25 @@ public class WebSocketService {
     }
 
     //회의명 변경
-    public void modifyProjectName(String projectId, ProjectNameRequestDto dto){
+    public void modifyProjectName(String projectIdStr, ProjectNameRequestDto dto){
+        String newProjectName = dto.getProjectName();
+        String receiveProjectId = dto.getProjectId();
+
+        if(receiveProjectId != projectIdStr){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "destination 주소 속 projectId와 message 속 projectId가 다릅니다.");
+        }
+
+        try{
+            ObjectId projectIdObj = new ObjectId(projectIdStr);
+
+            Project project = projectRepository.findByProjectId(projectIdObj)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
+            project.setProjectName(newProjectName);
+            projectRepository.save(project);
+
+
+        }
 
     }
 }
