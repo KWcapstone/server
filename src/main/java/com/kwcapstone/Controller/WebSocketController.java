@@ -1,5 +1,6 @@
 package com.kwcapstone.Controller;
 
+import com.kwcapstone.Domain.Dto.Request.ProjectNameRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.RecommendKeywordDto;
 import com.kwcapstone.Service.WebSocketService;
@@ -8,6 +9,7 @@ import com.kwcapstone.Config.WebSocketSessionRegistry;
 import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
 import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
 import com.kwcapstone.Domain.Dto.Response.ParticipantResponseDto;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.ChatMessage;
 import org.springframework.messaging.Message;
@@ -50,16 +52,9 @@ public class WebSocketController {
         webSocketService.saveScript(projectId, dto);
     }
 
-    @MessageMapping("/conference/summary/{projectId}")
-    public void receiveScript(@DestinationVariable String projectId, ScriptMessageRequestDto dto) {
-        webSocketService.handleScript(projectId, dto);
-
-        List<ParticipantDto> participants = participantTracker.getParticipantDtos(dto.getProjectId());
-        // 4. 전체 목록도 갱신
-        messagingTemplate.convertAndSend(
-                "/topic/conference/" + projectId + "/participants",
-                new ParticipantResponseDto("participants", projectId, String.valueOf((long) participants.size()),
-                        new ArrayList<>(participants))
-        );
+    @MessageMapping("/conference/{projectId}/modify_project_name")
+    public void projectNameModify(@DestinationVariable String projectId, Principal principal,
+                                  @Payload ProjectNameRequestDto dto){
+        webSocketService.modifyProjectName(projectId, dto);
     }
 }

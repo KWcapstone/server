@@ -1,11 +1,13 @@
 package com.kwcapstone.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.kwcapstone.AI.GptService;
 import com.kwcapstone.Config.RoomParticipantTracker;
 import com.kwcapstone.Config.WebSocketSessionRegistry;
 import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
 import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
+import com.kwcapstone.Domain.Dto.Request.ProjectNameRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.Project;
@@ -19,8 +21,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.socket.WebSocketSession;
 
 
 import java.io.File;
@@ -42,6 +44,13 @@ public class WebSocketService {
     private final WebSocketSessionRegistry sessionRegistry;
     private final ProjectRepository projectRepository;
     private final SimpMessagingTemplate messagingTemplate;
+
+    // projectId별로 스크립트를 누적 저장
+    //회의 여러개가 동시에 시작되기 때문에
+    //concurrentHashMap -> ,여러 스레득 도시에 접근해도 안전하게 작동
+    //내부적으로 데이터를 나눠서(lock 분할) 처리해서 성능도 높고, 충돌도 방지
+    private final Map<String, List<String>> scriptBuffer = new ConcurrentHashMap<>();
+    private final Map<String, Integer> newScriptionCounter = new ConcurrentHashMap<>();
 
     public void modifyMembers(String projectId, ParticipantEventDto dto, Message<?> message) {
         // 참가자 추가하는 경우
@@ -78,6 +87,11 @@ public class WebSocketService {
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
                 String content = dto.getScription();
+                //주요키워드
+                sendMainKeywords(projectIdStr, dto);
+
+                //요약본
+                sendSummary(projectIdStr, dto);
 
                 // 임시 디렉토리 경로 확인 및 생성
                 String tmpDirPath = System.getProperty("java.io.tmpdir");
@@ -153,73 +167,86 @@ public class WebSocketService {
         }
     }
 
-    // projectId별로 스크립트를 누적 저장
-    //회의 여러개가 동시에 시작되기 때문에
-    //concurrentHashMap -> ,여러 스레득 도시에 접근해도 안전하게 작동
-    //내부적으로 데이터를 나눠서(lock 분할) 처리해서 성능도 높고, 충돌도 방지
-    private final Map<String, List<String>> scriptBuffer = new ConcurrentHashMap<>();
-    private final Map<String, Integer> newScriptionCounter = new ConcurrentHashMap<>();
+    //주요키워드
+    public void sendMainKeywords(String projectId, ScriptMessageRequestDto dto){
+        String content = dto.getScription();
 
-    //실시간 회의 스크립트를 websocket으로 받아서 GPT로 요약하고 이 요약한 것을 webSocket을 다시 클라이언트들에게 전달하는 핵심 로직
-    public void handleScript(String projectId, ScriptMessageRequestDto dto) {
-        //scriptBuffer는 Map<Project, 스크립트 리스트> 구조
-        //스크립트에 새로운 문장 추가
-        scriptBuffer.computeIfAbsent(projectId, k -> new ArrayList<>()).add(dto.getScription());
+        String mainKeywords = gptService.callMainOpenAI(content);
 
-        //projctId를 통해 현재 회의바에 저장딘 전체 스크립트 리스트를 가져옴
-        List<String> scriptList = scriptBuffer.get(projectId);
+        if(mainKeywords.startsWith("Error:")){
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
+        }
 
-        // 신규 문장 카운트 증가
-        int currentCount = newScriptionCounter.getOrDefault(projectId, 0) + 1;
-        newScriptionCounter.put(projectId, currentCount);
+        List<String> result = parseJsonArrayToList(mainKeywords);
 
-        //새로운 문장이 7개 ㅇ상이면 gpt 호출
-        if (currentCount >=  7) {
-            String fullText = String.join(" ", scriptList);
-            String summary = gptService.callSummaryOpenAI(fullText);
+        messagingTemplate.convertAndSend(
+                "/topic/conference/" + projectId,
+                new MainKeywordDtoResponseDto("main_keywords", projectId, result));
 
-            // 요약본 WebSocket으로 전송
-            simpMessagingTemplate.convertAndSend("/topic/summary/" + projectId,
-                    Map.of(
-                            "event", "summary",
-                            "projectId", projectId,
-                            "summary", summary
-                    ));
+    }
 
-            newScriptionCounter.put(projectId, 0);
+    private SummaryResponseDto pareseSummaryResponse(String gptContent, String event, String projectId){
+        ObjectMapper mapper = new ObjectMapper();
+
+        try{
+            JsonNode node = mapper.readTree(gptContent);
+            String title = node.get("title").asText();
+            String content = node.get("content").asText();
+
+            return new SummaryResponseDto(event, projectId, title, content);
+
+        }catch (Exception e){
+            e.printStackTrace();
+
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[요약본] : 요약본 result 파싱 중 오류");
         }
     }
 
-    //실시간 회의 스크립트를 websocket으로 받아서 GPT로 요약하고 이 요약한 것을 webSocket을 다시 클라이언트들에게 전달하는 핵심 로직
-    public void handleMain(String projectId, ScriptMessageRequestDto dto) {
-        //scriptBuffer는 Map<Project, 스크립트 리스트> 구조
-        //스크립트에 새로운 문장 추가
-//        scriptBuffer.computeIfAbsent(projectId, k -> new ArrayList<>()).add(dto.getScription());
+    //요약
+    public void sendSummary(String projectId, ScriptMessageRequestDto dto){
+        String content = dto.getScription();
 
-        //projctId를 통해 현재 회의바에 저장딘 전체 스크립트 리스트를 가져옴
-        List<String> scriptList = scriptBuffer.get(projectId);
+        String summary = gptService.callSummaryOpenAI(content);
 
-        // 신규 문장 카운트 증가
-        int currentCount = newScriptionCounter.getOrDefault(projectId, 0) + 1;
-//        newScriptionCounter.put(projectId, currentCount);
-
-        //새로운 문장이 7개 ㅇ상이면 gpt 호출
-        if (currentCount >=  7) {
-            String fullText = String.join(" ", scriptList);
-            String mainKeyword = gptService.callMainOpenAI(fullText);
-            List<String> keywords = parseJsonArrayToList(mainKeyword);
-
-            // 요약본 WebSocket으로 전송
-            simpMessagingTemplate.convertAndSend("/topic/main_keyword/" + projectId,
-                    Map.of(
-                            "event", "main_keywords",
-                            "projectId", projectId,
-                            "summary", keywords
-                    ));
-
-            newScriptionCounter.put(projectId, 0);
+        if(summary.startsWith("Error:")){
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[요약본] : 외부 GPT API 요약 처리 과정 중 오류");
         }
+
+        ObjectMapper summaryMapper = new ObjectMapper();
+        SummaryResponseDto result = pareseSummaryResponse(summary, "summary", projectId);
+
+        messagingTemplate.convertAndSend(
+                "/topic/conference/" + projectId, result);
     }
 
+    //회의명 변경
+    @Transactional
+    public void modifyProjectName(String projectIdStr, ProjectNameRequestDto dto){
+        String newProjectName = dto.getProjectName();
+        String receiveProjectId = dto.getProjectId();
 
+        System.out.println(receiveProjectId);
+        System.out.println(projectIdStr);
+
+        if(!receiveProjectId.equals(projectIdStr)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "destination 주소 속 projectId와 message 속 projectId가 다릅니다.");
+        }
+
+        try{
+            ObjectId projectIdObj = new ObjectId(projectIdStr);
+
+            Project project = projectRepository.findByProjectId(projectIdObj)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
+            project.setProjectName(newProjectName);
+            projectRepository.save(project);
+
+            System.out.println(project.getProjectName());
+
+            messagingTemplate.convertAndSend("/topic/conference/" + projectIdStr,
+                    new ProjectNameModifyResponseDto("modifying", projectIdStr, newProjectName));
+        }catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "회의 이름 수정 중 오류");
+        }
+    }
 }
