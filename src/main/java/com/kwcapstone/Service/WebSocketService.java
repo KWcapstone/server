@@ -143,6 +143,16 @@ public class WebSocketService {
         }
     }
 
+    //주요키워드
+    public void sendMainKeywords(ScriptMessageRequestDto dto){
+        String content = dto.getScription();
+
+        String summary = gptService.callSummaryOpenAI(content);
+
+        if()
+
+    }
+
     public List<String> parseJsonArrayToList(String jsonArray) {
         ObjectMapper mapper = new ObjectMapper();
         try {
