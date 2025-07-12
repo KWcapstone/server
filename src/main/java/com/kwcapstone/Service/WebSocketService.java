@@ -87,6 +87,10 @@ public class WebSocketService {
                 String content = dto.getScription();
                 //주요키워드
                 sendMainKeywords(projectIdStr, dto);
+
+                //요약본
+                sendSummary(projectIdStr, dto);
+
                 // 임시 디렉토리 경로 확인 및 생성
                 String tmpDirPath = System.getProperty("java.io.tmpdir");
                 File tmpDir = new File(tmpDirPath);
