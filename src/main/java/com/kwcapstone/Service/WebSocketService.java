@@ -236,8 +236,10 @@ public class WebSocketService {
             project.setProjectName(newProjectName);
             projectRepository.save(project);
 
-
+            messagingTemplate.convertAndSend("/topic/conference/" + projectIdStr,
+                    new ProjectNameModifyResponseDto("modifying", projectIdStr, newProjectName));
+        }catch (Exception e){
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "회의 이름 수정 중 오류");
         }
-
     }
 }
