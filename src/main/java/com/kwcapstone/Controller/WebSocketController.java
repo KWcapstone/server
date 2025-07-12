@@ -49,17 +49,4 @@ public class WebSocketController {
                            @Payload ScriptMessageRequestDto dto) {
         webSocketService.saveScript(projectId, dto);
     }
-
-    @MessageMapping("/conference/summary/{projectId}")
-    public void receiveScript(@DestinationVariable String projectId, ScriptMessageRequestDto dto) {
-        webSocketService.handleScript(projectId, dto);
-
-        List<ParticipantDto> participants = participantTracker.getParticipantDtos(dto.getProjectId());
-        // 4. 전체 목록도 갱신
-        messagingTemplate.convertAndSend(
-                "/topic/conference/" + projectId + "/participants",
-                new ParticipantResponseDto("participants", projectId, String.valueOf((long) participants.size()),
-                        new ArrayList<>(participants))
-        );
-    }
 }
