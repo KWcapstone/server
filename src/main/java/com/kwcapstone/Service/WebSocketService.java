@@ -20,7 +20,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.socket.WebSocketSession;
 
 
 import java.io.File;
@@ -143,16 +142,6 @@ public class WebSocketService {
         }
     }
 
-    //주요키워드
-    public void sendMainKeywords(ScriptMessageRequestDto dto){
-        String content = dto.getScription();
-
-        String summary = gptService.callSummaryOpenAI(content);
-
-        if()
-
-    }
-
     public List<String> parseJsonArrayToList(String jsonArray) {
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -161,6 +150,24 @@ public class WebSocketService {
             e.printStackTrace();
             return List.of("파싱 실패");
         }
+    }
+
+    //주요키워드
+    public void sendMainKeywords(String projectId, ScriptMessageRequestDto dto){
+        String content = dto.getScription();
+
+        String summary = gptService.callSummaryOpenAI(content);
+
+        if(summary.startsWith("Error:")){
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "외부 GPT API 요약 처리 과정 중 오류");
+        }
+
+        List<String> result = parseJsonArrayToList(summary);
+
+        messagingTemplate.convertAndSend(
+                "topic/conference" + projectId,
+                new MainKeywordDtoResponseDto("main_keywords", projectId, result));
+
     }
 
     // projectId별로 스크립트를 누적 저장
