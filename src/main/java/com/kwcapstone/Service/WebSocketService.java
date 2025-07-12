@@ -160,7 +160,7 @@ public class WebSocketService {
         String mainKeywords = gptService.callMainOpenAI(content);
 
         if(mainKeywords.startsWith("Error:")){
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "외부 GPT API 요약 처리 과정 중 오류");
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
         }
 
         List<String> result = parseJsonArrayToList(mainKeywords);
@@ -177,7 +177,15 @@ public class WebSocketService {
 
         String summary = gptService.callSummaryOpenAI(content);
 
+        if(summary.startsWith("Error:")){
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "외부 GPT API 요약 처리 과정 중 오류");
+        }
 
+        List<String> result = parseJsonArrayToList(mainKeywords);
+
+        messagingTemplate.convertAndSend(
+                "/topic/conference/" + projectId,
+                new MainKeywordDtoResponseDto("main_keywords", projectId, result));
 
 
     }
