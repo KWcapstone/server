@@ -39,6 +39,9 @@ dependencies {
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
+	//redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'io.lettuce.core:lettuce-core'
 
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
