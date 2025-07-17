@@ -43,6 +43,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'io.lettuce.core:lettuce-core'
 	implementation 'org.redisson:redisson-spring-boot-starter:3.27.2'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
