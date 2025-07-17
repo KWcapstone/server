@@ -41,7 +41,7 @@ dependencies {
 
 	//redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-	implementation 'io.lettuce.core:lettuce-core'
+	implementation 'io.lettuce.core:lettuce-core:6.3.1.RELEASE'
 	implementation 'org.redisson:redisson-spring-boot-starter:3.27.2'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
