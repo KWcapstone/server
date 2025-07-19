@@ -46,10 +46,12 @@ public class RedisConfig {
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
-        System.out.println(properties.getSsl().isEnabled());
+        String url = String.format(createUrl(), properties.getHost(), properties.getPort());
+        System.out.println("redissonClient: " + url);
         config.useSingleServer()
-                .setAddress(String.format(createUrl(), properties.getHost(), properties.getPort()))
-                .setSslEnableEndpointIdentification(true);
+                .setAddress(url)
+                .setSslEnableEndpointIdentification(false)
+                .set
 
         return Redisson.create(config);
     }
@@ -58,7 +60,6 @@ public class RedisConfig {
         if(Boolean.TRUE.equals(properties.getSsl().isEnabled())){
             return "rediss://%s:%d";
         }
-
         return "redis://%s:%d";
     }
 }
