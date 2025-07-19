@@ -14,7 +14,7 @@ FROM bellsoft/liberica-openjdk-alpine:21
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache ca-certificate
+RUN apk update && apk add --no-cache ca-certificates
 
 RUN mkdir -p /app/tmp
 
