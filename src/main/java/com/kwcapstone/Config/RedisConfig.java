@@ -24,6 +24,10 @@ public class RedisConfig {
         RedisConfiguration config = new RedisStandaloneConfiguration(properties.getHost(), properties.getPort());
         LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfigurationBuilder = LettuceClientConfiguration.builder();
 
+        System.out.println("redisConnection: " + properties.getHost());
+        System.out.println("redisConnection: " + properties.getPort());
+        System.out.println("redisConnection: " + properties.getSsl().isEnabled());
+
         if(Boolean.TRUE.equals(properties.getSsl().isEnabled())){
             clientConfigurationBuilder.useSsl();
         }
@@ -42,9 +46,10 @@ public class RedisConfig {
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
+        System.out.println(properties.getSsl().isEnabled());
         config.useSingleServer()
                 .setAddress(String.format(createUrl(), properties.getHost(), properties.getPort()))
-                .setSslEnableEndpointIdentification(properties.getSsl().isEnabled());
+                .setSslEnableEndpointIdentification(true);
 
         return Redisson.create(config);
     }
