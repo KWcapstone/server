@@ -14,6 +14,8 @@ FROM bellsoft/liberica-openjdk-alpine:21
 
 WORKDIR /app
 
+RUN apk update && apk add --no-cache ca-certificate
+
 RUN mkdir -p /app/tmp
 
 ENV JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=/app/tmp"
