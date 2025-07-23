@@ -87,6 +87,7 @@ public class WebSocketService {
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
                 String content = dto.getScription();
+
                 //주요키워드
                 sendMainKeywords(projectIdStr, dto);
 
@@ -207,6 +208,8 @@ public class WebSocketService {
         String content = dto.getScription();
 
         String summary = gptService.callSummaryOpenAI(content);
+
+        System.out.println(summary);
 
         if(summary.startsWith("Error:")){
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[요약본] : 외부 GPT API 요약 처리 과정 중 오류");

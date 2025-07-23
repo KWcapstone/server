@@ -16,24 +16,30 @@ public class GptService {
     private final GptConfig gptConfig;
 
     //토큰 계산하는 함수
-    public int estimateMaxTokens(String promptText){
-        int wordCount = promptText.trim().split("\\s+").length;
-        int estimatedTokens = (int) (wordCount * 3.5);
-        if(wordCount > 500) {
-            estimatedTokens += 1000;
-        }
+    public int estimateMaxTokens(String promptText) {
+        final int totalLimit = 4096;
 
-        return Math.min(estimatedTokens, 1000);
+        int promptTokens = promptText.trim().split("\\s+").length;
+        int estimatedTokens = (int) (promptTokens * 1.5);
+
+        // 응답에 할당할 수 있는 최대 토큰 수
+        int remaining = totalLimit - estimatedTokens;
+
+        // 안전한 최소 보장 범위 (100~1500 사이 제한)
+        return Math.max(100, Math.min(remaining, 1500));
     }
 
     public int estimateMindMapMaxTokens(String promptText){
-        int wordCount = promptText.trim().split("\\s+").length;
-        int estimatedTokens = (int) (wordCount * 20);
-        if(wordCount > 500) {
-            estimatedTokens += 20000;
-        }
+        final int totalLimit = 4096;
 
-        return Math.min(estimatedTokens, 20000);
+        int wordCount = promptText.trim().split("\\s+").length;
+        int estimatedTokens = (int) (wordCount * 1.5);
+
+        // 응답에 할당할 수 있는 최대 토큰 수
+        int remaining = totalLimit - estimatedTokens;
+
+        // 안전한 최소 보장 범위 (100~1500 사이 제한)
+        return Math.max(100, Math.min(remaining, 1500));
     }
 
     //요약본
@@ -54,7 +60,7 @@ public class GptService {
                 - title은 15자 이내로, 내용을 대표할 수 있는 요약 문구로 작성해줘.
                 - content는 3~4문장 이내로 회의 핵심 내용을 압축해서 설명해줘.
                 - '더 도와드릴까요?' 같은 멘트는 절대 포함하지 마.
-                - 만약 이 형식 지키지 않고 답변 보낼거면 보내지마.
+                - 이 형식을 꼭꼭 지켜줘. Json 형식이며 필드는 꼭 title과 content여야 해.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(
