@@ -1,13 +1,10 @@
 package com.kwcapstone.Controller;
 
-import com.kwcapstone.Domain.Dto.Request.ProjectNameRequestDto;
-import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
+import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.RecommendKeywordDto;
 import com.kwcapstone.Service.WebSocketService;
 import com.kwcapstone.Config.RoomParticipantTracker;
 import com.kwcapstone.Config.WebSocketSessionRegistry;
-import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
-import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
 import com.kwcapstone.Domain.Dto.Response.ParticipantResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -57,4 +54,11 @@ public class WebSocketController {
                                   @Payload ProjectNameRequestDto dto){
         webSocketService.modifyProjectName(projectId, dto);
     }
+
+    // 마인드맵에 키워드 직접 추가
+//    @MessageMapping("/conference/{projectId}/live_off/add")
+//    public void keywordAdd(@DestinationVariable String projectId, Principal principal,
+//                           @Payload MindmapAddRequestDto dto) {
+//        webSocketService.addKeyword(projectId, dto);
+//    }
 }
