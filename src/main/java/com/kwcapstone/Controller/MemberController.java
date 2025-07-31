@@ -54,12 +54,6 @@ public class MemberController {
         return BaseResponse.res(SuccessStatus.USER_EMAIL_VERIFICATION,null);
     }
 
-    @GetMapping("/agree")
-    public void showTermsPage(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/terms.html");
-    }
-
-    // 약관동의 - 여기 형식도 통일해야할듯
     @PostMapping("/agree")
     public BaseResponse<MemberLoginResponseDto> agree(HttpServletRequest request) {
         return memberService.agreeNewMember();
@@ -73,12 +67,11 @@ public class MemberController {
 
     // 구글로그인
     @GetMapping("/login/google")
-    public BaseResponse<MemberLoginResponseDto> googleLogin
-        (@RequestParam String code, HttpServletResponse response) throws IOException {
+    public BaseResponse<MemberLoginResponseDto> googleLogin (@RequestParam String code) throws IOException {
         if (code == null || code.isEmpty()) {
             return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null);
         }
-        return memberService.handleGoogleLogin(code, response);
+        return memberService.handleGoogleLogin(code);
     }
 
     // 일반로그인
