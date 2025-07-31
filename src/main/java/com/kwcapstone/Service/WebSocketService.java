@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.kwcapstone.AI.GptService;
 import com.kwcapstone.Config.RoomParticipantTracker;
 import com.kwcapstone.Config.WebSocketSessionRegistry;
-import com.kwcapstone.Domain.Dto.Request.ParticipantDto;
-import com.kwcapstone.Domain.Dto.Request.ParticipantEventDto;
-import com.kwcapstone.Domain.Dto.Request.ProjectNameRequestDto;
-import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
+import com.kwcapstone.Domain.Dto.Request.*;
 import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.Project;
 import com.kwcapstone.Repository.ProjectRepository;
@@ -252,4 +249,23 @@ public class WebSocketService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "회의 이름 수정 중 오류");
         }
     }
+
+    // 키워드 직접 추가
+//    public void addKeyword(String projectIdStr, MindmapAddRequestDto dto){
+//        if (dto.getEvent().equals("add_mindmap")) {
+//            try {
+//                ObjectId projectId = new ObjectId(projectIdStr);
+//                Project project = projectRepository.findByProjectId(projectId)
+//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+//
+////                String content = dto.getScription();
+//
+//                // 초기화
+//                scriptBuffer.put(projectIdStr, new ArrayList<>());
+//                newScriptionCounter.put(projectIdStr, 0);
+//            } catch (IOException e) {
+//                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
+//            }
+//        }
+//    }
 }
