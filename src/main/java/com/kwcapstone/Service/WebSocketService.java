@@ -133,18 +133,27 @@ public class WebSocketService {
                 // 전체 스크립트 줄 읽기
                 List<String> allLines = Files.readAllLines(Path.of(filePath));
                 String fullText = String.join(" ", allLines);
+
                 String keywordResponse = gptService.callRecommendedKeywords(fullText);
 
-                List<String> keywords = Arrays.stream(keywordResponse.split(","))
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .limit(5)
-                        .collect(Collectors.toList());
+                // GPT 응답이 에러 문자열인지 확인
+                if (keywordResponse.startsWith("Error:")) {
+                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[추천 키워드] : 외부 GPT API 처리 중 오류");
+                }
+
+                // 응답 JSON 배열 → List<String> 파싱
+                List<String> keywords = parseJsonArrayToList(keywordResponse);
+
+                // 최대 5개까지만 전송
+                List<String> trimmed = keywords.stream().limit(5).toList();
 
                 messagingTemplate.convertAndSend(
                         "/topic/conference/" + projectId,
-                        new RecommendKeywordDto("recommended_keywords", projectId, keywords));
-                } catch (IOException e) {
+                        new RecommendKeywordDto("recommended_keywords", projectId, trimmed)
+                );
+
+            } catch (IOException e) {
+                e.printStackTrace();
                 messagingTemplate.convertAndSend(
                         "/topic/conference/" + projectId,
                         new RecommendKeywordDto("recommended_keywords", projectId, List.of("에러 발생"))
