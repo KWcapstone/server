@@ -3,6 +3,7 @@
 //import lombok.RequiredArgsConstructor;
 //import org.redisson.Redisson;
 //import org.redisson.api.RedissonClient;
+//import org.redisson.api.RedissonReactiveClient;
 //import org.redisson.config.Config;
 //import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 //import org.springframework.context.annotation.Bean;
@@ -13,6 +14,8 @@
 //import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 //import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 //import org.springframework.data.redis.core.RedisTemplate;
+//
+//import java.io.IOException;
 //
 //@Configuration
 //@RequiredArgsConstructor
@@ -37,6 +40,11 @@
 //    }
 //
 //    @Bean
+//    public RedissonReactiveClient redissonReactiveClient() throws IOException {
+//        return createRedissonClient().reactive();
+//    }
+//
+//    @Bean
 //    public RedisTemplate<String, String> redisTemplate() {
 //        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
 //        redisTemplate.setConnectionFactory(redisConnectionFactory());
@@ -44,15 +52,23 @@
 //    }
 //
 //    @Bean
-//    public RedissonClient redissonClient() {
+//    public RedissonClient redissonClient() throws IOException {
+//        return createRedissonClient();
+//    }
+//
+//    private RedissonClient createRedissonClient() throws IOException{
 //        Config config = new Config();
+//
 //        String url = String.format(createUrl(), properties.getHost(), properties.getPort());
 //        System.out.println("redissonClient: " + url);
+//
 //        config.useSingleServer()
 //                .setAddress(url)
-//                .setSslEnableEndpointIdentification(false);
+//                .setSslEnableEndpointIdentification(false)
+//                .setPassword(null);
 //
 //        return Redisson.create(config);
+//
 //    }
 //
 //    private String createUrl(){
