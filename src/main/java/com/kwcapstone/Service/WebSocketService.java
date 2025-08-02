@@ -42,6 +42,11 @@ public class WebSocketService {
     private final ProjectRepository projectRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
+    private final Map<String, List<NodeDto>> sessionNodeBuffer = new ConcurrentHashMap<>();
+
+    private final int X_BASE = 0; // 위치 기준
+    private final int Y_GAP = 50;   // 노드 간 y
+
     // projectId별로 스크립트를 누적 저장
     //회의 여러개가 동시에 시작되기 때문에
     //concurrentHashMap -> ,여러 스레득 도시에 접근해도 안전하게 작동
@@ -113,6 +118,7 @@ public class WebSocketService {
 
                 // 추천 키워드 전송
                 sendRecommendedKeywords(projectIdStr);
+                updateNode(projectIdStr);
 
                 // 초기화
                 scriptBuffer.put(projectIdStr, new ArrayList<>());
@@ -256,6 +262,101 @@ public class WebSocketService {
                     new ProjectNameModifyResponseDto("modifying", projectIdStr, newProjectName));
         }catch (Exception e){
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "회의 이름 수정 중 오류");
+        }
+    }
+
+    //노드 업데이트
+    private void updateNode(String projectId){
+        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            try {
+                // 전체 스크립트 줄 읽기
+                List<String> allLines = Files.readAllLines(Path.of(filePath));
+                String fullText = String.join(" ", allLines);
+                String gptResult = gptService.callMindMapNode(fullText);
+
+                ObjectMapper mapper = new ObjectMapper();
+                //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+                List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
+                System.out.println("GPT 결과: " + gptResult);
+
+                List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectId, k -> new ArrayList<>());
+                List<NodeDto> newNodes = new ArrayList<>();
+
+                Map<String, String> idMapping = new ConcurrentHashMap<>();
+
+                for (Map<String, Object> gptNode : gptNodes) {
+                    String originalId = gptNode.get("id").toString();
+                    String newId = UUID.randomUUID().toString();
+                    idMapping.put(originalId, newId);
+                }
+
+                int baseY = currentNodes.size() * Y_GAP;
+
+                for (int i = 0; i < gptNodes.size(); i++) {
+                    Map<String, Object> gptNode = gptNodes.get(i);
+                    String originalId = gptNode.get("id").toString();
+                    String label = gptNode.get("label").toString();
+                    String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
+                    String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
+
+                    String type;
+                    if (parentId == null) {
+                        type = "input";
+                    } else if (i == gptNodes.size() - 1) {
+                        type = "output";
+                    } else {
+                        type = "default";
+                    }
+
+                    System.out.println("parsing이 문제?");
+
+                    // position 추출
+                    Map<String, Object> positionMap = (Map<String, Object>) gptNode.get("position");
+                    int x, y;
+                    if (positionMap != null && positionMap.get("x") != null && positionMap.get("y") != null) {
+                        x = ((Number) positionMap.get("x")).intValue();
+                        y = ((Number) positionMap.get("y")).intValue();
+                    } else {
+                        // fallback 값 지정 (예: 루트는 0,0 / 나머지는 순서 기반 y축 정렬)
+                        x = X_BASE;
+                        y = baseY + i * Y_GAP;
+                    }
+                    System.out.println("positon은 문제 없는데,");
+
+                    NodeDto node = NodeDto.builder()
+                            .id(idMapping.get(originalId))
+                            .type(type)
+                            .data(new DataDto(label))
+                            .position(new PositionDto(x,y))
+                            .parentId(parentId)
+                            .build();
+
+                    currentNodes.add(node);
+                    newNodes.add(node);
+                }
+
+                for (NodeDto node : newNodes) {
+                    messagingTemplate.convertAndSend("/topic/conference/live_on",
+                            Map.of("event", "liveOn",
+                                    "projectId", projectId,
+                                    "node", node));
+                }
+
+
+                messagingTemplate.convertAndSend(
+                        "/topic/conference/" + projectId,
+                        new NodeUpdateResponseDto("liveOn", projectId, newNodes));
+            } catch (IOException e) {
+                messagingTemplate.convertAndSend(
+                        "/topic/conference/" + projectId,
+                        new RecommendKeywordDto("liveOn", projectId, List.of("에러 발생"))
+                );
+            }
+        } else {
+            System.out.println("파일 없음: " + filePath); // 디버깅용 로그
         }
     }
 

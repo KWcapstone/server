@@ -227,10 +227,7 @@ public class ConferenceService {
             return NodeUpdateResponseDto.builder()
                     .event("live_on")
                     .projectId(projectIdStr)
-                    .summary(summary)
                     .nodes(newNodes)
-                    .mainKeywords(mainKeywords)
-                    .recommendedKeywords(recommendKeywords)
                     .build();
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
