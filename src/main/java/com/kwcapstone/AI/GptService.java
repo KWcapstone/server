@@ -1,5 +1,7 @@
 package com.kwcapstone.AI;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -133,36 +135,35 @@ public class GptService {
     public String callRecommendedKeywords(String prompt) {
         int maxTokens = estimateRecommendResponseTokens(prompt);
 
-        String promptMessage = """
+        String fullPrompt = """
                     아래 회의 스크립트는 아이디어 회의 중 일부야.
                     지금 논의된 주제를 바탕으로, 다음 회의에서 더 발전시켜볼 만한 창의적이고, 새로운 아이디어 키워드 5개를 추천해줘. 제약사항은 다음과 같아.
-                    1. 각 키워드는 **새로운 아이디어** 방향을 제시하는 것이어야 함.
-                    2. 기존의 내용을 요약하지 않아야 함.
-                    3. 이전 내용을 반복하지 않아야 함.
-                    4. 키워드는 5글자 이내면 좋음.
-                    5. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하면 안됨.
-                    6. JSON 배열로 추출해줘.
-                    """;
+                    1. 기존의 내용을 요약하지 않아야 함.
+                    2. 이전 내용을 반복하지 않아야 함.
+                    3. 키워드는 5글자 이내여야 함.
+                    4. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하면 안됨.
+                    5. 반드시 JSON 배열로만 추출할 것. 예: ["React", "블록체인", "GPU", "그래픽AI", "클라우드"]
+                    """ + prompt;
 
         Map<String, Object> requestBody = Map.of(
                 "model", gptConfig.getModel(),
                 "messages", List.of(
-                        Map.of("role", "system", "content", promptMessage),
-                        Map.of("role", "user", "content", prompt)
+                        Map.of("role", "user", "content", fullPrompt)
                 ),
                 "temperature", 0.3,
                 "max_tokens", maxTokens
         );
 
         return openAiWebClient.post()
-                .uri("/chat/completions")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(Map.class)
+                .uri("/chat/completions") // gpt 한테 보내는 엔드포인트
+                .bodyValue(requestBody)  //요청 본문 담을 데이터
+                .retrieve() // 응답을 받아오는 단계 -> 비동기 응답 객체로 흐름이 바뀜
+                .bodyToMono(Map.class)  // JSON으로 받음
                 .map(response -> {
                     List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
                     Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return message.get("content").toString().trim();
+                    String content = message.get("content").toString().trim();
+                    return content;
                 })
                 .onErrorResume(e -> Mono.just("Error: " + e.getMessage()))
                 .block();
