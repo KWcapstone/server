@@ -91,7 +91,7 @@ public class WebSocketService {
                 String content = dto.getScription();
 
                 //주요키워드
-                sendMainKeywords(projectIdStr, dto);
+                sendMainKeywords(1, projectIdStr, dto, null);
 
                 //요약본
                 sendSummary(projectIdStr, dto);
@@ -117,7 +117,7 @@ public class WebSocketService {
                 newScriptionCounter.put(projectIdStr, count);
 
                 // 추천 키워드 전송
-                sendRecommendedKeywords(projectIdStr);
+                sendRecommendedKeywords(1, projectIdStr, null);
                 updateNode(projectIdStr);
 
                 // 초기화
@@ -130,43 +130,65 @@ public class WebSocketService {
     }
 
     // 추천 키워드
-    public void sendRecommendedKeywords(String projectId) {
-        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
-        File file = new File(filePath);
+    public void sendRecommendedKeywords(Integer type, String projectId, String node) {
+        if(type == 1){
+            String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
+            File file = new File(filePath);
 
-        if (file.exists()) {
-            try {
-                // 전체 스크립트 줄 읽기
-                List<String> allLines = Files.readAllLines(Path.of(filePath));
-                String fullText = String.join(" ", allLines);
+            if (file.exists()) {
+                try {
+                    // 전체 스크립트 줄 읽기
+                    List<String> allLines = Files.readAllLines(Path.of(filePath));
+                    String fullText = String.join(" ", allLines);
 
-                String keywordResponse = gptService.callRecommendedKeywords(fullText);
+                    String keywordResponse = gptService.callRecommendedKeywords(fullText);
 
-                // GPT 응답이 에러 문자열인지 확인
-                if (keywordResponse.startsWith("Error:")) {
-                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[추천 키워드] : 외부 GPT API 처리 중 오류");
+                    // GPT 응답이 에러 문자열인지 확인
+                    if (keywordResponse.startsWith("Error:")) {
+                        throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[추천 키워드] : 외부 GPT API 처리 중 오류");
+                    }
+
+                    // 응답 JSON 배열 → List<String> 파싱
+                    List<String> keywords = parseJsonArrayToList(keywordResponse);
+
+                    // 최대 5개까지만 전송
+                    List<String> trimmed = keywords.stream().limit(5).toList();
+
+                    messagingTemplate.convertAndSend(
+                            "/topic/conference/" + projectId,
+                            new RecommendKeywordDto("recommended_keywords", projectId, trimmed)
+                    );
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    messagingTemplate.convertAndSend(
+                            "/topic/conference/" + projectId,
+                            new RecommendKeywordDto("recommended_keywords", projectId, List.of("에러 발생"))
+                    );
                 }
-
-                // 응답 JSON 배열 → List<String> 파싱
-                List<String> keywords = parseJsonArrayToList(keywordResponse);
-
-                // 최대 5개까지만 전송
-                List<String> trimmed = keywords.stream().limit(5).toList();
-
-                messagingTemplate.convertAndSend(
-                        "/topic/conference/" + projectId,
-                        new RecommendKeywordDto("recommended_keywords", projectId, trimmed)
-                );
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                messagingTemplate.convertAndSend(
-                        "/topic/conference/" + projectId,
-                        new RecommendKeywordDto("recommended_keywords", projectId, List.of("에러 발생"))
-                );
+            } else {
+                System.out.println("파일 없음: " + filePath); // 디버깅용 로그
             }
-        } else {
-            System.out.println("파일 없음: " + filePath); // 디버깅용 로그
+        }
+        else{
+            String keywordResponse = gptService.modifyRecommendedKeywords(node);
+
+
+            // GPT 응답이 에러 문자열인지 확인
+            if (keywordResponse.startsWith("Error:")) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[추천 키워드] : 외부 GPT API 처리 중 오류");
+            }
+
+            // 응답 JSON 배열 → List<String> 파싱
+            List<String> keywords = parseJsonArrayToList(keywordResponse);
+
+            // 최대 5개까지만 전송
+            List<String> trimmed = keywords.stream().limit(5).toList();
+
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId,
+                    new RecommendKeywordDto("recommended_keywords", projectId, trimmed)
+            );
         }
     }
 
@@ -181,20 +203,35 @@ public class WebSocketService {
     }
 
     //주요키워드
-    public void sendMainKeywords(String projectId, ScriptMessageRequestDto dto){
-        String content = dto.getScription();
+    public void sendMainKeywords(Integer type, String projectId, ScriptMessageRequestDto dto, String node){
+        if(type == 1){
+            String content = dto.getScription();
 
-        String mainKeywords = gptService.callMainOpenAI(content);
+            String mainKeywords = gptService.callMainOpenAI(content);
 
-        if(mainKeywords.startsWith("Error:")){
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
+            if(mainKeywords.startsWith("Error:")){
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
+            }
+
+            List<String> result = parseJsonArrayToList(mainKeywords);
+
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId,
+                    new MainKeywordDtoResponseDto("main_keywords", projectId, result));
         }
+        else{
+            String mainKeywords = gptService.callMainOpenAI(node);
 
-        List<String> result = parseJsonArrayToList(mainKeywords);
+            if(mainKeywords.startsWith("Error:")){
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
+            }
 
-        messagingTemplate.convertAndSend(
-                "/topic/conference/" + projectId,
-                new MainKeywordDtoResponseDto("main_keywords", projectId, result));
+            List<String> result = parseJsonArrayToList(mainKeywords);
+
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId,
+                    new MainKeywordDtoResponseDto("main_keywords", projectId, result));
+        }
 
     }
 
