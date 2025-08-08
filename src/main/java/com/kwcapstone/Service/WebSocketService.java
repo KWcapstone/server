@@ -1,6 +1,8 @@
 package com.kwcapstone.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kwcapstone.AI.GptService;
 import com.kwcapstone.Config.RoomParticipantTracker;
@@ -91,7 +93,7 @@ public class WebSocketService {
                 String content = dto.getScription();
 
                 //주요키워드
-                sendMainKeywords(projectIdStr, dto);
+                sendMainKeywords(1, projectIdStr, dto, null);
 
                 //요약본
                 sendSummary(projectIdStr, dto);
@@ -117,8 +119,7 @@ public class WebSocketService {
                 newScriptionCounter.put(projectIdStr, count);
 
                 // 추천 키워드 전송
-                sendRecommendedKeywords(projectIdStr);
-                updateNode(projectIdStr);
+                sendRecommendedKeywords(1, projectIdStr, null);
 
                 // 초기화
                 scriptBuffer.put(projectIdStr, new ArrayList<>());
@@ -130,43 +131,65 @@ public class WebSocketService {
     }
 
     // 추천 키워드
-    public void sendRecommendedKeywords(String projectId) {
-        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
-        File file = new File(filePath);
+    public void sendRecommendedKeywords(Integer type, String projectId, String node) {
+        if(type == 1){
+            String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
+            File file = new File(filePath);
 
-        if (file.exists()) {
-            try {
-                // 전체 스크립트 줄 읽기
-                List<String> allLines = Files.readAllLines(Path.of(filePath));
-                String fullText = String.join(" ", allLines);
+            if (file.exists()) {
+                try {
+                    // 전체 스크립트 줄 읽기
+                    List<String> allLines = Files.readAllLines(Path.of(filePath));
+                    String fullText = String.join(" ", allLines);
 
-                String keywordResponse = gptService.callRecommendedKeywords(fullText);
+                    String keywordResponse = gptService.callRecommendedKeywords(fullText);
 
-                // GPT 응답이 에러 문자열인지 확인
-                if (keywordResponse.startsWith("Error:")) {
-                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[추천 키워드] : 외부 GPT API 처리 중 오류");
+                    // GPT 응답이 에러 문자열인지 확인
+                    if (keywordResponse.startsWith("Error:")) {
+                        throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[추천 키워드] : 외부 GPT API 처리 중 오류");
+                    }
+
+                    // 응답 JSON 배열 → List<String> 파싱
+                    List<String> keywords = parseJsonArrayToList(keywordResponse);
+
+                    // 최대 5개까지만 전송
+                    List<String> trimmed = keywords.stream().limit(5).toList();
+
+                    messagingTemplate.convertAndSend(
+                            "/topic/conference/" + projectId,
+                            new RecommendKeywordDto("recommended_keywords", projectId, trimmed)
+                    );
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    messagingTemplate.convertAndSend(
+                            "/topic/conference/" + projectId,
+                            new RecommendKeywordDto("recommended_keywords", projectId, List.of("에러 발생"))
+                    );
                 }
-
-                // 응답 JSON 배열 → List<String> 파싱
-                List<String> keywords = parseJsonArrayToList(keywordResponse);
-
-                // 최대 5개까지만 전송
-                List<String> trimmed = keywords.stream().limit(5).toList();
-
-                messagingTemplate.convertAndSend(
-                        "/topic/conference/" + projectId,
-                        new RecommendKeywordDto("recommended_keywords", projectId, trimmed)
-                );
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                messagingTemplate.convertAndSend(
-                        "/topic/conference/" + projectId,
-                        new RecommendKeywordDto("recommended_keywords", projectId, List.of("에러 발생"))
-                );
+            } else {
+                System.out.println("파일 없음: " + filePath); // 디버깅용 로그
             }
-        } else {
-            System.out.println("파일 없음: " + filePath); // 디버깅용 로그
+        }
+        if(type == 2){
+            String keywordResponse = gptService.modifyRecommendedKeywords(node);
+
+
+            // GPT 응답이 에러 문자열인지 확인
+            if (keywordResponse.startsWith("Error:")) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[추천 키워드] : 외부 GPT API 처리 중 오류");
+            }
+
+            // 응답 JSON 배열 → List<String> 파싱
+            List<String> keywords = parseJsonArrayToList(keywordResponse);
+
+            // 최대 5개까지만 전송
+            List<String> trimmed = keywords.stream().limit(5).toList();
+
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId,
+                    new RecommendKeywordDto("recommended_keywords", projectId, trimmed)
+            );
         }
     }
 
@@ -181,20 +204,36 @@ public class WebSocketService {
     }
 
     //주요키워드
-    public void sendMainKeywords(String projectId, ScriptMessageRequestDto dto){
-        String content = dto.getScription();
+    public void sendMainKeywords(Integer type, String projectId, ScriptMessageRequestDto dto, String node){
+        if(type == 1){
+            String content = dto.getScription();
 
-        String mainKeywords = gptService.callMainOpenAI(content);
+            String mainKeywords = gptService.callMainOpenAI(content);
 
-        if(mainKeywords.startsWith("Error:")){
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
+            if(mainKeywords.startsWith("Error:")){
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
+            }
+
+            List<String> result = parseJsonArrayToList(mainKeywords);
+
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId,
+                    new MainKeywordDtoResponseDto("main_keywords", projectId, result));
         }
 
-        List<String> result = parseJsonArrayToList(mainKeywords);
+        else{
+            String mainKeywords = gptService.modifyMainOpenAI(node);
 
-        messagingTemplate.convertAndSend(
-                "/topic/conference/" + projectId,
-                new MainKeywordDtoResponseDto("main_keywords", projectId, result));
+            if(mainKeywords.startsWith("Error:")){
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "[주요 키워드] : 외부 GPT API 요약 처리 과정 중 오류");
+            }
+
+            List<String> result = parseJsonArrayToList(mainKeywords);
+
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId,
+                    new MainKeywordDtoResponseDto("main_keywords", projectId, result));
+        }
 
     }
 
@@ -265,98 +304,184 @@ public class WebSocketService {
         }
     }
 
-    //노드 업데이트
-    private void updateNode(String projectId){
-        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
+    //노드 생성
+    private String createNode(NodeRequstDto nodeRequstDto){
+        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + nodeRequstDto.getProjectId() + ".txt";
         File file = new File(filePath);
 
+        String content = "";
+
+        //script 파일을 찾은 후
         if (file.exists()) {
+            System.out.println("파일이 존재해야함");
+            //이전 scripton 불러와야함
             try {
                 // 전체 스크립트 줄 읽기
                 List<String> allLines = Files.readAllLines(Path.of(filePath));
                 String fullText = String.join(" ", allLines);
-                String gptResult = gptService.callMindMapNode(fullText);
 
-                ObjectMapper mapper = new ObjectMapper();
-                //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
-                List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
-                System.out.println("GPT 결과: " + gptResult);
-
-                List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectId, k -> new ArrayList<>());
-                List<NodeDto> newNodes = new ArrayList<>();
-
-                Map<String, String> idMapping = new ConcurrentHashMap<>();
-
-                for (Map<String, Object> gptNode : gptNodes) {
-                    String originalId = gptNode.get("id").toString();
-                    String newId = UUID.randomUUID().toString();
-                    idMapping.put(originalId, newId);
-                }
-
-                int baseY = currentNodes.size() * Y_GAP;
-
-                for (int i = 0; i < gptNodes.size(); i++) {
-                    Map<String, Object> gptNode = gptNodes.get(i);
-                    String originalId = gptNode.get("id").toString();
-                    String label = gptNode.get("label").toString();
-                    String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
-                    String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
-
-                    String type;
-                    if (parentId == null) {
-                        type = "input";
-                    } else if (i == gptNodes.size() - 1) {
-                        type = "output";
-                    } else {
-                        type = "default";
-                    }
-
-                    System.out.println("parsing이 문제?");
-
-                    // position 추출
-                    Map<String, Object> positionMap = (Map<String, Object>) gptNode.get("position");
-                    int x, y;
-                    if (positionMap != null && positionMap.get("x") != null && positionMap.get("y") != null) {
-                        x = ((Number) positionMap.get("x")).intValue();
-                        y = ((Number) positionMap.get("y")).intValue();
-                    } else {
-                        // fallback 값 지정 (예: 루트는 0,0 / 나머지는 순서 기반 y축 정렬)
-                        x = X_BASE;
-                        y = baseY + i * Y_GAP;
-                    }
-                    System.out.println("positon은 문제 없는데,");
-
-                    NodeDto node = NodeDto.builder()
-                            .id(idMapping.get(originalId))
-                            .type(type)
-                            .data(new DataDto(label))
-                            .position(new PositionDto(x,y))
-                            .parentId(parentId)
-                            .build();
-
-                    currentNodes.add(node);
-                    newNodes.add(node);
-                }
-
-                for (NodeDto node : newNodes) {
-                    messagingTemplate.convertAndSend("/topic/conference/live_on",
-                            Map.of("event", "liveOn",
-                                    "projectId", projectId,
-                                    "node", node));
-                }
-
-
-                messagingTemplate.convertAndSend(
-                        "/topic/conference/" + projectId,
-                        new NodeUpdateResponseDto("liveOn", projectId, newNodes));
-            } catch (IOException e) {
-                messagingTemplate.convertAndSend(
-                        "/topic/conference/" + projectId,
-                        new RecommendKeywordDto("liveOn", projectId, List.of("에러 발생"))
-                );
+                System.out.println("fullText" + fullText);
+                System.out.println("node" + nodeRequstDto.getNodes());
+                //scription과 node를 합쳐서 프롬프트를 만들어야함
+                content = fullText + nodeRequstDto.getNodes();
+            }catch (IOException e){
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
             }
         } else {
-            System.out.println("파일 없음: " + filePath); // 디버깅용 로그
+            //노드 파일 만들기
+            // 임시 디렉토리 경로 확인 및 생성
+            String tmpDirPath = System.getProperty("java.io.tmpdir");
+            File tmpDir = new File(tmpDirPath);
+            if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시 폴더 생성에 실패했습니다.");
+            }
+
+            // 임시 파일에 저장 (append 모드)
+            String fileName = "script_" + nodeRequstDto.getProjectId() + ".txt";
+            File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
+            file = newFile;
+
+            content = nodeRequstDto.getNodes();
+        }
+
+        //GPT로부터 NODE 생성 부탁해야함
+        try {
+            String gptResult = gptService.callMindMapNode(content);
+
+            //gpt 결과
+            ObjectMapper mapper = new ObjectMapper();
+
+            //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
+            List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {
+            });
+            System.out.println("GPT 결과: " + gptResult);
+
+            List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(nodeRequstDto.getProjectId(), k -> new ArrayList<>());
+            List<NodeDto> newNodes = new ArrayList<>();
+
+            Map<String, String> idMapping = new ConcurrentHashMap<>();
+
+            for (Map<String, Object> gptNode : gptNodes) {
+                String originalId = gptNode.get("id").toString();
+                String newId = UUID.randomUUID().toString();
+                idMapping.put(originalId, newId);
+            }
+
+            for (int i = 0; i < gptNodes.size(); i++) {
+                Map<String, Object> gptNode = gptNodes.get(i);
+                String originalId = gptNode.get("id").toString();
+                String label = gptNode.get("label").toString();
+                String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
+                String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
+
+                String type;
+                if (parentId == null) {
+                    type = "input";
+                } else if (i == gptNodes.size() - 1) {
+                    type = "output";
+                } else {
+                    type = "default";
+                }
+
+                // position 추출
+                Map<String, Object> positionMap = (Map<String, Object>) gptNode.get("position");
+                int x, y;
+                if (positionMap != null && positionMap.get("x") != null && positionMap.get("y") != null) {
+                    x = ((Number) positionMap.get("x")).intValue();
+                    y = ((Number) positionMap.get("y")).intValue();
+                } else {
+                    // fallback 값 지정 (예: 루트는 0,0 / 나머지는 순서 기반 y축 정렬)
+                    x = X_BASE;
+                    y = i * Y_GAP;
+                }
+                System.out.println("positon은 문제 없는데,");
+
+                NodeDto node = NodeDto.builder()
+                        .id(idMapping.get(originalId))
+                        .type(type)
+                        .data(new DataDto(label))
+                        .position(new PositionDto(x,y))
+                        .parentId(parentId)
+                        .build();
+
+                currentNodes.add(node);
+                newNodes.add(node);
+            }
+
+            for (NodeDto node : newNodes) {
+                messagingTemplate.convertAndSend("/topic/conference/live_on",
+                        Map.of("event", "liveOn",
+                                "projectId", nodeRequstDto.getProjectId(),
+                                "node", node));
+            }
+
+
+            //2. RESPONSE 보내기
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + nodeRequstDto.getProjectId(),
+                    new NodeUpdateResponseDto("live_on", nodeRequstDto.getNodes(), newNodes));
+
+            return gptResult;
+        } catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }catch (IOException e) {
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + nodeRequstDto.getProjectId(),
+                    new RecommendKeywordDto("live_on", nodeRequstDto.getProjectId(), List.of("에러 발생"))
+            );
+            return null;
+        }
+    }
+
+    //노드 업데이트
+    public void updateNode(NodeRequstDto nodeRequstDto){
+        //파일에 덮어씌우기
+        String result = "";
+
+        //node가 null이 아니라면
+        if(nodeRequstDto.getNodes() != null){
+            System.out.println("필드 오류인가?");
+            //1. 바뀐 노드에 대한 키워드도 다시 보내주기(이건 이후에 지워도 됨)
+            sendMainKeywords(2, nodeRequstDto.getProjectId(), null, nodeRequstDto.getNodes());
+            sendRecommendedKeywords(2, nodeRequstDto.getProjectId(), nodeRequstDto.getNodes());
+            result = nodeRequstDto.getNodes();
+        }
+
+        //Node가 null이라면 그저 생성임
+        else{
+            System.out.println("잘 들어와서 creatNode 호출 예정");
+            //노드 생성하기 호출하고
+            result = createNode(nodeRequstDto);
+        }
+
+        //먼저 파일명부터 생성 및 찾기
+        String filePath = System.getProperty("java.io.tmpdir") + "/node_" + nodeRequstDto.getProjectId() + ".txt";
+        File file = new File(filePath);
+
+        //없으면 만들기
+        if(!file.exists()){
+            //노드 파일 만들기
+            // 임시 디렉토리 경로 확인 및 생성
+            String tmpDirPath = System.getProperty("java.io.tmpdir");
+            File tmpDir = new File(tmpDirPath);
+            if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시 폴더 생성에 실패했습니다.");
+            }
+
+            // 임시 파일에 저장 (append 모드)
+            String fileName = "node_" + nodeRequstDto.getProjectId() + ".txt";
+            File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
+            file = newFile;
+        }
+
+        //덮어씌우기
+        try(FileWriter writer = new FileWriter(file, false)) {
+            writer.write(result + "\n");
+        }
+        catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "노드 저장 중 오류가 발생하였습니다." + e);
         }
     }
 
