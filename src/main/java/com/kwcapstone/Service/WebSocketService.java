@@ -171,7 +171,7 @@ public class WebSocketService {
                 System.out.println("파일 없음: " + filePath); // 디버깅용 로그
             }
         }
-        else{
+        if(type == 2){
             String keywordResponse = gptService.modifyRecommendedKeywords(node);
 
 
@@ -220,6 +220,7 @@ public class WebSocketService {
                     "/topic/conference/" + projectId,
                     new MainKeywordDtoResponseDto("main_keywords", projectId, result));
         }
+
         else{
             String mainKeywords = gptService.modifyMainOpenAI(node);
 
@@ -305,19 +306,22 @@ public class WebSocketService {
 
     //노드 생성
     private String createNode(NodeRequstDto nodeRequstDto){
-        String filePath = System.getProperty("java.io.tmpdir") + "/node_" + nodeRequstDto.getProjectId() + ".txt";
+        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + nodeRequstDto.getProjectId() + ".txt";
         File file = new File(filePath);
 
         String content = "";
 
-        //파일명 만들기
+        //script 파일을 찾은 후
         if (file.exists()) {
+            System.out.println("파일이 존재해야함");
             //이전 scripton 불러와야함
             try {
                 // 전체 스크립트 줄 읽기
                 List<String> allLines = Files.readAllLines(Path.of(filePath));
                 String fullText = String.join(" ", allLines);
 
+                System.out.println("fullText" + fullText);
+                System.out.println("node" + nodeRequstDto.getNodes());
                 //scription과 node를 합쳐서 프롬프트를 만들어야함
                 content = fullText + nodeRequstDto.getNodes();
             }catch (IOException e){
@@ -333,7 +337,7 @@ public class WebSocketService {
             }
 
             // 임시 파일에 저장 (append 모드)
-            String fileName = "node_" + nodeRequstDto.getProjectId() + ".txt";
+            String fileName = "script_" + nodeRequstDto.getProjectId() + ".txt";
             File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
             file = newFile;
 
@@ -348,7 +352,8 @@ public class WebSocketService {
             ObjectMapper mapper = new ObjectMapper();
 
             //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
-            List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
+            List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {
+            });
             System.out.println("GPT 결과: " + gptResult);
 
             List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(nodeRequstDto.getProjectId(), k -> new ArrayList<>());
@@ -433,19 +438,11 @@ public class WebSocketService {
     //노드 업데이트
     public void updateNode(NodeRequstDto nodeRequstDto){
         //파일에 덮어씌우기
-        //먼저 파일명부터 생성 및 찾기
-        String filePath = System.getProperty("java.io.tmpdir") + "/node_" + nodeRequstDto.getProjectId() + ".txt";
-        File file = new File(filePath);
-
-        //없으면 오류
-        if(!file.exists()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "node 생성 및 파일 덮어씌우기 중 파일을 찾을 수 없습니다.");
-        }
-
         String result = "";
 
         //node가 null이 아니라면
         if(nodeRequstDto.getNodes() != null){
+            System.out.println("필드 오류인가?");
             //1. 바뀐 노드에 대한 키워드도 다시 보내주기(이건 이후에 지워도 됨)
             sendMainKeywords(2, nodeRequstDto.getProjectId(), null, nodeRequstDto.getNodes());
             sendRecommendedKeywords(2, nodeRequstDto.getProjectId(), nodeRequstDto.getNodes());
@@ -454,8 +451,29 @@ public class WebSocketService {
 
         //Node가 null이라면 그저 생성임
         else{
+            System.out.println("잘 들어와서 creatNode 호출 예정");
             //노드 생성하기 호출하고
             result = createNode(nodeRequstDto);
+        }
+
+        //먼저 파일명부터 생성 및 찾기
+        String filePath = System.getProperty("java.io.tmpdir") + "/node_" + nodeRequstDto.getProjectId() + ".txt";
+        File file = new File(filePath);
+
+        //없으면 만들기
+        if(!file.exists()){
+            //노드 파일 만들기
+            // 임시 디렉토리 경로 확인 및 생성
+            String tmpDirPath = System.getProperty("java.io.tmpdir");
+            File tmpDir = new File(tmpDirPath);
+            if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시 폴더 생성에 실패했습니다.");
+            }
+
+            // 임시 파일에 저장 (append 모드)
+            String fileName = "node_" + nodeRequstDto.getProjectId() + ".txt";
+            File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
+            file = newFile;
         }
 
         //덮어씌우기
