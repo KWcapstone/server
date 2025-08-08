@@ -266,7 +266,37 @@ public class WebSocketService {
     }
 
     //노드 업데이트
-    private void updateNode(String projectId){
+    public void updateNode(NodeRequstDto nodeRequstDto){
+        if(nodeRequstDto.getScription() == null){
+            //1. 기존에 있던 임시 파일에서 꺼내와서 지금 노드로 변경해두기
+
+            //2. 바뀐 노드에 대한 키워드도 다시 보내주기(이건 이후에 지워도 됨)
+
+            //3. r
+        }
+        else{
+
+        }
+        // 임시 디렉토리 경로 확인 및 생성
+        String tmpDirPath = System.getProperty("java.io.tmpdir");
+        File tmpDir = new File(tmpDirPath);
+        if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시 폴더 생성에 실패했습니다.");
+        }
+
+        // 임시 파일에 저장 (append 모드)
+        String fileName = "script_" + projectIdStr + ".txt";
+        File file = new File(System.getProperty("java.io.tmpdir"), fileName);
+
+        try(FileWriter writer = new FileWriter(file, true)) {
+            writer.write(content + "\n");
+        }
+
+        // 누적
+        scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(content);
+        int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
+        newScriptionCounter.put(projectIdStr, count);
+
         String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
         File file = new File(filePath);
 
