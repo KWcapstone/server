@@ -174,9 +174,9 @@ public class GptService {
         int maxTokens = estimateMindMapMaxTokens(prompt);
 
         String promptMessage = """
-                다음 텍스트는 회의에서 논의된 내용이야.
+                다음 스크립트는 회의에서 논의된 내용이야.
                 이 내용에서 주요 아이디어나 핵심 개념을 기준으로 마인드맵 노드를 구성하려고 해.
-                이때 내가 보낸 node 구조가 null이 아니라면, 기존의 node 구조를 보낸거야.
+                이때 내가 Json 구조를 같이 보냈다면 기존의 node 구조를 보낸거야.
                 기존의 node 구조를 바탕으로 다음 텍스트에 맞는 노드들을 뻗어나가는 형식으로 해야해.
                 기존의 node 구조의 틀을 크게 변경하면 안된다는 소리지.
                 
