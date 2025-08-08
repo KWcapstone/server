@@ -272,7 +272,7 @@ public class WebSocketService {
 
             //2. 바뀐 노드에 대한 키워드도 다시 보내주기(이건 이후에 지워도 됨)
 
-            //3. respons
+            //3.
         }
         else{
 
