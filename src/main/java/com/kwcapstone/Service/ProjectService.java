@@ -239,7 +239,7 @@ public class ProjectService {
         // 1. 초대 코드 생성 (UUID 또는 토큰)
         String inviteCode = UUID.randomUUID().toString();
 
-        // 2. 이메일 전송
+        // 2. 초대 링크
         String inviteLink = "https://www.moaba.site/main/project/" + projectId + "/add_by_link?code=" + inviteCode;
 
         saveInviteCode(inviteCode, projectId, null, memberId);
