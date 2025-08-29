@@ -289,7 +289,7 @@ public class ProjectService {
         Invite invite = validateInviteCode(code,projectId);
 
         //공유링크 인지 확인
-        if(invite.getEmail() != null){
+        if(invite.getEmail() != null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 초대 링크는 이메일 전용입니다.");
         }
 
