@@ -30,11 +30,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional
@@ -60,13 +59,48 @@ public class ConferenceService {
         String memberIdStr = memberId.toString();
 
         // 기본 프로젝트 이름 설정
-        String baseProjectName = "새 프로젝트";
-        String projectName = baseProjectName;
-        int count = 1;
+        String base = "새 프로젝트";
+        String sep = " ";
+        String prefix = base + sep;
 
-        // 동일한 프로젝트 이름이 이미 존재하는지 확인
-        while (projectRepository.existsByProjectName(projectName)) {
-            projectName = baseProjectName + " " + count++;
+        List<ObjectId> joinedIds = memberToProjectRepository.findByMemberId(memberId)
+                .stream().map(MemberToProject::getProjectId).toList();
+
+        List<ObjectId> ownedIds = projectRepository.findByCreator(memberId)
+                .stream().map(Project::getProjectId).toList();
+
+        Set<ObjectId> scope = new HashSet<>();
+        scope.addAll(joinedIds);
+        scope.addAll(ownedIds);
+        List<ObjectId> scopeIds = new ArrayList<>(scope);
+
+        String regex = "^" + Pattern.quote(base) + "(?: (\\d+))?$";
+        List<Project> candidates = scopeIds.isEmpty()
+            ? Collections.emptyList()
+            : projectRepository.findByProjectIdInAndProjectNameRegex(scopeIds, regex);
+
+        Set<Integer> used = new HashSet<>();
+        Pattern p = Pattern.compile(regex);
+
+        for (Project project : candidates) {
+            String name = project.getProjectName();
+            Matcher m = p.matcher(name);
+            if (!m.matches()) continue;
+
+            if (m.group(1) == null) {
+                used.add(0);
+            } else {
+                used.add(Integer.parseInt(m.group(1)));
+            }
+        }
+
+        String projectName;
+        if (!used.contains(0)) {
+            projectName = base;
+        } else {
+            int k = 1;
+            while (used.contains(k)) k++;
+            projectName = prefix + k;
         }
 
         Project project = new Project();
