@@ -325,4 +325,7 @@ public class ProjectService {
 
         return false;
     }
+
+    //프로젝트 status 띄우기
+
 }

@@ -68,6 +68,8 @@ public class ProjectController {
         return BaseResponse.res(SuccessStatus.SHOW_PROJECTSHARE, projectService.getProjectShareModal(projectId, principalDetails));
     }
 
+    //프로젝트 상태 불러오기
+
     //프로젝트 공유 링크로 사용자 추가
     @Operation(summary = "프로젝트 공유 링크로 사용자 추가")
     @PostMapping("/{projectId}/add_by_link")
