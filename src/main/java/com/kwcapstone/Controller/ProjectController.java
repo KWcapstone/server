@@ -80,14 +80,10 @@ public class ProjectController {
     @Operation(summary = "프로젝트 공유 링크로 사용자 추가")
     @PostMapping("/{projectId}/add_by_link")
     public BaseResponse userAddByLink(@AuthenticationPrincipal PrincipalDetails principalDetails,
-                                      @PathVariable String projectId,
-                                      @RequestParam String code){
-//        if(projectService.addByLink(principalDetails, projectId, code) == null){
-//            return BaseResponse.res(SuccessStatus.ALREADY_JOINED, new InviteUsersByLinkResponseDto(projectId));
-//        }
+                                      @PathVariable String projectId){
 
         //alreadyJoin
-        if(projectService.addByLink(principalDetails, projectId, code)){
+        if(projectService.addByLink(principalDetails, projectId)){
             return BaseResponse.res(SuccessStatus.ALREADY_JOINED, null);
         }
         else{

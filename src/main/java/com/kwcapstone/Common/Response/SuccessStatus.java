@@ -90,7 +90,7 @@ public enum SuccessStatus implements BaseCode{
     SHOW_PROJECTSTATUS(HttpStatus.OK, "프로젝트 상태를 불러왔습니다."),
 
     //프로젝트 공유링크로 공유하기
-    INVITE_SHARE_LINK(HttpStatus.OK, "초대 링크로 프로젝트에 초대가 완료되었습니다."),
+    INVITE_SHARE_LINK(HttpStatus.OK, "프로젝트에 성공적으로 초대되었습니다."),
 
     //프로젝트 공유링크로 공유시, 이미 참석자일 때
     ALREADY_JOINED(HttpStatus.OK,"이미 초대된 회원입니다."),
