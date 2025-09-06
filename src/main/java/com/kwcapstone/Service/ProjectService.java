@@ -323,5 +323,9 @@ public class ProjectService {
     }
 
     //프로젝트 status 띄우기
+    public ProjectStatusResponseDto getProjectStatus(PrincipalDetails principalDetails,
+                                                        String projectId){
 
+        return new ProjectStatusResponseDto()
+    }
 }
