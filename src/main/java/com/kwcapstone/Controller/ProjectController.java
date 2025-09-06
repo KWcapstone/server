@@ -69,6 +69,12 @@ public class ProjectController {
     }
 
     //프로젝트 상태 불러오기
+    @Operation(summary = "프로젝트 상태 불러오기")
+    @GetMapping("/{projectId}/status")
+    public BaseResponse getProjectStatus(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                         @PathVariable String projectId) {
+        return BaseResponse.res(SuccessStatus.)
+    }
 
     //프로젝트 공유 링크로 사용자 추가
     @Operation(summary = "프로젝트 공유 링크로 사용자 추가")
