@@ -108,6 +108,7 @@ public class ConferenceService {
         project.setProjectImage(null);
         project.setUpdatedAt(LocalDateTime.now());
         project.setCreator(memberId);
+        project.setStatus("Before");
         projectRepository.save(project);
 
         MemberToProject mapping = MemberToProject.builder()
