@@ -4,14 +4,8 @@ import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.*;
-import com.kwcapstone.Domain.Entity.Invite;
-import com.kwcapstone.Domain.Entity.Member;
-import com.kwcapstone.Domain.Entity.MemberToProject;
-import com.kwcapstone.Domain.Entity.Project;
-import com.kwcapstone.Repository.InviteRepository;
-import com.kwcapstone.Repository.MemberRepository;
-import com.kwcapstone.Repository.MemberToProjectRepository;
-import com.kwcapstone.Repository.ProjectRepository;
+import com.kwcapstone.Domain.Entity.*;
+import com.kwcapstone.Repository.*;
 import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -38,6 +32,7 @@ public class ProjectService {
     private final EmailService emailService;
     private final MemberRepository memberRepository;
     private final MemberToProjectRepository memberToProjectRepository;
+    private final NoticeRepository noticeRepository;
 
     // 이메일로 프로젝트에 사용자 추가하기
     public InviteEmailResponseDto addByEmailUser(PrincipalDetails principalDetails,
@@ -74,6 +69,20 @@ public class ProjectService {
         );
 
         saveInviteCode(inviteCode, projectId, emailInviteRequestDto.getEmail(), memberId);
+
+        // 코드 보내고 모아바 웹에 알림 보내기
+        String noticeTitle = inviterName + "님이 " + projectName + " 프로젝트에 초대하였습니다.";
+
+        Notice notice = Notice.builder()
+                .title(noticeTitle)
+                .content(noticeTitle)
+                .createAt(LocalDateTime.now())
+                .isRead(false)
+                .userId(isMember.get().getMemberId())
+                .senderId(memberId)
+                .build();
+
+        noticeRepository.save(notice);
 
         return new InviteEmailResponseDto(
                 projectId,
@@ -138,6 +147,11 @@ public class ProjectService {
         //member가 있는지 확인하기
         Member member = memberRepository.findByMemberId(principalDetails.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        // 이미 추가된 프로젝트의 경우 예외처리
+        if (memberToProjectRepository.existsByProjectIdAndMemberId(projectObjectId, memberId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 추가된 프로젝트입니다.");
+        }
 
         //관계 추가하기
         MemberToProject memberToProject = MemberToProject.builder()
