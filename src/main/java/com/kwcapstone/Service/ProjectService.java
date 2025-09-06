@@ -321,4 +321,23 @@ public class ProjectService {
 
         return false;
     }
+
+    //프로젝트 status 띄우기
+    public ProjectStatusResponseDto getProjectStatus(PrincipalDetails principalDetails,
+                                                        String projectId){
+        ObjectId memberId = principalDetails.getId();
+        if(memberId == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "토큰에서 넘겨진 memberId 가 null 입니다.");
+        }
+
+        ObjectId objProjectId = new ObjectId(projectId);
+        Optional<Project> project = projectRepository.findByProjectId(objProjectId);
+        if(!project.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
+        }
+
+        String projectStatus = project.get().getStatus();
+
+        return new ProjectStatusResponseDto(projectId, projectStatus);
+    }
 }

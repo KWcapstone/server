@@ -23,6 +23,7 @@ public class Project {
     private Summary summary;
     private LocalDateTime updatedAt;
     private ObjectId creator;
+    private String status;
 
     @Getter
     @NoArgsConstructor
