@@ -270,7 +270,7 @@ public class ProjectService {
 
     //프로젝트 공유링크로 들어왔을 때 사용자 추가
     public boolean addByLink(PrincipalDetails principalDetails,
-                                                  String projectId, String code){
+                                                  String projectId){
         ObjectId memberId = principalDetails.getId();
         if(memberId == null){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "토큰에서 넘겨진 memberId 가 null 입니다.");
@@ -282,13 +282,6 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
-        Invite invite = validateInviteCode(code,projectId);
-
-        //공유링크 인지 확인
-        if(invite.getEmail() != null) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 초대 링크는 이메일 전용입니다.");
-        }
-
         //이미 참여중인가?
         boolean alreadyJoined = memberToProjectRepository.existsByProjectIdAndMemberId(objProjectId, memberId);
 
@@ -296,7 +289,7 @@ public class ProjectService {
             return true;
         }
 
-        //참여자 등록
+        //참가자 등록
         MemberToProject mapping = MemberToProject.builder()
                 .projectId(objProjectId)
                 .memberId(memberId)
