@@ -8,6 +8,7 @@ import com.kwcapstone.Domain.Dto.Response.NewProjectResponseDto;
 import com.kwcapstone.Domain.Dto.Response.NodeUpdateResponseDto;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ConferenceService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.ChatMessage;
 import org.springframework.http.MediaType;
@@ -41,10 +42,6 @@ public class ConferenceController {
                 conferenceService.scriptSave(principalDetails, requestDto));
     }
 
-//    @PostMapping("/conference/node")
-//    public BaseResponse<NodeUpdateResponseDto> nodeUpdateMap(@AuthenticationPrincipal PrincipalDetails principalDetails,
-//                                                             @RequestBody )
-
     // 프로젝트 저장
     @PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public BaseResponse projectSave(@AuthenticationPrincipal PrincipalDetails principalDetails,
@@ -56,4 +53,7 @@ public class ConferenceController {
         conferenceService.saveProject(principalDetails, requestDto);
         return BaseResponse.res(SuccessStatus.PROJECT_SAVE_SUCCESS, null);
     }
+
+    //끝난 프로젝트 보이기
+    @Operation(summary = "끝난 프로젝트 보이기")
 }
