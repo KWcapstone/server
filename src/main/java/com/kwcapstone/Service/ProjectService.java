@@ -236,15 +236,10 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
-        // 1. 초대 코드 생성 (UUID 또는 토큰)
-        String inviteCode = UUID.randomUUID().toString();
+        //inviteLink
+        String inviteUrl = "http://localhost:3000/project/" + projectId;
 
-        // 2. 초대 링크
-        String inviteLink = "https://www.moaba.site/main/project/" + projectId + "/add_by_link?code=" + inviteCode;
-
-        saveInviteCode(inviteCode, projectId, null, memberId);
-
-        //4. 참여자 목록 가져오기
+        //참여자 목록 가져오기
         List<MemberToProject> connections = memberToProjectRepository.findByProjectId(ObjprojectId);
 
         if(connections == null){
@@ -254,7 +249,7 @@ public class ProjectService {
         List<MemberInfoDto> sharedMembers = connections.stream()
                 .map(conn -> {
                     Member member = memberRepository.findByMemberId(conn.getMemberId())
-                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없는 프로젝트 참여자입니다."));
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "참여자 목록에서 회원 정보를 찾을 수 없는 참가자가 존재합니다."));
 
                     //회의 생성자일때
                     if((project.get().getCreator()).equals(conn.getMemberId())) {
@@ -262,6 +257,7 @@ public class ProjectService {
                     }else{
                         return new MemberInfoDto(member.getName(), "참석자");
                     }
+
                 }).sorted((a, b) -> {
                     // "회의 생성자"가 먼저 오도록 정렬
                     if (a.getRole().equals("회의 생성자")) return -1;
@@ -269,7 +265,7 @@ public class ProjectService {
                     return 0;
                 }).collect(Collectors.toList());
 
-        return new GetProjectShareModalResponseDto(inviteLink, sharedMembers);
+        return new GetProjectShareModalResponseDto(inviteUrl, sharedMembers);
     }
 
     //프로젝트 공유링크로 들어왔을 때 사용자 추가
