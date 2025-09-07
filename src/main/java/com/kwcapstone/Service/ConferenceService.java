@@ -1,6 +1,7 @@
 package com.kwcapstone.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kwcapstone.AI.GptService;
 import com.kwcapstone.Domain.Dto.Request.SaveProjectRequestDto;
@@ -16,6 +17,7 @@ import org.bson.types.ObjectId;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.boot.autoconfigure.ssl.SslProperties;
 import org.springframework.cglib.core.Local;
+import org.springframework.cloud.function.json.JsonMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,7 @@ public class ConferenceService {
     private final Map<String, List<NodeDto>> sessionNodeBuffer = new ConcurrentHashMap<>();
     private final int X_BASE = 100; // 위치 기준
     private final int Y_GAP = 80;   // 노드 간 y 간격
+    private final JsonMapper jsonMapper;
 
 
     public NewProjectResponseDto projectCreate(PrincipalDetails principalDetails) {
@@ -370,5 +373,39 @@ public class ConferenceService {
             fos.write(multipartFile.getBytes());
         }
         return file;
+    }
+
+    public getProjectInfoResponseDto getDoneProject(PrincipalDetails principalDetails, String projectId){
+        ObjectId memberId = principalDetails.getId();
+
+        if(memberId == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "토큰에서 넘겨진 memberId 가 null 입니다.");
+        }
+
+        ObjectId objProjectId = new ObjectId(projectId);
+        Optional<Project> OpProject = projectRepository.findByProjectId(objProjectId);
+        if (!OpProject.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
+        }
+
+        Project project = OpProject.get();
+
+        String gettingContent = project.getSummary().getContent();
+        JsonNode clean;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            clean = mapper.readTree(gettingContent);
+        } catch(Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"유효하지 않은 json 형식이 저장되어있습니다.");
+        }
+
+        return new getProjectInfoResponseDto(
+                projectId,
+                project.getProjectName(),
+                project.getUpdatedAt(),
+                project.getProjectImage(),
+                project.getScript().getContent(),
+                clean
+        );
     }
 }
