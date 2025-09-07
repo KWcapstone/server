@@ -1,5 +1,6 @@
 package com.kwcapstone.Domain.Entity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;

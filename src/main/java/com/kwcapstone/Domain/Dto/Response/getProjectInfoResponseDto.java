@@ -1,5 +1,6 @@
 package com.kwcapstone.Domain.Dto.Response;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,5 +17,5 @@ public class getProjectInfoResponseDto {
     private LocalDateTime updateAt;
     private String imageUrl;
     private String script;
-    private String summary;
+    private JsonNode summary;
 }
