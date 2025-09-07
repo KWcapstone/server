@@ -56,4 +56,9 @@ public class ConferenceController {
 
     //끝난 프로젝트 보이기
     @Operation(summary = "끝난 프로젝트 보이기")
+    @GetMapping("/view/{projectId}")
+    public BaseResponse showTheDoneProject(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                           @PathVariable String projectId){
+        return BaseResponse.res(SuccessStatus.SHOW_DONE_PROJECT, conferenceService.getDoneProject(principalDetails, projectId));
+    }
 }

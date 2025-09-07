@@ -371,4 +371,8 @@ public class ConferenceService {
         }
         return file;
     }
+
+    public getProjectInfoResponseDto getDoneProject(PrincipalDetails principalDetails, String projectId){
+
+    }
 }
