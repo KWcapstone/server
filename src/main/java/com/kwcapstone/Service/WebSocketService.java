@@ -27,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -120,6 +121,9 @@ public class WebSocketService {
 
                 // 추천 키워드 전송
                 sendRecommendedKeywords(1, projectIdStr, null);
+
+                //노드 생성
+                createNode(projectIdStr,dto.getScription());
 
                 // 초기화
                 scriptBuffer.put(projectIdStr, new ArrayList<>());
@@ -237,7 +241,7 @@ public class WebSocketService {
 
     }
 
-    private SummaryResponseDto pareseSummaryResponse(String gptContent, String event, String projectId){
+    private SummaryResponseDto pareseSummaryResponse(String gptContent, String event, String projectId, String time){
         ObjectMapper mapper = new ObjectMapper();
 
         try{
@@ -245,7 +249,7 @@ public class WebSocketService {
             String title = node.get("title").asText();
             String content = node.get("content").asText();
 
-            return new SummaryResponseDto(event, projectId, title, content);
+            return new SummaryResponseDto(event, projectId, time, title, content);
 
         }catch (Exception e){
             e.printStackTrace();
@@ -267,7 +271,7 @@ public class WebSocketService {
         }
 
         ObjectMapper summaryMapper = new ObjectMapper();
-        SummaryResponseDto result = pareseSummaryResponse(summary, "summary", projectId);
+        SummaryResponseDto result = pareseSummaryResponse(summary, "summary", projectId, dto.getTime());
 
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId, result);
@@ -305,8 +309,8 @@ public class WebSocketService {
     }
 
     //노드 생성
-    private String createNode(NodeRequstDto nodeRequstDto){
-        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + nodeRequstDto.getProjectId() + ".txt";
+    private String createNode(String projectId, String scription){
+        String filePath = System.getProperty("java.io.tmpdir") + "/script_" + projectId + ".txt";
         File file = new File(filePath);
 
         String content = "";
@@ -321,9 +325,9 @@ public class WebSocketService {
                 String fullText = String.join(" ", allLines);
 
                 System.out.println("fullText" + fullText);
-                System.out.println("node" + nodeRequstDto.getNodes());
+                System.out.println("node" + scription);
                 //scription과 node를 합쳐서 프롬프트를 만들어야함
-                content = fullText + nodeRequstDto.getNodes();
+                content = fullText + scription;
             }catch (IOException e){
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
             }
@@ -337,11 +341,11 @@ public class WebSocketService {
             }
 
             // 임시 파일에 저장 (append 모드)
-            String fileName = "script_" + nodeRequstDto.getProjectId() + ".txt";
+            String fileName = "script_" + projectId + ".txt";
             File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
             file = newFile;
 
-            content = nodeRequstDto.getNodes();
+            content = scription;
         }
 
         //GPT로부터 NODE 생성 부탁해야함
@@ -356,7 +360,7 @@ public class WebSocketService {
             });
             System.out.println("GPT 결과: " + gptResult);
 
-            List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(nodeRequstDto.getProjectId(), k -> new ArrayList<>());
+            List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectId, k -> new ArrayList<>());
             List<NodeDto> newNodes = new ArrayList<>();
 
             Map<String, String> idMapping = new ConcurrentHashMap<>();
@@ -411,27 +415,19 @@ public class WebSocketService {
             for (NodeDto node : newNodes) {
                 messagingTemplate.convertAndSend("/topic/conference/live_on",
                         Map.of("event", "liveOn",
-                                "projectId", nodeRequstDto.getProjectId(),
+                                "projectId", projectId,
                                 "node", node));
             }
 
 
             //2. RESPONSE 보내기
             messagingTemplate.convertAndSend(
-                    "/topic/conference/" + nodeRequstDto.getProjectId(),
-                    new NodeUpdateResponseDto("live_on", nodeRequstDto.getNodes(), newNodes));
+                    "/topic/conference/" + projectId,
+                    new NodeUpdateResponseDto("live_on", scription, newNodes));
 
             return gptResult;
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
-        }catch (IOException e) {
-            messagingTemplate.convertAndSend(
-                    "/topic/conference/" + nodeRequstDto.getProjectId(),
-                    new RecommendKeywordDto("live_on", nodeRequstDto.getProjectId(), List.of("에러 발생"))
-            );
-            return null;
         }
     }
 
@@ -441,20 +437,12 @@ public class WebSocketService {
         String result = "";
 
         //node가 null이 아니라면
-        if(nodeRequstDto.getNodes() != null){
-            System.out.println("필드 오류인가?");
-            //1. 바뀐 노드에 대한 키워드도 다시 보내주기(이건 이후에 지워도 됨)
-            sendMainKeywords(2, nodeRequstDto.getProjectId(), null, nodeRequstDto.getNodes());
-            sendRecommendedKeywords(2, nodeRequstDto.getProjectId(), nodeRequstDto.getNodes());
-            result = nodeRequstDto.getNodes();
-        }
 
-        //Node가 null이라면 그저 생성임
-        else{
-            System.out.println("잘 들어와서 creatNode 호출 예정");
-            //노드 생성하기 호출하고
-            result = createNode(nodeRequstDto);
-        }
+        //1. 바뀐 노드에 대한 키워드도 다시 보내주기(이건 이후에 지워도 됨)
+        sendMainKeywords(2, nodeRequstDto.getProjectId(), null, nodeRequstDto.getNodes());
+        sendRecommendedKeywords(2, nodeRequstDto.getProjectId(), nodeRequstDto.getNodes());
+        result = nodeRequstDto.getNodes();
+
 
         //먼저 파일명부터 생성 및 찾기
         String filePath = System.getProperty("java.io.tmpdir") + "/node_" + nodeRequstDto.getProjectId() + ".txt";
@@ -483,24 +471,17 @@ public class WebSocketService {
         catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "노드 저장 중 오류가 발생하였습니다." + e);
         }
-    }
 
-    // 키워드 직접 추가
-//    public void addKeyword(String projectIdStr, MindmapAddRequestDto dto){
-//        if (dto.getEvent().equals("add_mindmap")) {
-//            try {
-//                ObjectId projectId = new ObjectId(projectIdStr);
-//                Project project = projectRepository.findByProjectId(projectId)
-//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
-//
-////                String content = dto.getScription();
-//
-//                // 초기화
-//                scriptBuffer.put(projectIdStr, new ArrayList<>());
-//                newScriptionCounter.put(projectIdStr, 0);
-//            } catch (IOException e) {
-//                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
-//            }
-//        }
-//    }
+        String fileContent = null;
+        try {
+            fileContent = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "변경사항 반영된 노드 스크립트를 읽어오는데 오류가 발생했습니다." + e);
+        }
+
+        messagingTemplate.convertAndSend("/topic/conference/live_on",
+                Map.of("event", "live_on",
+                        "projectId", nodeRequstDto.getProjectId(),
+                        "node", fileContent));
+    }
 }
