@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class SummaryResponseDto {
     private String event;
     private String projectId;
+    private String time;
     private String title;
     private String content;
 }
