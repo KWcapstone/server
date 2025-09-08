@@ -411,19 +411,19 @@ public class WebSocketService {
                 currentNodes.add(node);
                 newNodes.add(node);
             }
-
-            for (NodeDto node : newNodes) {
-                messagingTemplate.convertAndSend("/topic/conference/live_on",
-                        Map.of("event", "liveOn",
-                                "projectId", projectId,
-                                "node", node));
-            }
+//
+//            for (NodeDto node : newNodes) {
+//                messagingTemplate.convertAndSend("/topic/conference/live_on",
+//                        Map.of("event", "liveOn",
+//                                "projectId", projectId,
+//                                "node", node));
+//            }
 
 
             //2. RESPONSE 보내기
             messagingTemplate.convertAndSend(
                     "/topic/conference/" + projectId,
-                    new NodeUpdateResponseDto("live_on", scription, newNodes));
+                    new NodeUpdateResponseDto("create_node", projectId, newNodes));
 
             return gptResult;
         } catch (JsonProcessingException e) {
