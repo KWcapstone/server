@@ -4,6 +4,7 @@ import com.kwcapstone.GoogleLogin.Auth.Dto.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -41,6 +42,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // 세션 사용 X
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(possibleAccess).permitAll()
                         .anyRequest().authenticated());
 
@@ -55,7 +57,9 @@ public class SecurityConfig {
                 "https://moaba.vercel.app", "https://www.moaba.site",
                 "https://moaba.site",
                 "http://3.39.11.168:8080", "https://3.39.11.168:8080",
-                "http://localhost:3000", "https://localhost:3000"
+                "http://localhost:3000", "https://localhost:3000",
+                "http://3.35.152.83:80", "http://43.201.65.48",
+                "https://jiangxy.github.io" // 테스트 툴이라 나중엔 지워야
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));

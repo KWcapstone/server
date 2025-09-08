@@ -1,18 +1,13 @@
 package com.kwcapstone.Domain.Dto.Response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class NodeUpdateResponseDto {
-    private String event;
+public class ProjectStatusResponseDto {
     private String projectId;
-    private List<NodeDto> nodes;
+    private String status;
 }

@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScriptMessageRequestDto {
+public class ProjectNameRequestDto {
     private String event;
-    private String projectId;  // 이거 그냥 추출해도되려나???
-    private String scription;
-    private String time;
+    private String projectId;
+    private String projectName;
 }

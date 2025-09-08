@@ -1,5 +1,6 @@
 package com.kwcapstone.Domain.Entity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -23,6 +24,7 @@ public class Project {
     private Summary summary;
     private LocalDateTime updatedAt;
     private ObjectId creator;
+    private String status;
 
     @Getter
     @NoArgsConstructor
@@ -37,6 +39,7 @@ public class Project {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Script {
+        private String scriptUrl;
         private String content;
         private long sizeInBytes;  // 스크립트 파일 크기 (바이트 단위)
     }
@@ -45,6 +48,7 @@ public class Project {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Summary {
+        private String summaryUrl;
         private String content;
         private long sizeInBytes;
     }

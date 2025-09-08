@@ -1,5 +1,7 @@
 package com.kwcapstone.AI;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,21 +18,33 @@ public class GptService {
     private final GptConfig gptConfig;
 
     //토큰 계산하는 함수
-    public int estimateMaxTokens(String promptText){
-        int wordCount = promptText.trim().split("\\s+").length;
-        int estimatedTokens = (int) (wordCount * 3.5);
-        if(wordCount > 500) {
-            estimatedTokens += 1000;
-        }
+    public int estimateMaxTokens(String promptText) {
+        final int totalLimit = 4096;
 
-        return Math.min(estimatedTokens, 1000);
+        int promptTokens = promptText.trim().split("\\s+").length;
+        int estimatedTokens = (int) (promptTokens * 1.5);
+
+        // 응답에 할당할 수 있는 최대 토큰 수
+        int remaining = totalLimit - estimatedTokens;
+
+        // 안전한 최소 보장 범위 (100~1500 사이 제한)
+        return Math.max(100, Math.min(remaining, 1500));
     }
 
+    public int estimateMindMapMaxTokens(String promptText){
+        final int totalLimit = 4096;
 
-    //gpt에게 요청하는 call를 만들어줘야할 것 같음
-    // open ai 는 max_tokens 생성할 때 최대 토큰 수를 으미함
-    // prompt 가 응답 모두 토큰으로 계산되어 얼마나 길게 나올 수 있는지를 제한함
-    //prompt 는 누적된 회의 스크립트 전체 텍스트
+        int wordCount = promptText.trim().split("\\s+").length;
+        int estimatedTokens = (int) (wordCount * 1.5);
+
+        // 응답에 할당할 수 있는 최대 토큰 수
+        int remaining = totalLimit - estimatedTokens;
+
+        // 안전한 최소 보장 범위 (100~1500 사이 제한)
+        return Math.max(100, Math.min(remaining, 1500));
+    }
+
+    //요약본
     public String callSummaryOpenAI(String prompt) {
         int maxTokens = estimateMaxTokens(prompt);
 
@@ -48,6 +62,7 @@ public class GptService {
                 - title은 15자 이내로, 내용을 대표할 수 있는 요약 문구로 작성해줘.
                 - content는 3~4문장 이내로 회의 핵심 내용을 압축해서 설명해줘.
                 - '더 도와드릴까요?' 같은 멘트는 절대 포함하지 마.
+                - 이 형식을 꼭꼭 지켜줘. Json 형식이며 필드는 꼭 title과 content여야 해.
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(
@@ -120,32 +135,35 @@ public class GptService {
     public String callRecommendedKeywords(String prompt) {
         int maxTokens = estimateRecommendResponseTokens(prompt);
 
-        String promptMessage = """
+        String fullPrompt = """
                     아래 회의 스크립트는 아이디어 회의 중 일부야.
-                    지금 논의된 주제를 바탕으로, 다음 회의에서 더 발전시켜볼 만한 창의적인 아이디어 키워드 5개를 추천해줘.
-                    각 키워드는 새로운 아이디어 방향을 제시하는 것이어야 하고, 이전 내용을 반복하지 않아야 해.
-                    키워드는 6글자 이내면 좋고, 쉼표로 구분해서 한 줄로만 출력해줘.
-                    """;
+                    지금 논의된 주제를 바탕으로, 다음 회의에서 더 발전시켜볼 만한 창의적이고, 새로운 아이디어 키워드 5개를 추천해줘. 제약사항은 다음과 같아.
+                    1. 기존의 내용을 요약하지 않아야 함.
+                    2. 이전 내용을 반복하지 않아야 함.
+                    3. 키워드는 5글자 이내여야 함.
+                    4. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하면 안됨.
+                    5. 반드시 JSON 배열로만 추출할 것. 예: ["React", "블록체인", "GPU", "그래픽AI", "클라우드"]
+                    """ + prompt;
 
         Map<String, Object> requestBody = Map.of(
                 "model", gptConfig.getModel(),
                 "messages", List.of(
-                        Map.of("role", "system", "content", promptMessage),
-                        Map.of("role", "user", "content", prompt)
+                        Map.of("role", "user", "content", fullPrompt)
                 ),
                 "temperature", 0.3,
                 "max_tokens", maxTokens
         );
 
         return openAiWebClient.post()
-                .uri("/chat/completions")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(Map.class)
+                .uri("/chat/completions") // gpt 한테 보내는 엔드포인트
+                .bodyValue(requestBody)  //요청 본문 담을 데이터
+                .retrieve() // 응답을 받아오는 단계 -> 비동기 응답 객체로 흐름이 바뀜
+                .bodyToMono(Map.class)  // JSON으로 받음
                 .map(response -> {
                     List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
                     Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return message.get("content").toString().trim();
+                    String content = message.get("content").toString().trim();
+                    return content;
                 })
                 .onErrorResume(e -> Mono.just("Error: " + e.getMessage()))
                 .block();
@@ -153,11 +171,14 @@ public class GptService {
 
     //주요 노드 추가하기
     public String callMindMapNode(String prompt){
-        int maxTokens = estimateMaxTokens(prompt);
+        int maxTokens = estimateMindMapMaxTokens(prompt);
 
         String promptMessage = """
-                다음 텍스트는 회의에서 논의된 내용이야.
+                다음 스크립트는 회의에서 논의된 내용이야.
                 이 내용에서 주요 아이디어나 핵심 개념을 기준으로 마인드맵 노드를 구성하려고 해.
+                이때 내가 Json 구조를 같이 보냈다면 기존의 node 구조를 보낸거야.
+                기존의 node 구조를 바탕으로 다음 텍스트에 맞는 노드들을 뻗어나가는 형식으로 해야해.
+                기존의 node 구조의 틀과 내용을 크게 변경하면 안된다는 소리지.
                 
                 각 노드는 1~2단어 또는 짧은 문장으로 구성되어야 하고,
                 하나의 노드는 하나의 주제나 개념을 담고 있어야 해.
@@ -208,5 +229,77 @@ public class GptService {
                 })
                 .onErrorResume(e -> Mono.just("Error: " + e.getMessage()))
                 .block(); // block은 동기식으로 기다리기 (필요 시 비동기 방식으로 분리 가능
+    }
+
+
+    public String modifyMainOpenAI(String prompt) {
+        int maxTokens = estimateMaxTokens(prompt);
+
+        String promptMessage = """
+            다음 텍스트는 현재 진행 중인 아이디에이션 과정에서 수정된 node야.
+             Json 형태로 node 구조를 보냈는데 이를 보고 주제를 다시 파악하고 현재 아이디에이션에 대한 주요 키워드를 5개 알려줘.
+            주요 키워드만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마. JSON 배열로 추출해줘.
+            """.formatted(maxTokens);
+
+        Map<String, Object> requestBody = Map.of(
+                "model", gptConfig.getModel(),
+                "messages", List.of(
+                        Map.of("role", "system", "content", promptMessage),
+                        Map.of("role", "user", "content", prompt) //원문 내용
+                ),
+                "temperature", 0.3, //창의성(무작위성)을 조절하는 파라미터
+                "max_tokens", maxTokens
+        );
+
+        // block()을 써서 동기적으로 받기
+        return openAiWebClient.post()
+                .uri("/chat/completions") // gpt 한테 보내는 엔드포인트
+                .bodyValue(requestBody)  //요청 본문 담을 데이터
+                .retrieve() // 응답을 받아오는 단계 -> 비동기 응답 객체로 흐름이 바뀜
+                .bodyToMono(Map.class)  // JSON으로 받음
+                .map(response -> {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                    return message.get("content").toString().trim();
+                })
+                .onErrorResume(e -> Mono.just("Error: " + e.getMessage()))
+                .block(); // block은 동기식으로 기다리기 (필요 시 비동기 방식으로 분리 가능)
+    }
+
+    public String modifyRecommendedKeywords(String prompt) {
+        int maxTokens = estimateRecommendResponseTokens(prompt);
+
+        String fullPrompt = """
+                    다음 텍스트는 현재 진행 중인 아이디에이션 과정에서 수정된 node야.
+                    Json 형태로 node 구조를 보냈는데 이를 보고 주제를 파악해서, 다음 회의에서 더 발전시켜볼 만한 창의적이고, 새로운 아이디어 키워드 5개를 추천해줘. 제약사항은 다음과 같아.
+                    1. 기존의 내용을 요약하지 않아야 함.
+                    2. 이전 내용을 반복하지 않아야 함.
+                    3. 키워드는 5글자 이내여야 함.
+                    4. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하면 안됨.
+                5. 반드시 JSON 배열로만 추출할 것. 예: ["React", "블록체인", "GPU", "그래픽AI", "클라우드"]
+                """ + prompt;
+
+        Map<String, Object> requestBody = Map.of(
+                "model", gptConfig.getModel(),
+                "messages", List.of(
+                        Map.of("role", "user", "content", fullPrompt)
+                ),
+                "temperature", 0.3,
+                "max_tokens", maxTokens
+        );
+
+        return openAiWebClient.post()
+                .uri("/chat/completions") // gpt 한테 보내는 엔드포인트
+                .bodyValue(requestBody)  //요청 본문 담을 데이터
+                .retrieve() // 응답을 받아오는 단계 -> 비동기 응답 객체로 흐름이 바뀜
+                .bodyToMono(Map.class)  // JSON으로 받음
+                .map(response -> {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                    String content = message.get("content").toString().trim();
+                    return content;
+                })
+                .onErrorResume(e -> Mono.just("Error: " + e.getMessage()))
+                .block();
     }
 }

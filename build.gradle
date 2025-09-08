@@ -39,6 +39,11 @@ dependencies {
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
+//	//redis
+//	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+//	implementation 'org.redisson:redisson-spring-boot-starter:3.27.2'
+//	implementation 'org.redisson:redisson:3.27.2'
+//	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -51,6 +56,7 @@ dependencies {
 	// S3
 	implementation platform('software.amazon.awssdk:bom:2.17.230')
 	implementation 'software.amazon.awssdk:s3'
+	implementation 'software.amazon.awssdk:url-connection-client'
 
 	//websocket
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'

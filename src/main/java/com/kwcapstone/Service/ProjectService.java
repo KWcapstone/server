@@ -4,14 +4,8 @@ import com.kwcapstone.Domain.Dto.Request.EmailInviteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.*;
-import com.kwcapstone.Domain.Entity.Invite;
-import com.kwcapstone.Domain.Entity.Member;
-import com.kwcapstone.Domain.Entity.MemberToProject;
-import com.kwcapstone.Domain.Entity.Project;
-import com.kwcapstone.Repository.InviteRepository;
-import com.kwcapstone.Repository.MemberRepository;
-import com.kwcapstone.Repository.MemberToProjectRepository;
-import com.kwcapstone.Repository.ProjectRepository;
+import com.kwcapstone.Domain.Entity.*;
+import com.kwcapstone.Repository.*;
 import com.kwcapstone.Security.PrincipalDetails;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -38,6 +32,7 @@ public class ProjectService {
     private final EmailService emailService;
     private final MemberRepository memberRepository;
     private final MemberToProjectRepository memberToProjectRepository;
+    private final NoticeRepository noticeRepository;
 
     // 이메일로 프로젝트에 사용자 추가하기
     public InviteEmailResponseDto addByEmailUser(PrincipalDetails principalDetails,
@@ -74,6 +69,20 @@ public class ProjectService {
         );
 
         saveInviteCode(inviteCode, projectId, emailInviteRequestDto.getEmail(), memberId);
+
+        // 코드 보내고 모아바 웹에 알림 보내기
+        String noticeTitle = inviterName + "님이 " + projectName + " 프로젝트에 초대하였습니다.";
+
+        Notice notice = Notice.builder()
+                .title(noticeTitle)
+                .content(noticeTitle)
+                .createAt(LocalDateTime.now())
+                .isRead(false)
+                .userId(isMember.get().getMemberId())
+                .senderId(memberId)
+                .build();
+
+        noticeRepository.save(notice);
 
         return new InviteEmailResponseDto(
                 projectId,
@@ -138,6 +147,11 @@ public class ProjectService {
         //member가 있는지 확인하기
         Member member = memberRepository.findByMemberId(principalDetails.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        // 이미 추가된 프로젝트의 경우 예외처리
+        if (memberToProjectRepository.existsByProjectIdAndMemberId(projectObjectId, memberId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 추가된 프로젝트입니다.");
+        }
 
         //관계 추가하기
         MemberToProject memberToProject = MemberToProject.builder()
@@ -236,15 +250,10 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
-        // 1. 초대 코드 생성 (UUID 또는 토큰)
-        String inviteCode = UUID.randomUUID().toString();
+        //inviteLink
+        String inviteUrl = "http://localhost:3000/project/" + projectId;
 
-        // 2. 이메일 전송
-        String inviteLink = "https://www.moaba.site/main/project/" + projectId + "/add_by_link?code=" + inviteCode;
-
-        saveInviteCode(inviteCode, projectId, null, memberId);
-
-        //4. 참여자 목록 가져오기
+        //참여자 목록 가져오기
         List<MemberToProject> connections = memberToProjectRepository.findByProjectId(ObjprojectId);
 
         if(connections == null){
@@ -254,7 +263,7 @@ public class ProjectService {
         List<MemberInfoDto> sharedMembers = connections.stream()
                 .map(conn -> {
                     Member member = memberRepository.findByMemberId(conn.getMemberId())
-                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없는 프로젝트 참여자입니다."));
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "참여자 목록에서 회원 정보를 찾을 수 없는 참가자가 존재합니다."));
 
                     //회의 생성자일때
                     if((project.get().getCreator()).equals(conn.getMemberId())) {
@@ -262,6 +271,7 @@ public class ProjectService {
                     }else{
                         return new MemberInfoDto(member.getName(), "참석자");
                     }
+
                 }).sorted((a, b) -> {
                     // "회의 생성자"가 먼저 오도록 정렬
                     if (a.getRole().equals("회의 생성자")) return -1;
@@ -269,12 +279,12 @@ public class ProjectService {
                     return 0;
                 }).collect(Collectors.toList());
 
-        return new GetProjectShareModalResponseDto(inviteLink, sharedMembers);
+        return new GetProjectShareModalResponseDto(inviteUrl, sharedMembers);
     }
 
-    //프로젝트 공유링크로 들어왓을 때 사용자 추가
+    //프로젝트 공유링크로 들어왔을 때 사용자 추가
     public boolean addByLink(PrincipalDetails principalDetails,
-                                                  String projectId, String code){
+                                                  String projectId){
         ObjectId memberId = principalDetails.getId();
         if(memberId == null){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "토큰에서 넘겨진 memberId 가 null 입니다.");
@@ -286,13 +296,6 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
-        Invite invite = validateInviteCode(code,projectId);
-
-        //공유링크 인지 확인
-        if(invite.getEmail() != null){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 초대 링크는 이메일 전용입니다.");
-        }
-
         //이미 참여중인가?
         boolean alreadyJoined = memberToProjectRepository.existsByProjectIdAndMemberId(objProjectId, memberId);
 
@@ -300,7 +303,7 @@ public class ProjectService {
             return true;
         }
 
-        //참여자 등록
+        //참가자 등록
         MemberToProject mapping = MemberToProject.builder()
                 .projectId(objProjectId)
                 .memberId(memberId)
@@ -324,5 +327,24 @@ public class ProjectService {
 
 
         return false;
+    }
+
+    //프로젝트 status 띄우기
+    public ProjectStatusResponseDto getProjectStatus(PrincipalDetails principalDetails,
+                                                        String projectId){
+        ObjectId memberId = principalDetails.getId();
+        if(memberId == null){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "토큰에서 넘겨진 memberId 가 null 입니다.");
+        }
+
+        ObjectId objProjectId = new ObjectId(projectId);
+        Optional<Project> project = projectRepository.findByProjectId(objProjectId);
+        if(!project.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
+        }
+
+        String projectStatus = project.get().getStatus();
+
+        return new ProjectStatusResponseDto(projectId, projectStatus);
     }
 }

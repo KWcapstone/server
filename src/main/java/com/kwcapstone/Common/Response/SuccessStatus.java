@@ -20,6 +20,7 @@ public enum SuccessStatus implements BaseCode{
 
     //소셜로그인
     USER_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
+    NEED_AGREEMENT(HttpStatus.OK, "약관동의가 필요한 계정입니다"),
     USER_NEW_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
     USER_KAKAO_LOGIN(HttpStatus.OK,"로그인 성공"),
     USER_NAVER_LOGIN(HttpStatus.OK,"로그인 성공"),
@@ -85,8 +86,11 @@ public enum SuccessStatus implements BaseCode{
     //프로젝트 공유 모달 띄우기
     SHOW_PROJECTSHARE(HttpStatus.OK,"프로젝트 공유 모달을 띄웠습니다."),
 
+    //프로젝트 status 띄우기
+    SHOW_PROJECTSTATUS(HttpStatus.OK, "프로젝트 상태를 불러왔습니다."),
+
     //프로젝트 공유링크로 공유하기
-    INVITE_SHARE_LINK(HttpStatus.OK, "초대 링크로 프로젝트에 초대가 완료되었습니다."),
+    INVITE_SHARE_LINK(HttpStatus.OK, "프로젝트에 성공적으로 초대되었습니다."),
 
     //프로젝트 공유링크로 공유시, 이미 참석자일 때
     ALREADY_JOINED(HttpStatus.OK,"이미 초대된 회원입니다."),
@@ -105,7 +109,10 @@ public enum SuccessStatus implements BaseCode{
     GPT_MINDMap_SUCCESS(HttpStatus.OK, "gpt MindMap Node"),
 
     // 프로젝트 저장
-    PROJECT_SAVE_SUCCESS(HttpStatus.OK, "프로젝트가 성공적으로 저장되었습니다.")
+    PROJECT_SAVE_SUCCESS(HttpStatus.OK, "프로젝트가 성공적으로 저장되었습니다."),
+
+    //끝난 회의 보이기
+    SHOW_DONE_PROJECT(HttpStatus.OK, "프로젝트를 불러왔습니다.")
     ;
 
     private final HttpStatus httpStatus;

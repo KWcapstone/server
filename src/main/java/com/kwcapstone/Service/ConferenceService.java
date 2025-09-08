@@ -1,6 +1,7 @@
 package com.kwcapstone.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kwcapstone.AI.GptService;
 import com.kwcapstone.Domain.Dto.Request.SaveProjectRequestDto;
@@ -16,26 +17,25 @@ import org.bson.types.ObjectId;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.boot.autoconfigure.ssl.SslProperties;
 import org.springframework.cglib.core.Local;
+import org.springframework.cloud.function.json.JsonMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.IOException;
+import java.io.BufferedWriter;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional
@@ -54,6 +54,7 @@ public class ConferenceService {
     private final Map<String, List<NodeDto>> sessionNodeBuffer = new ConcurrentHashMap<>();
     private final int X_BASE = 100; // 위치 기준
     private final int Y_GAP = 80;   // 노드 간 y 간격
+    private final JsonMapper jsonMapper;
 
 
     public NewProjectResponseDto projectCreate(PrincipalDetails principalDetails) {
@@ -61,13 +62,48 @@ public class ConferenceService {
         String memberIdStr = memberId.toString();
 
         // 기본 프로젝트 이름 설정
-        String baseProjectName = "새 프로젝트";
-        String projectName = baseProjectName;
-        int count = 1;
+        String base = "새 프로젝트";
+        String sep = " ";
+        String prefix = base + sep;
 
-        // 동일한 프로젝트 이름이 이미 존재하는지 확인
-        while (projectRepository.existsByProjectName(projectName)) {
-            projectName = baseProjectName + " " + count++;
+        List<ObjectId> joinedIds = memberToProjectRepository.findByMemberId(memberId)
+                .stream().map(MemberToProject::getProjectId).toList();
+
+        List<ObjectId> ownedIds = projectRepository.findByCreator(memberId)
+                .stream().map(Project::getProjectId).toList();
+
+        Set<ObjectId> scope = new HashSet<>();
+        scope.addAll(joinedIds);
+        scope.addAll(ownedIds);
+        List<ObjectId> scopeIds = new ArrayList<>(scope);
+
+        String regex = "^" + Pattern.quote(base) + "(?: (\\d+))?$";
+        List<Project> candidates = scopeIds.isEmpty()
+            ? Collections.emptyList()
+            : projectRepository.findByProjectIdInAndProjectNameRegex(scopeIds, regex);
+
+        Set<Integer> used = new HashSet<>();
+        Pattern p = Pattern.compile(regex);
+
+        for (Project project : candidates) {
+            String name = project.getProjectName();
+            Matcher m = p.matcher(name);
+            if (!m.matches()) continue;
+
+            if (m.group(1) == null) {
+                used.add(0);
+            } else {
+                used.add(Integer.parseInt(m.group(1)));
+            }
+        }
+
+        String projectName;
+        if (!used.contains(0)) {
+            projectName = base;
+        } else {
+            int k = 1;
+            while (used.contains(k)) k++;
+            projectName = prefix + k;
         }
 
         Project project = new Project();
@@ -75,6 +111,7 @@ public class ConferenceService {
         project.setProjectImage(null);
         project.setUpdatedAt(LocalDateTime.now());
         project.setCreator(memberId);
+        project.setStatus("Before");
         projectRepository.save(project);
 
         MemberToProject mapping = MemberToProject.builder()
@@ -121,9 +158,6 @@ public class ConferenceService {
             try(FileWriter writer = new FileWriter(file, true)) {
                 writer.write(content + "\n");
             }
-            // S3에 업로드 (덮어쓰기 형식)
-            String s3Path = "scripts/" + fileName;
-            s3Service.uploadFileToS3(s3Path, file);
 
             // 누적
             scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(content);
@@ -136,12 +170,22 @@ public class ConferenceService {
             String gptResult = gptService.callMindMapNode(fullText);
             String summaryJson = gptService.callSummaryOpenAI(fullText);
 
+            String mainKeywords = gptService.callMainOpenAI(fullText);
+            String recommendKeywords = gptService.callRecommendedKeywords(fullText);
+
             ObjectMapper summaryMapper = new ObjectMapper();
             NodeSummaryResponseDto summary;
 
             System.out.println("summary 문제 없음");
             try {
-                summary = summaryMapper.readValue(summaryJson, NodeSummaryResponseDto.class);
+                if (summaryJson.trim().startsWith("{")) {
+                    summary = summaryMapper.readValue(summaryJson, NodeSummaryResponseDto.class);
+                } else {
+                    summary = NodeSummaryResponseDto.builder()
+                            .content(summaryJson)
+                            .title(null)
+                            .build();
+                }
             } catch (Exception e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "요약 정보를 파싱하는 데 실패했습니다.");
             }
@@ -162,8 +206,6 @@ public class ConferenceService {
                 idMapping.put(originalId, newId);
             }
 
-            System.out.println("new Id 하는게 문제?");
-//
            int baseY = currentNodes.size() * Y_GAP;
 
             for (int i = 0; i < gptNodes.size(); i++) {
@@ -223,62 +265,10 @@ public class ConferenceService {
             return NodeUpdateResponseDto.builder()
                     .event("live_on")
                     .projectId(projectIdStr)
-                    .summary(summary)
                     .nodes(newNodes)
                     .build();
-
-//                boolean isFirstNode = sessionNodeBuffer.get(projectIdStr) == null || sessionNodeBuffer.get(projectIdStr).isEmpty();
-//
-//                for (int i = 0; i < keywords.size(); i++) {
-//                    String keyword = keywords.get(i);
-//
-//                    String type;
-//                    if (isFirstNode && i == 0) {
-//                        type = "input"; // 처음 노드만 input
-//                    } else if (i == keywords.size() - 1) {
-//                        type = "output"; // 마지막 노드
-//                    } else {
-//                        type = "default"; // 그 외
-//                    }
-//
-//                    NodeDto node = NodeDto.builder()
-//                            .id(UUID.randomUUID().toString())
-//                            .type(type)
-//                            .data(new DataDto(keyword))
-//                            .position(new PositionDto(X_BASE, baseY + i * Y_GAP))
-//                            .parentId(null) // 이후 연결할 경우 지정
-//                            .build();
-//                    currentNodes.add(node);
-//                    newNodes.add(node);
-//                }
-//
-//                // 클라이언트에 변경 노드만 전송
-//                for (NodeDto node : newNodes) {
-//                    messagingTemplate.convertAndSend("/topic/conference/live_on" ,
-//                            Map.of("event", "liveOn",
-//                                    "projectId", projectIdStr,
-//                                    "node", node));
-//
-//                    // ✅ 콘솔 확인용 로그
-//                    System.out.println("[Generated Node]");
-//                    System.out.println(" - id: " + node.getId());
-//                    System.out.println(" - type: " + node.getType());
-//                    System.out.println(" - label: " + node.getData().getLabel());
-//                    System.out.println(" - position: (" + node.getPosition().getX() + ", " + node.getPosition().getY() + ")");
-//                }
-//
-//                // 초기화
-//                scriptptNodes = mapper.readValue(gptBuffer.put(projectIdStr, new ArrayList<>());
-//                newScriptionCounter.put(projectIdStr, 0);
-//                NodeUpdateResponseDto update =
-//                        NodeUpdateResponseDto.builder()
-//                                .event("live_on")
-//                                .projectId(projectIdStr)
-//                                .nodes(newNodes)
-//                                .build();
-//            return update;
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
         }
     }
 
@@ -301,8 +291,10 @@ public class ConferenceService {
             String nodeExt = getExtension(requestDto.getNode().getOriginalFilename());
             String recordExt = getExtension(requestDto.getRecord().getOriginalFilename());
 
-            String nodeFileName = "node/" + requestDto.getProjectId() + nodeExt;
-            String recordFileName = "record/" + requestDto.getProjectId() + recordExt;
+            String projectId = requestDto.getProjectId();
+
+            String nodeFileName = "node/" + projectId + nodeExt;
+            String recordFileName = "record/" + projectId + recordExt;
 
             // S3 업로드
             File nodeFile = convertMultipartToFile(requestDto.getNode());
@@ -311,8 +303,18 @@ public class ConferenceService {
             s3Service.uploadFileToS3(nodeFileName, nodeFile);
             s3Service.uploadFileToS3(recordFileName, recordFile);
 
-            // GPT 요약 호출
-            String summary = gptService.callSummaryOpenAI(requestDto.getScription());
+            String scriptText = requestDto.getScription();
+            String summaryText = gptService.callSummaryOpenAI(scriptText);
+
+            String scriptFileName = "script/" + projectId + ".txt";
+            File scriptFile = createTempTextFile(scriptText);
+            s3Service.uploadFileToS3(scriptFileName, scriptFile);
+            String scriptUrl = s3Service.getS3FileUrl(scriptFileName);
+
+            String summaryFileName = "summary/" + projectId + ".txt";
+            File summaryFile = createTempTextFile(summaryText);
+            s3Service.uploadFileToS3(summaryFileName, summaryFile);
+            String summaryUrl = s3Service.getS3FileUrl(summaryFileName);
 
             // S3 실제 URL 생성
             String nodeUrl = s3Service.getS3FileUrl(nodeFileName);
@@ -328,13 +330,15 @@ public class ConferenceService {
             project.setProjectImage(nodeUrl);
 
             project.setScript(new Project.Script(
-                    requestDto.getScription(),
-                    requestDto.getScription().getBytes(StandardCharsets.UTF_8).length
+                    scriptUrl,
+                    scriptText,
+                    scriptText.getBytes(StandardCharsets.UTF_8).length
             ));
 
             project.setSummary(new Project.Summary(
-                    summary,
-                    summary.getBytes(StandardCharsets.UTF_8).length
+                    summaryUrl,
+                    summaryText,
+                    summaryText.getBytes(StandardCharsets.UTF_8).length
             ));
 
             project.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
@@ -343,6 +347,15 @@ public class ConferenceService {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 처리 중 오류 발생");
         }
+    }
+
+    // .txt 파일
+    private File createTempTextFile(String content) throws IOException {
+        File tempFile = File.createTempFile("temp", ".txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+            writer.write(content);
+        }
+        return tempFile;
     }
 
     // 확장자 추출 메서드
@@ -360,5 +373,39 @@ public class ConferenceService {
             fos.write(multipartFile.getBytes());
         }
         return file;
+    }
+
+    public getProjectInfoResponseDto getDoneProject(PrincipalDetails principalDetails, String projectId){
+        ObjectId memberId = principalDetails.getId();
+
+        if(memberId == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "토큰에서 넘겨진 memberId 가 null 입니다.");
+        }
+
+        ObjectId objProjectId = new ObjectId(projectId);
+        Optional<Project> OpProject = projectRepository.findByProjectId(objProjectId);
+        if (!OpProject.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
+        }
+
+        Project project = OpProject.get();
+
+        String gettingContent = project.getSummary().getContent();
+        JsonNode clean;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            clean = mapper.readTree(gettingContent);
+        } catch(Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"유효하지 않은 json 형식이 저장되어있습니다.");
+        }
+
+        return new getProjectInfoResponseDto(
+                projectId,
+                project.getProjectName(),
+                project.getUpdatedAt(),
+                project.getProjectImage(),
+                project.getScript().getContent(),
+                clean
+        );
     }
 }
