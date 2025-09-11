@@ -43,7 +43,7 @@ public class WebSocketController {
 
     // 실시간 스크립트 저장
     // 추천 키워드 +
-    @MessageMapping("/conference/{projectId}/script")
+    @MessageMapping("/conference/{projectId}/gpt")
     public void scriptSave(@DestinationVariable String projectId, Principal principal,
                            @Payload ScriptMessageRequestDto dto) {
         webSocketService.saveScript(projectId, dto);
