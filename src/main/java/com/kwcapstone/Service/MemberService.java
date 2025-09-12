@@ -196,8 +196,6 @@ public class MemberService {
 
         Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
 
-        MemberLoginResponseDto tokenResponseDto;
-
         // 새로운 멤버인 경우 저장
         if (member == null) {
             member = Member.builder()
@@ -209,14 +207,23 @@ public class MemberService {
                     .agreement(false)
                     .build();
             memberRepository.save(member);
+
             httpSession.setAttribute("tempMember", member);
+            httpSession.setAttribute("googleAccessToken", accessToken);
 
             // 약관 동의 필요 -> 프론트에서 약관 동의 처리해줘야 함.
             return BaseResponse.res(SuccessStatus.NEED_AGREEMENT,null);
         }
 
-        // jwt 사용할 것
-        tokenResponseDto = getMemberToken(member, accessToken);
+        if(!member.isAgreement()) {
+            httpSession.setAttribute("tempMember", member);
+            httpSession.setAttribute("googleAccessToken", accessToken);
+
+            return BaseResponse.res(SuccessStatus.NEED_AGREEMENT,null);
+        }
+
+        // 기존 회원 & 약관 동의 완료
+        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, accessToken);
 
         httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
         httpSession.setAttribute("member", new SessionUser(member));
@@ -244,8 +251,9 @@ public class MemberService {
     // 약관 동의 (새로운 Google User)
     public BaseResponse<MemberLoginResponseDto> agreeNewMember() {
         Member tempMember = (Member) httpSession.getAttribute("tempMember");
+        String googleAccessToken = (String) httpSession.getAttribute("googleAccessToken");
 
-        if (tempMember == null) {
+        if (tempMember == null || googleAccessToken == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "임시 회원 정보가 없습니다.");
         }
 
@@ -253,11 +261,12 @@ public class MemberService {
         tempMember.setAgreement(true);
         memberRepository.save(tempMember);
 
-        MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember, null);
+        MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember, googleAccessToken);
 
-        httpSession.setAttribute("tempMember", new SessionUser(tempMember));
-        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
         httpSession.removeAttribute("tempMember");
+        httpSession.removeAttribute("googleAccessToken");
+        httpSession.setAttribute("member", new SessionUser(tempMember));
+        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
 
         return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN,tokenResponseDto);
     }

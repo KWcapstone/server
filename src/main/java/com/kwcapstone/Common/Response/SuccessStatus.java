@@ -20,7 +20,7 @@ public enum SuccessStatus implements BaseCode{
 
     //소셜로그인
     USER_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
-    NEED_AGREEMENT(HttpStatus.OK, "약관동의가 필요한 계정입니다"),
+    NEED_AGREEMENT(HttpStatus.ACCEPTED, "약관동의가 필요한 계정입니다"),
     USER_NEW_GOOGLE_LOGIN(HttpStatus.OK,"로그인 성공"),
     USER_KAKAO_LOGIN(HttpStatus.OK,"로그인 성공"),
     USER_NAVER_LOGIN(HttpStatus.OK,"로그인 성공"),
