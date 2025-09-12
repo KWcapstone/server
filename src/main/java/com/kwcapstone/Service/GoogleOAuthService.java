@@ -81,6 +81,7 @@ public class GoogleOAuthService {
         HttpEntity<MultiValueMap<String, String>> request
                 = new HttpEntity<>(params, headers);
 
+        System.out.println("코드 좀 확인하겠음 : " + finalCode);
 
         try {
             ResponseEntity<String> response = restTemplate.exchange(
@@ -97,10 +98,6 @@ public class GoogleOAuthService {
             String accessToken = (String) responseMap.get("access_token");
             String refreshToken = (String) responseMap.get("refresh_token");
 
-            //Token token = new Token(accessToken, refreshToken, null);
-
-            // 여기서 왜 token을 주는게 아니고 accessToken을 주지....???????
-            //return BaseResponse<>(HttpStatus.OK.value(),"Google Access new Token 발급 성공", accessToken);
             return accessToken;
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             //return new BaseResponse<>(e.getStatusCode().value(), "Google Oauth 요청 중 오류 발생" + e.getResponseBodyAsString());
