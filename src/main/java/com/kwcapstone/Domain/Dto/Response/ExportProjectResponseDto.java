@@ -7,10 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SummaryResponseDto {
-    private String event;
+public class ExportProjectResponseDto {
     private String projectId;
-    private String time;
-    private String title;
-    private String content;
+    private String projectUrl;
 }

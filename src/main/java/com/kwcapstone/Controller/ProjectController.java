@@ -7,6 +7,7 @@ import com.kwcapstone.Domain.Dto.Request.ProjectDeleteRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ProjectNameEditRequestDto;
 import com.kwcapstone.Domain.Dto.Response.InviteEmailResponseDto;
 import com.kwcapstone.Domain.Dto.Response.InviteUsersByLinkResponseDto;
+import com.kwcapstone.Domain.Entity.ExportKind;
 import com.kwcapstone.Security.PrincipalDetails;
 import com.kwcapstone.Service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -89,5 +90,14 @@ public class ProjectController {
         else{
             return BaseResponse.res(SuccessStatus.INVITE_SHARE_LINK, null);
         }
+    }
+
+    //프로젝트 추출하기
+    @Operation(summary = "프로젝트 추출하기")
+    @GetMapping("/{projectId}/export")
+    public BaseResponse exportProject(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                      @PathVariable String projectId,
+                                      @RequestParam(required = true) ExportKind kind){
+        return BaseResponse.res(SuccessStatus.EXPROT_PROJECT, projectService.exportProject(principalDetails, projectId, kind));
     }
 }

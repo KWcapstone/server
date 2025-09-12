@@ -11,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 public class GetProjectShareModalResponseDto {
     private String inviteUrl;
-    private List<MemberInfoDto> sharedMembers;
+    private List<MemberInfoDto> participants;
 }

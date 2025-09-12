@@ -43,7 +43,7 @@ public class WebSocketController {
 
     // 실시간 스크립트 저장
     // 추천 키워드 +
-    @MessageMapping("/conference/{projectId}/script")
+    @MessageMapping("/conference/{projectId}/gpt")
     public void scriptSave(@DestinationVariable String projectId, Principal principal,
                            @Payload ScriptMessageRequestDto dto) {
         webSocketService.saveScript(projectId, dto);
@@ -60,11 +60,4 @@ public class WebSocketController {
     public void updateNodes(Principal principal, @Payload NodeRequstDto nodeRequstDto){
         webSocketService.updateNode(nodeRequstDto);
     }
-
-    // 마인드맵에 키워드 직접 추가
-//    @MessageMapping("/conference/{projectId}/live_off/add")
-//    public void keywordAdd(@DestinationVariable String projectId, Principal principal,
-//                           @Payload MindmapAddRequestDto dto) {
-//        webSocketService.addKeyword(projectId, dto);
-//    }
 }

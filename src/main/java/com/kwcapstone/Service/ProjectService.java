@@ -347,4 +347,43 @@ public class ProjectService {
 
         return new ProjectStatusResponseDto(projectId, projectStatus);
     }
+
+    //프로젝트 추출
+    public ExportProjectResponseDto exportProject(PrincipalDetails principalDetails,
+                                                  String projectId,
+                                                  ExportKind kind){
+        ObjectId memberId = principalDetails.getId();
+        Optional<Member> member = memberRepository.findByMemberId(memberId);
+        if(!member.isPresent()){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰에 있는 memberId 정보가 db에 존재하지 않습니다.");
+        }
+
+
+        ObjectId ObjProject = new ObjectId(projectId);
+        Optional<Project> project = projectRepository.findByProjectId(ObjProject);
+        if(!project.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
+        }
+
+        String projectUrl = "";
+
+        //kind에 따라서 프로젝트 추출하기
+        switch (kind) {
+            case MINDMAP -> {
+                // MindMap 추출 로직
+                projectUrl = project.get().getProjectImage();
+            }
+            case SUMMARY -> {
+                // Summary 추출 로직
+                projectUrl = project.get().getSummary().getSummaryUrl();
+            }
+            case RECORDING -> {
+                // Recording 추출 로직
+                projectUrl = project.get().getRecord().getFileUrl();
+            }
+            default -> throw new IllegalArgumentException("Unsupported export kind: " + kind);
+        }
+
+        return new ExportProjectResponseDto(projectId, projectUrl);
+    }
 }
