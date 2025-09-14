@@ -178,7 +178,8 @@ public class MemberService {
 
     // 구글 로그인
     public BaseResponse<MemberLoginResponseDto> handleGoogleLogin
-        (String authorizationCode) throws IOException {
+        (String authorizationCode, HttpServletRequest request) throws IOException {
+        HttpSession session = request.getSession(true);
         String accessToken = googleOAuthService.getAccessToken(authorizationCode);
 
         // 실제 accessToken 값 꺼내기
@@ -208,16 +209,16 @@ public class MemberService {
                     .build();
             memberRepository.save(member);
 
-            httpSession.setAttribute("tempMember", member);
-            httpSession.setAttribute("googleAccessToken", accessToken);
+            session.setAttribute("tempMember", member);
+            session.setAttribute("googleAccessToken", accessToken);
 
             // 약관 동의 필요 -> 프론트에서 약관 동의 처리해줘야 함.
             return BaseResponse.res(SuccessStatus.NEED_AGREEMENT,null);
         }
 
         if(!member.isAgreement()) {
-            httpSession.setAttribute("tempMember", member);
-            httpSession.setAttribute("googleAccessToken", accessToken);
+            session.setAttribute("tempMember", member);
+            session.setAttribute("googleAccessToken", accessToken);
 
             return BaseResponse.res(SuccessStatus.NEED_AGREEMENT,null);
         }

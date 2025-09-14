@@ -67,11 +67,12 @@ public class MemberController {
 
     // 구글로그인
     @GetMapping("/login/google")
-    public BaseResponse<MemberLoginResponseDto> googleLogin (@RequestParam String code) throws IOException {
+    public BaseResponse<MemberLoginResponseDto> googleLogin (@RequestParam String code,
+                                                             HttpServletRequest request) throws IOException {
         if (code == null || code.isEmpty()) {
             return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null);
         }
-        return memberService.handleGoogleLogin(code);
+        return memberService.handleGoogleLogin(code, request);
     }
 
     // 일반로그인
