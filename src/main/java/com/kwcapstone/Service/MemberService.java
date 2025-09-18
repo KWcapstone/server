@@ -177,26 +177,82 @@ public class MemberService {
     }
 
     // 구글 로그인
-    public BaseResponse<MemberLoginResponseDto> handleGoogleLogin
-        (String authorizationCode, HttpServletRequest request) throws IOException {
-        String accessToken = googleOAuthService.getAccessToken(authorizationCode);
+//    public BaseResponse<MemberLoginResponseDto> handleGoogleLogin
+//        (String authorizationCode, HttpServletRequest request) throws IOException {
+//        String accessToken = googleOAuthService.getAccessToken(authorizationCode);
+//
+//        // 실제 accessToken 값 꺼내기
+//        if(accessToken == null){
+//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+//                    "Google OAuth 오류 : access token null");
+//        }
+//
+//        GoogleUser googleUser = googleOAuthService.getUserInfo(accessToken);
+//
+//        if(googleUser == null){
+//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+//                    "Google 사용자 정보 요청 오류: User Response null");
+//        }
+//
+//        Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
+//
+//        // 새로운 멤버인 경우 저장
+//        if (member == null) {
+//            member = Member.builder()
+//                    .socialId(googleUser.getSocialId())
+//                    .name(googleUser.getName())
+//                    .email(googleUser.getEmail())
+//                    .image(googleUser.getPicture())
+//                    .role(MemberRole.GOOGLE)
+//                    .agreement(false)
+//                    .build();
+//            memberRepository.save(member);
+//
+//            MemberLoginResponseDto dto = new MemberLoginResponseDto(
+//                    member.getMemberId(),
+//                    null,
+//                    null
+//            );
+//
+//            // 약관 동의 필요 -> 프론트에서 약관 동의 처리해줘야 함.
+//            return BaseResponse.res(SuccessStatus.NEED_AGREEMENT, dto);
+//        }
+//
+//        if(!member.isAgreement()) {
+//            MemberLoginResponseDto dto = new MemberLoginResponseDto(
+//                    member.getMemberId(),
+//                    null,
+//                    null
+//            );
+//
+//            return BaseResponse.res(SuccessStatus.NEED_AGREEMENT,dto);
+//        }
+//
+//        // 기존 회원 & 약관 동의 완료
+//        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, accessToken);
+//
+//        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+//        httpSession.setAttribute("member", new SessionUser(member));
+//
+//        return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN,tokenResponseDto);
+//    }
 
-        // 실제 accessToken 값 꺼내기
-        if(accessToken == null){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Google OAuth 오류 : access token null");
+    public BaseResponse<MemberLoginResponseDto> handleGoogleLogin(String authorizationCode) throws IOException {
+        String googleAccessToken = googleOAuthService.getAccessToken(authorizationCode);
+
+        if (googleAccessToken == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Google OAuth 오류 : access token null");
         }
 
-        GoogleUser googleUser = googleOAuthService.getUserInfo(accessToken);
+        GoogleUser googleUser = googleOAuthService.getUserInfo(googleAccessToken);
 
-        if(googleUser == null){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Google 사용자 정보 요청 오류: User Response null");
+        if (googleUser == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Google 사용자 정보 요청 오류: User Response null");
         }
 
         Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
 
-        // 새로운 멤버인 경우 저장
+        // 새로운 멤버 저장
         if (member == null) {
             member = Member.builder()
                     .socialId(googleUser.getSocialId())
@@ -207,34 +263,28 @@ public class MemberService {
                     .agreement(false)
                     .build();
             memberRepository.save(member);
+        }
 
+        // 🔹 토큰 저장/업데이트 (DB에 socialAccessToken 저장)
+        Token token = tokenRepository.findByMemberId(member.getMemberId()).orElse(
+                new Token(null, null, member.getMemberId(), googleAccessToken)
+        );
+        token.changeToken(token.getAccessToken(), token.getRefreshToken(), googleAccessToken);
+        tokenRepository.save(token);
+
+        // 약관 동의 안 한 경우 → memberId만 반환
+        if (!member.isAgreement()) {
             MemberLoginResponseDto dto = new MemberLoginResponseDto(
                     member.getMemberId(),
                     null,
                     null
             );
-
-            // 약관 동의 필요 -> 프론트에서 약관 동의 처리해줘야 함.
             return BaseResponse.res(SuccessStatus.NEED_AGREEMENT, dto);
         }
 
-        if(!member.isAgreement()) {
-            MemberLoginResponseDto dto = new MemberLoginResponseDto(
-                    member.getMemberId(),
-                    null,
-                    null
-            );
-
-            return BaseResponse.res(SuccessStatus.NEED_AGREEMENT,dto);
-        }
-
-        // 기존 회원 & 약관 동의 완료
-        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, accessToken);
-
-        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
-        httpSession.setAttribute("member", new SessionUser(member));
-
-        return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN,tokenResponseDto);
+        // 약관 동의 완료 회원 → 우리 JWT 발급
+        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, googleAccessToken);
+        return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN, tokenResponseDto);
     }
 
     private MemberLoginResponseDto getMemberToken(Member member, String socialAccessToken) {
@@ -255,27 +305,63 @@ public class MemberService {
     }
 
     // 약관 동의 (새로운 Google User)
-    public BaseResponse<MemberLoginResponseDto> agreeNewMember() {
-        Member tempMember = (Member) httpSession.getAttribute("tempMember");
-        String googleAccessToken = (String) httpSession.getAttribute("googleAccessToken");
+//    public BaseResponse<MemberLoginResponseDto> agreeNewMember(AgreementRequestDto requestDto) {
+//        Member member = memberRepository.findById(new ObjectId(requestDto.getMemberId()))
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 회원을 찾을 수 없습니다."));
+//
+//        // 이미 동의했으면 그냥 로그인 처리
+//        if (member.isAgreement()) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 약관에 동의한 회원입니다.");
+//        }
+//
+//        member.setAgreement(true);
+//        memberRepository.save(member);
+//
+//        String googleAccessToken = (String) httpSession.getAttribute("googleAccessToken");
+//        if (googleAccessToken == null) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "AccessToken이 없습니다.");
+//        }
+//
+//        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, googleAccessToken);
+//
+//        httpSession.removeAttribute("googleAccessToken");
+//        httpSession.setAttribute("member", new SessionUser(member));
+//        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+//
+//        return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN,tokenResponseDto);
+//    }
 
-        if (tempMember == null || googleAccessToken == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "임시 회원 정보가 없습니다.");
+    public BaseResponse<MemberLoginResponseDto> agreeNewMember(AgreementRequestDto requestDto) {
+        Member member = memberRepository.findById(new ObjectId(requestDto.getMemberId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 회원을 찾을 수 없습니다."));
+
+        if (member.isAgreement()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 약관에 동의한 회원입니다.");
         }
 
-        // 약관 동의 처리 후, DB에 저장
-        tempMember.setAgreement(true);
-        memberRepository.save(tempMember);
+        // 약관 동의 처리
+        member.setAgreement(true);
+        memberRepository.save(member);
 
-        MemberLoginResponseDto tokenResponseDto = getMemberToken(tempMember, googleAccessToken);
+        // 🔹 DB에서 socialAccessToken 조회
+        Token token = tokenRepository.findByMemberId(member.getMemberId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "토큰 정보가 없습니다."));
 
-        httpSession.removeAttribute("tempMember");
-        httpSession.removeAttribute("googleAccessToken");
-        httpSession.setAttribute("member", new SessionUser(tempMember));
-        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
+        String googleAccessToken = token.getSocialAccessToken();
+        if (googleAccessToken == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Google AccessToken이 없습니다.");
+        }
 
-        return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN,tokenResponseDto);
+        // 우리 서비스 JWT 발급
+        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, googleAccessToken);
+
+        // 🔹 DB에 우리 JWT 저장 (필요하다면)
+        token.changeToken(tokenResponseDto.getAccessToken(), tokenResponseDto.getRefreshToken(), googleAccessToken);
+        tokenRepository.save(token);
+
+        return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN, tokenResponseDto);
     }
+
 
     // 일반 유저 로그인
     public MemberLoginResponseDto userLogin(MemberLoginRequestDto memberLoginRequestDto) {

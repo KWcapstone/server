@@ -55,8 +55,9 @@ public class MemberController {
     }
 
     @PostMapping("/agree")
-    public BaseResponse<MemberLoginResponseDto> agree(HttpServletRequest request) {
-        return memberService.agreeNewMember();
+    public BaseResponse<MemberLoginResponseDto> agree(@RequestBody AgreementRequestDto agreementRequestDto,
+                                                      HttpServletRequest request) {
+        return memberService.agreeNewMember(agreementRequestDto);
     }
 
     // 비밀번호 초기화 기능
@@ -67,12 +68,11 @@ public class MemberController {
 
     // 구글로그인
     @GetMapping("/login/google")
-    public BaseResponse<MemberLoginResponseDto> googleLogin (@RequestParam String code,
-                                                             HttpServletRequest request) throws IOException {
+    public BaseResponse<MemberLoginResponseDto> googleLogin (@RequestParam String code) throws IOException {
         if (code == null || code.isEmpty()) {
             return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null);
         }
-        return memberService.handleGoogleLogin(code, request);
+        return memberService.handleGoogleLogin(code);
     }
 
     // 일반로그인
