@@ -324,7 +324,8 @@ public class ConferenceService {
             project.setRecord(new Project.Record(
                     recordUrl,
                     requestDto.getRecord().getOriginalFilename(),
-                    requestDto.getRecord().getSize()
+                    requestDto.getRecord().getSize(),  // long
+                    requestDto.getRecordLength()
             ));
 
             project.setProjectImage(nodeUrl);

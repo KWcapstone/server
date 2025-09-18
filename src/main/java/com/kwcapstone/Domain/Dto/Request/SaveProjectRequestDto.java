@@ -12,5 +12,6 @@ public class SaveProjectRequestDto {
     private String projectId;
     private String scription;
     private MultipartFile record;
+    private String recordLength;
     private MultipartFile node;
 }
