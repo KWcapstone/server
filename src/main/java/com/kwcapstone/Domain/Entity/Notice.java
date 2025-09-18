@@ -17,7 +17,7 @@ public class Notice {
     @Id
     private ObjectId noticeId;
     private String title;
-    private String content;
+    private String url;
     private LocalDateTime createAt;
     private Boolean isRead;
     private ObjectId userId;
