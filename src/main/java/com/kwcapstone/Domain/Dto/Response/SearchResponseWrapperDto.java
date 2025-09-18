@@ -30,7 +30,7 @@ public class SearchResponseWrapperDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class RecordDto {
-        private long length;
+        private String length;
         private long sizeInBytes;
         private String fileName;
     }

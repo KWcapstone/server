@@ -14,7 +14,7 @@ public class ShowRecordResponseDto {
     private String recordId;
     private String name;
     private LocalDateTime updatedAt;
-    private long length;
+    private String length;
     private long sizeInBytes;
     private String creator;
 }

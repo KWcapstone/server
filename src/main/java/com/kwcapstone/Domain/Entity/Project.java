@@ -32,7 +32,8 @@ public class Project {
     public static class Record {
         private String fileUrl;
         private String fileName;
-        private long length;
+        private long fileSize;
+        private String length;
     }
 
     @Getter
