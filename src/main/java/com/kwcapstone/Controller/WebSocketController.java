@@ -44,7 +44,7 @@ public class WebSocketController {
     // 실시간 스크립트 저장
     // 추천 키워드 +
     @MessageMapping("/conference/{projectId}/gpt")
-    public void scriptSave(@DestinationVariable String projectId, Principal principal,
+    public void usingGpt(@DestinationVariable String projectId, Principal principal,
                            @Payload ScriptMessageRequestDto dto) {
         webSocketService.saveScript(projectId, dto);
     }
@@ -59,5 +59,12 @@ public class WebSocketController {
     @MessageMapping("/conference/live_on")
     public void updateNodes(Principal principal, @Payload NodeRequstDto nodeRequstDto){
         webSocketService.updateNode(nodeRequstDto);
+    }
+
+    //실시간 스크립트
+    @MessageMapping("/conference/{projectId}/script")
+    public void sendScript(@DestinationVariable String projectId, Principal principal,
+                           @Payload ScriptMessageRequestDto dto) {
+        webSocketService.sendScript(projectId, dto);
     }
 }

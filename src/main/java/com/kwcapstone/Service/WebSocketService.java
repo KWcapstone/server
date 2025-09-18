@@ -84,8 +84,29 @@ public class WebSocketService {
         );
     }
 
+    public void sendScript(String projectIdStr, ScriptMessageRequestDto dto){
+        if(dto.getProjectId().equals("script")){
+            try{
+                ObjectId projectId = new ObjectId(projectIdStr);
+                Project project = projectRepository.findByProjectId(projectId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
+                String content = dto.getScription();
+
+                String time = dto.getTime();
+
+                messagingTemplate.convertAndSend(
+                        "/topic/conference/" + projectId,
+                        new SendProjectResponseDto("script", projectIdStr, content, time));
+
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
+            }
+        }
+    }
+
     public void saveScript(String projectIdStr, ScriptMessageRequestDto dto) {
-        if (dto.getEvent().equals("script")) {
+        if (dto.getEvent().equals("gpt")) {
             try {
                 ObjectId projectId = new ObjectId(projectIdStr);
                 Project project = projectRepository.findByProjectId(projectId)
