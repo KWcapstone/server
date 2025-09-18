@@ -77,6 +77,7 @@ public class MainService {
                         userName,
                         notice.getTitle(),
                         notice.getUrl(),
+                        notice.getOfficial(),
                         notice.getIsRead()
                 );
             }).collect(Collectors.toList());
@@ -85,42 +86,6 @@ public class MainService {
                     "알림 데이터를 불러오는 중 서버에서 예상치 못한 오류가 발생했습니다.");
         }
     }
-
-    // 알림창 세부 조회
-//    public NoticeDetailReadResponseDto showDetailNotice(PrincipalDetails principalDetails, String noticeId) {
-//        ObjectId memberObjectId;
-//        ObjectId noticeObjectId;
-//        ObjectId memberId = principalDetails.getId();
-//
-//        try {
-//            memberObjectId = new ObjectId(String.valueOf(memberId));
-//            noticeObjectId = new ObjectId(noticeId);
-//        } catch (IllegalArgumentException e) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식입니다.");
-//        }
-//
-//        Notice notice = noticeRepository.findById(noticeObjectId)
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 알림 데이터를 찾을 수 없습니다."));
-//
-//        if (!notice.getUserId().equals(memberObjectId)) {
-//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 알림을 조회할 권한이 없습니다.");
-//        }
-//
-//        String userName = memberRepository.findByMemberId(notice.getSenderId())
-//                .map(Member::getName)
-//                .orElse("Unknown");
-//
-//        if (!notice.getIsRead()) {
-//            notice.setIsRead(true);
-//            noticeRepository.save(notice);
-//        }
-//
-//        return new NoticeDetailReadResponseDto(
-//                notice.getNoticeId(),
-//                userName,
-//                notice.getTitle()
-//        );
-//    }
 
     private List<Project> getProjects(String memberId, String filterType) {
         ObjectId memberObjectId;

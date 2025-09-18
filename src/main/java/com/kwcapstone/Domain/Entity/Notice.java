@@ -19,6 +19,7 @@ public class Notice {
     private String title;
     private String url;
     private LocalDateTime createAt;
+    private Boolean official;
     private Boolean isRead;
     private ObjectId userId;
     private ObjectId senderId;

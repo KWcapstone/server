@@ -78,6 +78,7 @@ public class ProjectService {
                 .url(inviteLink)
                 .createAt(LocalDateTime.now())
                 .isRead(false)
+                .official(false)
                 .userId(isMember.get().getMemberId())
                 .senderId(memberId)
                 .build();
