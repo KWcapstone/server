@@ -12,5 +12,7 @@ public class NoticeReadResponseDto {
     private ObjectId noticeId;
     private String userName;
     private String title;
+    private String url;
+    private Boolean official;
     private Boolean isRead;
 }

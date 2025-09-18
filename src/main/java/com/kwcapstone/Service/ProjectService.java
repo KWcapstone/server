@@ -75,9 +75,10 @@ public class ProjectService {
 
         Notice notice = Notice.builder()
                 .title(noticeTitle)
-                .content(noticeTitle)
+                .url(inviteLink)
                 .createAt(LocalDateTime.now())
                 .isRead(false)
+                .official(false)
                 .userId(isMember.get().getMemberId())
                 .senderId(memberId)
                 .build();
