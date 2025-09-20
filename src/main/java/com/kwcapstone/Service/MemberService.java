@@ -176,68 +176,7 @@ public class MemberService {
         return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "잘못된 요청입니다.");
     }
 
-    // 구글 로그인
-//    public BaseResponse<MemberLoginResponseDto> handleGoogleLogin
-//        (String authorizationCode, HttpServletRequest request) throws IOException {
-//        String accessToken = googleOAuthService.getAccessToken(authorizationCode);
-//
-//        // 실제 accessToken 값 꺼내기
-//        if(accessToken == null){
-//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-//                    "Google OAuth 오류 : access token null");
-//        }
-//
-//        GoogleUser googleUser = googleOAuthService.getUserInfo(accessToken);
-//
-//        if(googleUser == null){
-//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-//                    "Google 사용자 정보 요청 오류: User Response null");
-//        }
-//
-//        Member member = memberRepository.findByEmail(googleUser.getEmail()).orElse(null);
-//
-//        // 새로운 멤버인 경우 저장
-//        if (member == null) {
-//            member = Member.builder()
-//                    .socialId(googleUser.getSocialId())
-//                    .name(googleUser.getName())
-//                    .email(googleUser.getEmail())
-//                    .image(googleUser.getPicture())
-//                    .role(MemberRole.GOOGLE)
-//                    .agreement(false)
-//                    .build();
-//            memberRepository.save(member);
-//
-//            MemberLoginResponseDto dto = new MemberLoginResponseDto(
-//                    member.getMemberId(),
-//                    null,
-//                    null
-//            );
-//
-//            // 약관 동의 필요 -> 프론트에서 약관 동의 처리해줘야 함.
-//            return BaseResponse.res(SuccessStatus.NEED_AGREEMENT, dto);
-//        }
-//
-//        if(!member.isAgreement()) {
-//            MemberLoginResponseDto dto = new MemberLoginResponseDto(
-//                    member.getMemberId(),
-//                    null,
-//                    null
-//            );
-//
-//            return BaseResponse.res(SuccessStatus.NEED_AGREEMENT,dto);
-//        }
-//
-//        // 기존 회원 & 약관 동의 완료
-//        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, accessToken);
-//
-//        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
-//        httpSession.setAttribute("member", new SessionUser(member));
-//
-//        return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN,tokenResponseDto);
-//    }
-
-    public BaseResponse<MemberLoginResponseDto> handleGoogleLogin(String authorizationCode) throws IOException {
+    public ResponseEntity<BaseResponse<MemberLoginResponseDto>> handleGoogleLogin(String authorizationCode) throws IOException {
         String googleAccessToken = googleOAuthService.getAccessToken(authorizationCode);
 
         if (googleAccessToken == null) {
@@ -265,7 +204,7 @@ public class MemberService {
             memberRepository.save(member);
         }
 
-        // 🔹 토큰 저장/업데이트 (DB에 socialAccessToken 저장)
+        // 토큰 저장/업데이트 (DB에 socialAccessToken 저장)
         Token token = tokenRepository.findByMemberId(member.getMemberId()).orElse(
                 new Token(null, null, member.getMemberId(), googleAccessToken)
         );
@@ -279,12 +218,14 @@ public class MemberService {
                     null,
                     null
             );
-            return BaseResponse.res(SuccessStatus.NEED_AGREEMENT, dto);
+            return ResponseEntity
+                    .status(HttpStatus.ACCEPTED)
+                    .body(BaseResponse.res(SuccessStatus.NEED_AGREEMENT, dto));
         }
 
         // 약관 동의 완료 회원 → 우리 JWT 발급
         MemberLoginResponseDto tokenResponseDto = getMemberToken(member, googleAccessToken);
-        return BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN, tokenResponseDto);
+        return ResponseEntity.ok(BaseResponse.res(SuccessStatus.USER_GOOGLE_LOGIN, tokenResponseDto));
     }
 
     private MemberLoginResponseDto getMemberToken(Member member, String socialAccessToken) {
