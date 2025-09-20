@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -68,9 +69,11 @@ public class MemberController {
 
     // 구글로그인
     @GetMapping("/login/google")
-    public BaseResponse<MemberLoginResponseDto> googleLogin (@RequestParam String code) throws IOException {
+    public ResponseEntity<BaseResponse<MemberLoginResponseDto>> googleLogin (@RequestParam String code) throws IOException {
         if (code == null || code.isEmpty()) {
-            return new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null);
+            return ResponseEntity
+                    .badRequest()
+                    .body(new BaseResponse<>(HttpStatus.BAD_REQUEST.value(), "인가코드가 없습니다.", null));
         }
         return memberService.handleGoogleLogin(code);
     }
