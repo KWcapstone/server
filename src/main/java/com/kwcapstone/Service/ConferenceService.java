@@ -29,6 +29,8 @@ import java.io.BufferedWriter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -129,147 +131,25 @@ public class ConferenceService {
         );
     }
 
-    public NodeUpdateResponseDto scriptSave(PrincipalDetails principalDetails, ScriptMessageRequestDto requestDto) {
-        ObjectId memberId = principalDetails.getId();
-        try {
-            String projectIdStr = requestDto.getProjectId();
-            ObjectId projectId = new ObjectId(projectIdStr);
+    private List<SaveScriptDto> loadScriptFromFile(String projectIdStr) throws IOException {
+        File file = new File(System.getProperty("java.io.tmpdir"), "script_" + projectIdStr + ".txt");
 
-            Project project = projectRepository.findByProjectId(projectId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
-
-            if (!project.getCreator().equals(memberId)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 프로젝트 대한 권한이 없습니다.");
-            }
-
-            String content = requestDto.getScription();
-
-            // 임시 디렉토리 경로 확인 및 생성
-            String tmpDirPath = System.getProperty("java.io.tmpdir");
-            File tmpDir = new File(tmpDirPath);
-            if (!tmpDir.exists() && !tmpDir.mkdirs()) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시 폴더 생성에 실패했습니다.");
-            }
-
-            // 임시 파일에 저장 (append 모드)
-            String fileName = "script_" + projectId + ".txt";
-            File file = new File(System.getProperty("java.io.tmpdir"), fileName);
-
-            try(FileWriter writer = new FileWriter(file, true)) {
-                writer.write(content + "\n");
-            }
-
-            // 누적
-            scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(content);
-            int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
-            newScriptionCounter.put(projectIdStr, count);
-
-            // GPT 호출 조건 (7문장마다)
-            List<String> scriptList = scriptBuffer.get(projectIdStr);
-            String fullText = String.join(" ", scriptList);
-            String gptResult = gptService.callMindMapNode(fullText);
-            String summaryJson = gptService.callSummaryOpenAI(fullText);
-
-            String mainKeywords = gptService.callMainOpenAI(fullText);
-            String recommendKeywords = gptService.callRecommendedKeywords(fullText);
-
-            ObjectMapper summaryMapper = new ObjectMapper();
-            NodeSummaryResponseDto summary;
-
-            System.out.println("summary 문제 없음");
-            try {
-                if (summaryJson.trim().startsWith("{")) {
-                    summary = summaryMapper.readValue(summaryJson, NodeSummaryResponseDto.class);
-                } else {
-                    summary = NodeSummaryResponseDto.builder()
-                            .content(summaryJson)
-                            .title(null)
-                            .build();
-                }
-            } catch (Exception e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "요약 정보를 파싱하는 데 실패했습니다.");
-            }
-
-            ObjectMapper mapper = new ObjectMapper();
-            //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
-            List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {});
-            System.out.println("GPT 결과: " + gptResult);
-
-            List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>());
-            List<NodeDto> newNodes = new ArrayList<>();
-
-            Map<String, String> idMapping = new ConcurrentHashMap<>();
-
-            for (Map<String, Object> gptNode : gptNodes) {
-                String originalId = gptNode.get("id").toString();
-                String newId = UUID.randomUUID().toString();
-                idMapping.put(originalId, newId);
-            }
-
-           int baseY = currentNodes.size() * Y_GAP;
-
-            for (int i = 0; i < gptNodes.size(); i++) {
-                Map<String, Object> gptNode = gptNodes.get(i);
-                String originalId = gptNode.get("id").toString();
-                String label = gptNode.get("label").toString();
-                String parentIdRaw = gptNode.get("parentId") == null ? null : gptNode.get("parentId").toString();
-                String parentId = parentIdRaw == null ? null : idMapping.get(parentIdRaw);
-
-                String type;
-                if (parentId == null) {
-                    type = "input";
-                } else if (i == gptNodes.size() - 1) {
-                    type = "output";
-                } else {
-                    type = "default";
-                }
-
-                System.out.println("parsing이 문제?");
-
-                // position 추출
-                Map<String, Object> positionMap = (Map<String, Object>) gptNode.get("position");
-                int x, y;
-                if (positionMap != null && positionMap.get("x") != null && positionMap.get("y") != null) {
-                    x = ((Number) positionMap.get("x")).intValue();
-                    y = ((Number) positionMap.get("y")).intValue();
-                } else {
-                    // fallback 값 지정 (예: 루트는 0,0 / 나머지는 순서 기반 y축 정렬)
-                    x = X_BASE;
-                    y = baseY + i * Y_GAP;
-                }
-                System.out.println("positon은 문제 없는데,");
-
-                NodeDto node = NodeDto.builder()
-                        .id(idMapping.get(originalId))
-                        .type(type)
-                        .data(new DataDto(label))
-                        .position(new PositionDto(x,y))
-                        .parentId(parentId)
-                        .build();
-
-                    currentNodes.add(node);
-                    newNodes.add(node);
-            }
-
-            for (NodeDto node : newNodes) {
-                messagingTemplate.convertAndSend("/topic/conference/live_on",
-                        Map.of("event", "liveOn",
-                                "projectId", projectIdStr,
-                                "node", node));
-            }
-
-            // 초기화
-            scriptBuffer.put(projectIdStr, new ArrayList<>());
-            newScriptionCounter.put(projectIdStr, 0);
-
-            return NodeUpdateResponseDto.builder()
-                    .event("live_on")
-                    .projectId(projectIdStr)
-                    .nodes(newNodes)
-                    .build();
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
+        if(!file.exists()) {
+            return List.of();
         }
+
+        ObjectMapper mapper = new ObjectMapper();
+        List<SaveScriptDto> scriptions = new ArrayList<>();
+
+        try(BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while((line = br.readLine()) != null) {
+                SaveScriptDto saveScriptDto = mapper.readValue(line, SaveScriptDto.class);
+                scriptions.add(saveScriptDto);
+            }
+        }
+
+        return scriptions;
     }
 
     public void saveProject(PrincipalDetails principalDetails, SaveProjectRequestDto requestDto) {
@@ -285,6 +165,13 @@ public class ConferenceService {
 
         Project project = projectRepository.findByProjectId(projectObjectId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+
+        List<SaveScriptDto> scriptions = new ArrayList<>();
+        try{
+            scriptions = loadScriptFromFile(requestDto.getProjectId());
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 불러오는 과정에서 오류 발생했습니다.");
+        }
 
         try {
             // 확장자 추출
@@ -303,7 +190,7 @@ public class ConferenceService {
             s3Service.uploadFileToS3(nodeFileName, nodeFile);
             s3Service.uploadFileToS3(recordFileName, recordFile);
 
-            String scriptText = requestDto.getScription();
+            String scriptText = requestDto.getScripion();
             String summaryText = gptService.callSummaryOpenAI(scriptText);
 
             String scriptFileName = "script/" + projectId + ".txt";
@@ -332,7 +219,7 @@ public class ConferenceService {
 
             project.setScript(new Project.Script(
                     scriptUrl,
-                    scriptText,
+                    scriptions,
                     scriptText.getBytes(StandardCharsets.UTF_8).length
             ));
 
@@ -405,7 +292,7 @@ public class ConferenceService {
                 project.getProjectName(),
                 project.getUpdatedAt(),
                 project.getProjectImage(),
-                project.getScript().getContent(),
+                project.getScript().getScriptions(),
                 clean
         );
     }

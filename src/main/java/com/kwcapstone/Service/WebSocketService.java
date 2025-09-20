@@ -54,7 +54,7 @@ public class WebSocketService {
     //회의 여러개가 동시에 시작되기 때문에
     //concurrentHashMap -> ,여러 스레득 도시에 접근해도 안전하게 작동
     //내부적으로 데이터를 나눠서(lock 분할) 처리해서 성능도 높고, 충돌도 방지
-    private final Map<String, List<String>> scriptBuffer = new ConcurrentHashMap<>();
+    private final Map<String, List<SaveScriptDto>> scriptBuffer = new ConcurrentHashMap<>();
     private final Map<String, Integer> newScriptionCounter = new ConcurrentHashMap<>();
 
     public void modifyMembers(String projectId, ParticipantEventDto dto, Message<?> message) {
@@ -95,9 +95,11 @@ public class WebSocketService {
 
                 String time = dto.getTime();
 
+                SaveScriptDto saveScriptDto = new SaveScriptDto(content, time);
+
                 messagingTemplate.convertAndSend(
                         "/topic/conference/" + projectId,
-                        new SendProjectResponseDto("script", projectIdStr, content, time));
+                        new SendProjectResponseDto("script", projectIdStr, saveScriptDto));
 
             } catch (Exception e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
@@ -108,11 +110,13 @@ public class WebSocketService {
     public void saveScript(String projectIdStr, ScriptMessageRequestDto dto) {
         if (dto.getEvent().equals("gpt")) {
             try {
+                ObjectMapper mapper = new ObjectMapper();
                 ObjectId projectId = new ObjectId(projectIdStr);
                 Project project = projectRepository.findByProjectId(projectId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
                 String content = dto.getScription();
+                SaveScriptDto saveScriptDto = new SaveScriptDto(content, dto.getTime());
 
                 //주요키워드
                 sendMainKeywords(1, projectIdStr, dto, null);
@@ -132,11 +136,12 @@ public class WebSocketService {
                 File file = new File(System.getProperty("java.io.tmpdir"), fileName);
 
                 try(FileWriter writer = new FileWriter(file, true)) {
-                    writer.write(content + "\n");
+                    String jsonLine = mapper.writeValueAsString(saveScriptDto);
+                    writer.write(jsonLine + System.lineSeparator());
                 }
 
                 // 누적
-                scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(content);
+                scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(saveScriptDto);
                 int count = newScriptionCounter.getOrDefault(projectIdStr, 0) + 1;
                 newScriptionCounter.put(projectIdStr, count);
 

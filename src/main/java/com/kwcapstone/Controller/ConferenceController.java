@@ -29,13 +29,6 @@ public class ConferenceController {
                 conferenceService.projectCreate(principalDetails));
     }
 
-    // 실시간 스크립트 임시저장
-    @PostMapping("/script")
-    public BaseResponse<NodeUpdateResponseDto> saveScript(@AuthenticationPrincipal PrincipalDetails principalDetails,
-                                         @RequestBody ScriptMessageRequestDto requestDto) {
-        return BaseResponse.res(SuccessStatus.SCRIPT_SAVE_SUCCESS,
-                conferenceService.scriptSave(principalDetails, requestDto));
-    }
 
     // 프로젝트 저장
     @PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
