@@ -18,7 +18,6 @@ import java.util.Map;
 @Builder
 public class MindMap {
     @Id
-    private ObjectId nodeObjectId;
     private ObjectId projectId;
     private List<NodeDto> nodes;
 }

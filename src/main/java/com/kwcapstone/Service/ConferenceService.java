@@ -8,6 +8,7 @@ import com.kwcapstone.Domain.Dto.Request.SaveProjectRequestDto;
 import com.kwcapstone.Domain.Dto.Request.ScriptMessageRequestDto;
 import com.kwcapstone.Domain.Dto.Response.*;
 import com.kwcapstone.Domain.Entity.MemberToProject;
+import com.kwcapstone.Domain.Entity.MindMap;
 import com.kwcapstone.Domain.Entity.Project;
 import com.kwcapstone.Repository.MemberToProjectRepository;
 import com.kwcapstone.Repository.ProjectRepository;
@@ -207,12 +208,29 @@ public class ConferenceService {
             String nodeUrl = s3Service.getS3FileUrl(nodeFileName);
             String recordUrl = s3Service.getS3FileUrl(recordFileName);
 
+            //먼저 파일명부터 생성 및 찾기
+            String filePath = System.getProperty("java.io.tmpdir") + "/node_" + requestDto.getProjectId() + ".txt";
+            File file = new File(filePath);
+
+            //없으면 만들기
+            if(!file.exists()){
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시저장된 노드 txt 파일이 없습니다");
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            List<NodeDto> nodes = mapper.readValue(file, new TypeReference<List<NodeDto>>() {});
+
             // 프로젝트 객체 업데이트
             project.setRecord(new Project.Record(
                     recordUrl,
                     requestDto.getRecord().getOriginalFilename(),
                     requestDto.getRecord().getSize(),  // long
                     requestDto.getRecordLength()
+            ));
+
+            ObjectId projectIdStr = new ObjectId(requestDto.getProjectId());
+            project.setMindMap(new MindMap(
+                    projectIdStr, nodes
             ));
 
             project.setProjectImage(nodeUrl);
