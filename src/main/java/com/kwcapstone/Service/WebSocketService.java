@@ -85,11 +85,10 @@ public class WebSocketService {
     }
 
     public void sendScript(String projectIdStr, ScriptMessageRequestDto dto){
-        if(dto.getProjectId().equals("script")){
-            try{
-                ObjectId projectId = new ObjectId(projectIdStr);
-                Project project = projectRepository.findByProjectId(projectId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
+       try{
+           ObjectId projectId = new ObjectId(projectIdStr);
+           Project project = projectRepository.findByProjectId(projectId)
+                   .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
                 String content = dto.getScription();
 
@@ -101,10 +100,9 @@ public class WebSocketService {
                         "/topic/conference/" + projectId,
                         new SendProjectResponseDto("script", projectIdStr, saveScriptDto));
 
-            } catch (Exception e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
-            }
-        }
+       } catch (Exception e) {
+           throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
+       }
     }
 
     public void saveScript(String projectIdStr, ScriptMessageRequestDto dto) {
@@ -121,8 +119,11 @@ public class WebSocketService {
                 //주요키워드
                 sendMainKeywords(1, projectIdStr, dto, null);
 
+                System.out.println("주요 키워드 ok ");
                 //요약본
                 sendSummary(projectIdStr, dto);
+
+                System.out.println("요약본 ok ");
 
                 // 임시 디렉토리 경로 확인 및 생성
                 String tmpDirPath = System.getProperty("java.io.tmpdir");
@@ -148,8 +149,12 @@ public class WebSocketService {
                 // 추천 키워드 전송
                 sendRecommendedKeywords(1, projectIdStr, null);
 
+                System.out.println("추천 키워드 ok ");
+
                 //노드 생성
                 createNode(projectIdStr,dto.getScription());
+
+                System.out.println("노드 키워드 ok ");
 
                 // 초기화
                 scriptBuffer.put(projectIdStr, new ArrayList<>());
@@ -351,7 +356,7 @@ public class WebSocketService {
                 String fullText = String.join(" ", allLines);
 
                 System.out.println("fullText" + fullText);
-                System.out.println("node" + scription);
+                System.out.println("new scipt" + scription);
                 //scription과 node를 합쳐서 프롬프트를 만들어야함
                 content = fullText + scription;
             }catch (IOException e){
@@ -445,6 +450,36 @@ public class WebSocketService {
 //                                "node", node));
 //            }
 
+            //먼저 파일명부터 생성 및 찾기
+            String nodeFilePath = System.getProperty("java.io.tmpdir") + "/node_" + projectId + ".txt";
+            File nodeFile = new File(nodeFilePath);
+
+            //없으면 만들기
+            if(!nodeFile.exists()){
+                //노드 파일 만들기
+                // 임시 디렉토리 경로 확인 및 생성
+                String tmpDirPath = System.getProperty("java.io.tmpdir");
+                File tmpDir = new File(tmpDirPath);
+                if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "임시 폴더 생성에 실패했습니다.");
+                }
+
+                // 임시 파일에 저장 (append 모드)
+                String fileName = "node_" + projectId + ".txt";
+                File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
+                file = newFile;
+            }
+
+            mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(newNodes);
+
+            //덮어씌우기
+            try (FileWriter writer = new FileWriter(file, false)) {
+                writer.write(json);
+            }
+            catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "노드 저장 중 오류가 발생하였습니다." + e);
+            }
 
             //2. RESPONSE 보내기
             messagingTemplate.convertAndSend(
@@ -491,12 +526,13 @@ public class WebSocketService {
         }
 
         //덮어씌우기
-        try(FileWriter writer = new FileWriter(file, false)) {
-            writer.write(result + "\n");
+        try (FileWriter writer = new FileWriter(file, false)) {
+            writer.write(nodeRequstDto.getNodes());
         }
         catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "노드 저장 중 오류가 발생하였습니다." + e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "업데이트 노드 저장 중 오류가 발생하였습니다." + e);
         }
+
 
         String fileContent = null;
         try {

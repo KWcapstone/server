@@ -24,6 +24,7 @@ public class Project {
     private Record record;
     private Script script;
     private Summary summary;
+    private MindMap mindMap;
     private LocalDateTime updatedAt;
     private ObjectId creator;
     private String status;
