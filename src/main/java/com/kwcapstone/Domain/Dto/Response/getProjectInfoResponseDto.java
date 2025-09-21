@@ -16,6 +16,6 @@ public class getProjectInfoResponseDto {
     private String projectName;
     private LocalDateTime updateAt;
     private String imageUrl;
-    private String script;
+    private List<SaveScriptDto> scriptions;
     private JsonNode summary;
 }

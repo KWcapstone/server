@@ -1,12 +1,14 @@
 package com.kwcapstone.Domain.Entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.kwcapstone.Domain.Dto.Response.SaveScriptDto;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Document(collection = "project")
 @Getter
@@ -22,6 +24,7 @@ public class Project {
     private Record record;
     private Script script;
     private Summary summary;
+    private MindMap mindMap;
     private LocalDateTime updatedAt;
     private ObjectId creator;
     private String status;
@@ -41,7 +44,7 @@ public class Project {
     @AllArgsConstructor
     public static class Script {
         private String scriptUrl;
-        private String content;
+        private List<SaveScriptDto> scriptions;
         private long sizeInBytes;  // 스크립트 파일 크기 (바이트 단위)
     }
 
