@@ -91,7 +91,6 @@ public class GoogleOAuthService {
             try {
                 responseMap = objectMapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
             } catch (JsonProcessingException e) {
-                //return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Google OAuth 응답 JSON 파싱 실패: " + e.getMessage());
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Google OAuth 응답JSON 파싱 실패: " + e.getMessage());
             }
 
@@ -100,10 +99,8 @@ public class GoogleOAuthService {
 
             return accessToken;
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            //return new BaseResponse<>(e.getStatusCode().value(), "Google Oauth 요청 중 오류 발생" + e.getResponseBodyAsString());
             throw new ResponseStatusException(e.getStatusCode(), "Google Oauth 요청 중 오류 발생" + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            //return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Google OAuth 요청 실패: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Google OAuth 요청 실패: " + e.getMessage());
         }
     }
@@ -119,13 +116,10 @@ public class GoogleOAuthService {
         try {
             ResponseEntity<GoogleUser> response = restTemplate.exchange(
                     userInfoEndpoint, HttpMethod.GET, request, GoogleUser.class);
-            //return new BaseResponse<>(HttpStatus.OK.value(), "Google 사용자 정보 조회 성공", response.getBody());
             return response.getBody();
         } catch (HttpStatusCodeException e) {
-            //return new BaseResponse<>(e.getStatusCode().value(), "Google 사용자 정보 요청 실패: " + e.getResponseBodyAsString());
             throw new ResponseStatusException(e.getStatusCode(), "Google 사용자 정보 요청 실패: " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            //return new BaseResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Google 사용자 정보 요청 실패: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Google 사용자 정보 요청 실패: " + e.getMessage());
         }
     }
