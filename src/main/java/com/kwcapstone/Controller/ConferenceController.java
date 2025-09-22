@@ -35,10 +35,11 @@ public class ConferenceController {
     public BaseResponse projectSave(@AuthenticationPrincipal PrincipalDetails principalDetails,
                                     @RequestParam("projectId") String projectId,
                                     @RequestParam("scription") String scription,
+                                    @RequestParam("status") String status,
                                     @RequestPart("record") MultipartFile record,
                                     @RequestPart("recordLength") String recordLength,
                                     @RequestPart("node") MultipartFile node) {
-        SaveProjectRequestDto requestDto = new SaveProjectRequestDto(projectId, scription, record, recordLength, node);
+        SaveProjectRequestDto requestDto = new SaveProjectRequestDto(projectId, scription, record, recordLength, node, status);
         conferenceService.saveProject(principalDetails, requestDto);
         return BaseResponse.res(SuccessStatus.PROJECT_SAVE_SUCCESS, null);
     }

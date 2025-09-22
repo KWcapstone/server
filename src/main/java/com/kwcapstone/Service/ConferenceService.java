@@ -220,6 +220,8 @@ public class ConferenceService {
             ObjectMapper mapper = new ObjectMapper();
             List<NodeDto> nodes = mapper.readValue(file, new TypeReference<List<NodeDto>>() {});
 
+            project.setStatus(requestDto.getStatus());
+
             // 프로젝트 객체 업데이트
             project.setRecord(new Project.Record(
                     recordUrl,
