@@ -38,7 +38,7 @@ public class ConferenceController {
                                     @RequestParam("status") String status,
                                     @RequestPart("record") MultipartFile record,
                                     @RequestPart("recordLength") String recordLength,
-                                    @RequestPart("node") MultipartFile node) {
+                                    @RequestParam("picture") MultipartFile node) {
         SaveProjectRequestDto requestDto = new SaveProjectRequestDto(projectId, scription, record, recordLength, node, status);
         conferenceService.saveProject(principalDetails, requestDto);
         return BaseResponse.res(SuccessStatus.PROJECT_SAVE_SUCCESS, null);
