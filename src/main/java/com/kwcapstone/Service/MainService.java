@@ -63,7 +63,7 @@ public class MainService {
         }
 
         if (notices.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 알림 데이터를 찾을 수 없습니다.");
+            return null;
         }
 
         try {
