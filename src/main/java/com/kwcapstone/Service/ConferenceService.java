@@ -140,17 +140,17 @@ public class ConferenceService {
         }
 
         ObjectMapper mapper = new ObjectMapper();
-        List<SaveScriptDto> scriptions = new ArrayList<>();
-
-        try(BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while((line = br.readLine()) != null) {
-                SaveScriptDto saveScriptDto = mapper.readValue(line, SaveScriptDto.class);
-                scriptions.add(saveScriptDto);
-            }
-        }
-
-        return scriptions;
+        return mapper.readValue(file, new TypeReference<List<SaveScriptDto>>() {});
+//        List<SaveScriptDto> scriptions = new ArrayList<>();
+//
+//        try(BufferedReader br = new BufferedReader(new FileReader(file))) {
+//            String line;
+//            while((line = br.readLine()) != null) {
+//                SaveScriptDto saveScriptDto = mapper.readValue(line, SaveScriptDto.class);
+//                scriptions.add(saveScriptDto);
+//            }
+//        }
+//        return scriptions;
     }
 
     public void saveProject(PrincipalDetails principalDetails, SaveProjectRequestDto requestDto) {
@@ -191,7 +191,7 @@ public class ConferenceService {
             s3Service.uploadFileToS3(nodeFileName, nodeFile);
             s3Service.uploadFileToS3(recordFileName, recordFile);
 
-            String scriptText = requestDto.getScripion();
+            String scriptText = requestDto.getScription();
             String summaryText = gptService.callSummaryOpenAI(scriptText);
 
             String scriptFileName = "script/" + projectId + ".txt";
