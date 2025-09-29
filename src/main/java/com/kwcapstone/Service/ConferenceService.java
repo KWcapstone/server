@@ -171,7 +171,7 @@ public class ConferenceService {
         try{
             scriptions = loadScriptFromFile(requestDto.getProjectId());
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 불러오는 과정에서 오류 발생했습니다.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
 
         try {
