@@ -171,7 +171,8 @@ public class ConferenceService {
         try{
             scriptions = loadScriptFromFile(requestDto.getProjectId());
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            String message = e.getMessage();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
 
         try {
