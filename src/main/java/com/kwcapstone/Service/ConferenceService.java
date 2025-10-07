@@ -136,21 +136,25 @@ public class ConferenceService {
         File file = new File(System.getProperty("java.io.tmpdir"), "script_" + projectIdStr + ".txt");
 
         if(!file.exists()) {
+            System.out.println("파일이 존재하지 않습니다: " + file.getAbsolutePath());
             return List.of();
         }
 
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(file, new TypeReference<List<SaveScriptDto>>() {});
-//        List<SaveScriptDto> scriptions = new ArrayList<>();
+        List<SaveScriptDto> scriptLists = new ArrayList<>();
 //
-//        try(BufferedReader br = new BufferedReader(new FileReader(file))) {
-//            String line;
-//            while((line = br.readLine()) != null) {
-//                SaveScriptDto saveScriptDto = mapper.readValue(line, SaveScriptDto.class);
-//                scriptions.add(saveScriptDto);
-//            }
-//        }
-//        return scriptions;
+//        String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+//        System.out.println("파일 내용:\n" + content);
+
+        for(String line : Files.readAllLines(file.toPath(), StandardCharsets.UTF_8)) {
+            if(line.trim().isEmpty()) {
+                continue;
+            }
+            SaveScriptDto dto = mapper.readValue(line, SaveScriptDto.class);
+            scriptLists.add(dto);
+        }
+
+        return scriptLists;
     }
 
     public void saveProject(PrincipalDetails principalDetails, SaveProjectRequestDto requestDto) {
