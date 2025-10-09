@@ -42,10 +42,10 @@ public enum SuccessStatus implements BaseCode{
     USER_WITHDRAW(HttpStatus.OK, "회원 탈퇴가 완료되었습니다."),
 
     // 알림창 조회
-    NOTICE_CONFIRM(HttpStatus.OK, "모든 알림을 조회합니다."),
+    ALL_NOTICE_CONFIRM(HttpStatus.OK, "모든 알림을 조회합니다."),
 
-    // 알림창 세부 조회
-    NOTICE_DETAIL_CONFIRM(HttpStatus.OK, "알림 세부 조회입니다."),
+    // 알림창 unread 조회
+    UNREAD_NOTICE_CONFIRM(HttpStatus.OK, "읽지 않은 알림을 조회입니다."),
 
     // 메인화면 확인
     MAIN_SHOW(HttpStatus.OK, "모든 프로젝트 리스트를 불러왔습니다."),
