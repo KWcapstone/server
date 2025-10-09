@@ -67,24 +67,27 @@ public class MainService {
             return null;
         }
 
+        List<NoticeReadResponseDto> resultNotices
+                = notices.stream().map(notice -> {
+            String userName = memberRepository.findByMemberId(notice.getSenderId())
+                    .map(Member::getName)
+                    .orElse("Unknown");  // senderId에 해당하는 유저가 없을 경우
+
+            return new NoticeReadResponseDto(
+                    notice.getNoticeId(),
+                    userName,
+                    notice.getTitle(),
+                    notice.getUrl(),
+                    notice.getOfficial(),
+                    notice.getIsRead()
+            );
+        }).collect(Collectors.toList());
+
         //없데이트
         markAsRead(notices);
 
         try {
-            return notices.stream().map(notice -> {
-                String userName = memberRepository.findByMemberId(notice.getSenderId())
-                        .map(Member::getName)
-                        .orElse("Unknown");  // senderId에 해당하는 유저가 없을 경우
-
-                return new NoticeReadResponseDto(
-                        notice.getNoticeId(),
-                        userName,
-                        notice.getTitle(),
-                        notice.getUrl(),
-                        notice.getOfficial(),
-                        notice.getIsRead()
-                );
-            }).collect(Collectors.toList());
+            return resultNotices;
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "알림 데이터를 불러오는 중 서버에서 예상치 못한 오류가 발생했습니다.");
