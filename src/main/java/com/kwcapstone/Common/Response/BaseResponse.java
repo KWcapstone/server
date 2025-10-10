@@ -11,7 +11,7 @@ import lombok.Getter;
 public class BaseResponse<T> {
     private final int status;
     private final String message;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private T data;
 
    /* public BaseResponse(int status, String message, T data) {
@@ -29,6 +29,7 @@ public class BaseResponse<T> {
     public BaseResponse(int status, String message) {
         this.status = status;
         this.message = message;
+        this.data = null;
     }
 
     //객체 지향을 위해서임

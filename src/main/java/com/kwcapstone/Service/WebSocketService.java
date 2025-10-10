@@ -119,11 +119,8 @@ public class WebSocketService {
                 //주요키워드
                 sendMainKeywords(1, projectIdStr, dto, null);
 
-                System.out.println("주요 키워드 ok ");
                 //요약본
                 sendSummary(projectIdStr, dto);
-
-                System.out.println("요약본 ok ");
 
                 // 임시 디렉토리 경로 확인 및 생성
                 String tmpDirPath = System.getProperty("java.io.tmpdir");
@@ -149,12 +146,9 @@ public class WebSocketService {
                 // 추천 키워드 전송
                 sendRecommendedKeywords(1, projectIdStr, null);
 
-                System.out.println("추천 키워드 ok ");
 
                 //노드 생성
                 createNode(projectIdStr,dto.getScription());
-
-                System.out.println("노드 키워드 ok ");
 
                 // 초기화
                 scriptBuffer.put(projectIdStr, new ArrayList<>());
@@ -363,7 +357,6 @@ public class WebSocketService {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
             }
         } else {
-            //노드 파일 만들기
             // 임시 디렉토리 경로 확인 및 생성
             String tmpDirPath = System.getProperty("java.io.tmpdir");
             File tmpDir = new File(tmpDirPath);
@@ -373,8 +366,9 @@ public class WebSocketService {
 
             // 임시 파일에 저장 (append 모드)
             String fileName = "script_" + projectId + ".txt";
-            File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
-            file = newFile;
+            File scriptNewFile;
+            scriptNewFile = new File(System.getProperty("java.io.tmpdir"), fileName);
+            file = scriptNewFile;
 
             content = scription;
         }
@@ -389,7 +383,6 @@ public class WebSocketService {
             //List<String> keywords = mapper.readValue(gptResult, new TypeReference<List<String>>() {});
             List<Map<String, Object>> gptNodes = mapper.readValue(gptResult, new TypeReference<List<Map<String, Object>>>() {
             });
-            System.out.println("GPT 결과: " + gptResult);
 
             List<NodeDto> currentNodes = sessionNodeBuffer.computeIfAbsent(projectId, k -> new ArrayList<>());
             List<NodeDto> newNodes = new ArrayList<>();
@@ -429,7 +422,6 @@ public class WebSocketService {
                     x = X_BASE;
                     y = i * Y_GAP;
                 }
-                System.out.println("positon은 문제 없는데,");
 
                 NodeDto node = NodeDto.builder()
                         .id(idMapping.get(originalId))
@@ -466,15 +458,16 @@ public class WebSocketService {
 
                 // 임시 파일에 저장 (append 모드)
                 String fileName = "node_" + projectId + ".txt";
-                File newFile = new File(System.getProperty("java.io.tmpdir"), fileName);
-                file = newFile;
+                File nodeNewFile;
+                nodeNewFile = new File(System.getProperty("java.io.tmpdir"), fileName);
+                nodeFile = nodeNewFile;
             }
 
             mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(newNodes);
 
             //덮어씌우기
-            try (FileWriter writer = new FileWriter(file, false)) {
+            try (FileWriter writer = new FileWriter(nodeFile, false)) {
                 writer.write(json);
             }
             catch (IOException e) {

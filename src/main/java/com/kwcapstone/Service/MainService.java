@@ -45,6 +45,7 @@ public class MainService {
     }
 
     // 알림창 전체 조회
+    @Transactional
     public List<NoticeReadResponseDto> showNotice(PrincipalDetails principalDetails, String type) {
         ObjectId objectId;
         ObjectId memberId = principalDetails.getId();
@@ -66,25 +67,50 @@ public class MainService {
             return null;
         }
 
-        try {
-            return notices.stream().map(notice -> {
-                String userName = memberRepository.findByMemberId(notice.getSenderId())
-                        .map(Member::getName)
-                        .orElse("Unknown");  // senderId에 해당하는 유저가 없을 경우
+        List<NoticeReadResponseDto> resultNotices
+                = notices.stream().map(notice -> {
+            String userName = memberRepository.findByMemberId(notice.getSenderId())
+                    .map(Member::getName)
+                    .orElse("Unknown");  // senderId에 해당하는 유저가 없을 경우
 
-                return new NoticeReadResponseDto(
-                        notice.getNoticeId(),
-                        userName,
-                        notice.getTitle(),
-                        notice.getUrl(),
-                        notice.getOfficial(),
-                        notice.getIsRead()
-                );
-            }).collect(Collectors.toList());
+            return new NoticeReadResponseDto(
+                    notice.getNoticeId(),
+                    userName,
+                    notice.getTitle(),
+                    notice.getUrl(),
+                    notice.getOfficial(),
+                    notice.getIsRead()
+            );
+        }).collect(Collectors.toList());
+
+        //없데이트
+        markAsRead(notices);
+
+        try {
+            return resultNotices;
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "알림 데이터를 불러오는 중 서버에서 예상치 못한 오류가 발생했습니다.");
         }
+    }
+
+    //알림 읽은 상태 조회 업데이트
+    private void markAsRead(List<Notice> notices){
+        List<Notice> unRead = notices.stream()
+                .filter(notice -> !notice.getIsRead()) //안 읽은 알림 조회
+                .peek(n-> n.setIsRead(true)) //필터링된 요소에 업데이트
+                .toList();
+
+        noticeRepository.saveAll(unRead);
+    }
+
+    //안 읽은 알림 개수 조회
+    public GetUnreadNoticeNum getUnreadNoticeNum(PrincipalDetails principalDetails) {
+        ObjectId memberId = principalDetails.getId();
+
+        Integer num = noticeRepository.countByUserIdAndIsReadFalse(memberId);
+
+        return new GetUnreadNoticeNum(num);
     }
 
     private List<Project> getProjects(String memberId, String filterType) {

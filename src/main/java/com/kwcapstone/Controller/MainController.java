@@ -9,10 +9,10 @@ import com.kwcapstone.Service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -25,16 +25,28 @@ public class MainController {
     @GetMapping("/notice")
     public BaseResponse noticeShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
                                     @RequestParam(value = "type", defaultValue = "all") String type) {
-        return BaseResponse.res(SuccessStatus.NOTICE_CONFIRM, mainService.showNotice(principalDetails, type));
+
+        Object data = mainService.showNotice(principalDetails, type);
+
+        if(data == null){
+            if(type.equals("all")){
+                return BaseResponse.res(SuccessStatus.ALL_NOTICE_CONFIRM, null);
+            }else{
+                return BaseResponse.res(SuccessStatus.UNREAD_NOTICE_CONFIRM, null);
+            }
+        }
+        if(type.equals("all")){
+            return BaseResponse.res(SuccessStatus.ALL_NOTICE_CONFIRM, data);
+        }else{
+            return BaseResponse.res(SuccessStatus.UNREAD_NOTICE_CONFIRM, data);
+        }
     }
 
-    // 알림창 세부 조회
-//    @GetMapping("/notice/{noticeId}")
-//    public BaseResponse detailNoticeShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
-//                                          @PathVariable("noticeId") String noticeId) {
-//        return BaseResponse.res(SuccessStatus.NOTICE_DETAIL_CONFIRM,
-//                mainService.showDetailNotice(principalDetails, noticeId));
-//    }
+    // 안 읽은 알림창 개수 조회
+    @GetMapping("/notice/num")
+    public BaseResponse showUnReadNoticeNum (@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        return BaseResponse.res(SuccessStatus.UNREAD_NOTICE_NUM_CONFIRM, mainService.getUnreadNoticeNum(principalDetails));
+    }
 
     // [모든 회의] 메인화면
     @GetMapping
