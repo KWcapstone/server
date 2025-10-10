@@ -14,7 +14,7 @@ import java.util.List;
 public class getProjectInfoResponseDto {
     private String projectId;
     private String projectName;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
     private String imageUrl;
     private List<SaveScriptDto> scriptions;
     private JsonNode summary;
