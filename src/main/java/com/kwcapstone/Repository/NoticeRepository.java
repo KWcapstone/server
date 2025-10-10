@@ -14,4 +14,7 @@ public interface NoticeRepository extends MongoRepository<Notice, ObjectId> {
 
     // 읽지 않은 알림만 (최신순 정렬)
     List<Notice> findByUserIdAndIsReadFalseOrderByCreateAtDesc(ObjectId userId);
+
+    //읽지 않은 알림 개수
+    Integer countByUserIdAndIsReadFalse(ObjectId userId);
 }

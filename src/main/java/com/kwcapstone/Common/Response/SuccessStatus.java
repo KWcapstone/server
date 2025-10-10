@@ -47,6 +47,9 @@ public enum SuccessStatus implements BaseCode{
     // 알림창 unread 조회
     UNREAD_NOTICE_CONFIRM(HttpStatus.OK, "읽지 않은 알림을 조회입니다."),
 
+    //알림창 unread 개수 조회
+    UNREAD_NOTICE_NUM_CONFIRM(HttpStatus.OK, "읽지 않은 알림 개수를 조회합니다."),
+
     // 메인화면 확인
     MAIN_SHOW(HttpStatus.OK, "모든 프로젝트 리스트를 불러왔습니다."),
 

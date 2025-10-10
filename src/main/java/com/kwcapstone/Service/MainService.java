@@ -104,6 +104,15 @@ public class MainService {
         noticeRepository.saveAll(unRead);
     }
 
+    //안 읽은 알림 개수 조회
+    public GetUnreadNoticeNum getUnreadNoticeNum(PrincipalDetails principalDetails) {
+        ObjectId memberId = principalDetails.getId();
+
+        Integer num = noticeRepository.countByUserIdAndIsReadFalse(memberId);
+
+        return new GetUnreadNoticeNum(num);
+    }
+
     private List<Project> getProjects(String memberId, String filterType) {
         ObjectId memberObjectId;
         try {

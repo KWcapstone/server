@@ -42,13 +42,11 @@ public class MainController {
         }
     }
 
-    // 알림창 세부 조회
-//    @GetMapping("/notice/{noticeId}")
-//    public BaseResponse detailNoticeShow (@AuthenticationPrincipal PrincipalDetails principalDetails,
-//                                          @PathVariable("noticeId") String noticeId) {
-//        return BaseResponse.res(SuccessStatus.NOTICE_DETAIL_CONFIRM,
-//                mainService.showDetailNotice(principalDetails, noticeId));
-//    }
+    // 안 읽은 알림창 개수 조회
+    @GetMapping("/notice/num")
+    public BaseResponse showUnReadNoticeNum (@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        return BaseResponse.res(SuccessStatus.UNREAD_NOTICE_NUM_CONFIRM, mainService.getUnreadNoticeNum(principalDetails));
+    }
 
     // [모든 회의] 메인화면
     @GetMapping
