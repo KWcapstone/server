@@ -166,7 +166,7 @@ public class WebSocketService {
     //상태 변경
     private void changeTheStatus(Project project){
         if(Objects.equals(project.getStatus(), "Before")){
-            project.setStatus("Active");
+            project.setStatus("Processing");
 
             projectRepository.save(project);
         }
