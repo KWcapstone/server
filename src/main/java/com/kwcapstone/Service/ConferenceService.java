@@ -39,6 +39,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 @Transactional
@@ -160,6 +162,7 @@ public class ConferenceService {
     public void saveProject(PrincipalDetails principalDetails, SaveProjectRequestDto requestDto) {
         ObjectId memberId = principalDetails.getId();
 
+        //memberId checking
         try {
             memberId = new ObjectId(String.valueOf(memberId));
         } catch (IllegalArgumentException e) {
@@ -168,9 +171,12 @@ public class ConferenceService {
 
         ObjectId projectObjectId = new ObjectId(requestDto.getProjectId());
 
+        //projectId checking
         Project project = projectRepository.findByProjectId(projectObjectId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
+
+        //script dto
         List<SaveScriptDto> scriptions = new ArrayList<>();
         try{
             scriptions = loadScriptFromFile(requestDto.getProjectId());
@@ -187,35 +193,39 @@ public class ConferenceService {
             String projectId = requestDto.getProjectId();
 
             String nodeFileName = "node/" + projectId + nodeExt;
-            String recordFileName = "record/" + projectId + recordExt;
+//            String recordFileName = "record/" + projectId + recordExt;
 
-            // S3 업로드
+            // node
             File nodeFile = convertMultipartToFile(requestDto.getNode());
-            File recordFile = convertMultipartToFile(requestDto.getRecord());
-
             s3Service.uploadFileToS3(nodeFileName, nodeFile);
-            s3Service.uploadFileToS3(recordFileName, recordFile);
 
             //스크립트
             String scriptText = requestDto.getScription();
-            //요약
+
+            //summary
             String summaryText = gptService.callSummaryOpenAI(scriptText);
-
-            String scriptFileName = "script/" + projectId + ".txt";
-            File scriptFile = createTempTextFile(scriptText);
-            s3Service.uploadFileToS3(scriptFileName, scriptFile);
-            String scriptUrl = s3Service.getS3FileUrl(scriptFileName);
-
             String summaryFileName = "summary/" + projectId + ".txt";
             File summaryFile = createTempTextFile(summaryText);
-
-
             s3Service.uploadFileToS3(summaryFileName, summaryFile);
-            String summaryUrl = s3Service.getS3FileUrl(summaryFileName);
+
+            //record
+            File recordFile = convertMultipartToFile(requestDto.getRecord());
+
+            //script
+            String scriptFileName = "script/" + projectId + ".txt";
+            File scriptFile = createTempTextFile(scriptText);
+
+            //zip 파일 과정이 필요함
+            File zipFile = createZipFile(projectId, recordFile, scriptFile);
+            String zipFileName = "zip/" + projectId + ".zip";
+
+            s3Service.uploadFileToS3(zipFileName, zipFile);
 
             // S3 실제 URL 생성
+            String zipUrl = s3Service.getS3FileUrl(zipFileName);
             String nodeUrl = s3Service.getS3FileUrl(nodeFileName);
-            String recordUrl = s3Service.getS3FileUrl(recordFileName);
+            String summaryUrl = s3Service.getS3FileUrl(summaryFileName);
+            String scriptUrl = s3Service.getS3FileUrl(scriptFileName);
 
             //먼저 파일명부터 생성 및 찾기
             String filePath = System.getProperty("java.io.tmpdir") + "/node_" + requestDto.getProjectId() + ".txt";
@@ -232,12 +242,17 @@ public class ConferenceService {
             project.setStatus(requestDto.getStatus());
 
             // 프로젝트 객체 업데이트
-            project.setRecord(new Project.Record(
-                    recordUrl,
-                    requestDto.getRecord().getOriginalFilename(),
-                    requestDto.getRecord().getSize(),  // long
-                    requestDto.getRecordLength()
+            project.setZipFile(new Project.Zip(
+                    zipUrl,
+                    zipFileName,
+                    zipFile.length()
             ));
+//            project.setRecord(new Project.Record(
+//                    recordUrl,
+//                    requestDto.getRecord().getOriginalFilename(),
+//                    requestDto.getRecord().getSize(),  // long
+//                    requestDto.getRecordLength()
+//            ));
 
             ObjectId projectIdStr = new ObjectId(requestDto.getProjectId());
             project.setMindMap(new MindMap(
@@ -290,6 +305,38 @@ public class ConferenceService {
             fos.write(multipartFile.getBytes());
         }
         return file;
+    }
+
+    private File createZipFile(String projectId, File recordFile, File scriptFile) throws IOException {
+        File zipFile = new File(System.getProperty("java.io.tmpdir"),  projectId + ".zip");
+
+        try(FileOutputStream fos = new FileOutputStream(zipFile);
+            ZipOutputStream zos = new ZipOutputStream(fos)) {
+            // record 추가
+            addFileToZip(recordFile, "record/" + recordFile.getName(), zos);
+
+            // script 추가
+            addFileToZip(scriptFile, "script/" + scriptFile.getName(), zos);
+        }
+
+        return zipFile;
+    }
+
+    private void addFileToZip(File file, String fileName, ZipOutputStream zos) throws IOException {
+        try(FileInputStream fis = new FileInputStream(file)) {
+            ZipEntry entry = new ZipEntry(fileName);
+            zos.putNextEntry(entry);
+
+            byte[] buffer =  new byte[1024];
+            int length;
+
+            while((length = fis.read(buffer)) >= 0){
+                zos.write(buffer, 0, length);
+            }
+
+            zos.closeEntry();
+
+        }
     }
 
     public getProjectInfoResponseDto getDoneProject(PrincipalDetails principalDetails, String projectId){

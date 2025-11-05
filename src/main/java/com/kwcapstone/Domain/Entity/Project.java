@@ -21,24 +21,32 @@ public class Project {
     private ObjectId projectId;
     private String projectName;
     private String projectImage;
-    private Record record;
-    private Script script;
+    private Zip zipFile;
     private Summary summary;
     private MindMap mindMap;
+    private Script script;
     private LocalDateTime updatedAt;
     private ObjectId creator;
     private String status;
 
+//    @Getter
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    public static class Record {
+//        private String fileUrl;
+//        private String fileName;
+//        private long fileSize;
+//        private String length;
+//    }
+
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Record {
-        private String fileUrl;
-        private String fileName;
-        private long fileSize;
-        private String length;
+    public static class Zip {
+        private String zipUrl;
+        private String zipFileName;
+        private long zipFileSize;
     }
-
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
