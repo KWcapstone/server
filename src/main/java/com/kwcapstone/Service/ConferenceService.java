@@ -196,7 +196,9 @@ public class ConferenceService {
             s3Service.uploadFileToS3(nodeFileName, nodeFile);
             s3Service.uploadFileToS3(recordFileName, recordFile);
 
+            //스크립트
             String scriptText = requestDto.getScription();
+            //요약
             String summaryText = gptService.callSummaryOpenAI(scriptText);
 
             String scriptFileName = "script/" + projectId + ".txt";
@@ -206,6 +208,8 @@ public class ConferenceService {
 
             String summaryFileName = "summary/" + projectId + ".txt";
             File summaryFile = createTempTextFile(summaryText);
+
+
             s3Service.uploadFileToS3(summaryFileName, summaryFile);
             String summaryUrl = s3Service.getS3FileUrl(summaryFileName);
 
