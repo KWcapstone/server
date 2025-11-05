@@ -51,7 +51,6 @@ public class MemberService {
     private final EmailService emailService;
     private final GoogleOAuthService googleOAuthService;
 
-    private final HttpSession httpSession;
     private final MongoTemplate mongoTemplate;
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -256,33 +255,6 @@ public class MemberService {
         return new MemberLoginResponseDto(member.getMemberId(), newAccessToken, newRefreshToken);
     }
 
-    // 약관 동의 (새로운 Google User)
-//    public BaseResponse<MemberLoginResponseDto> agreeNewMember(AgreementRequestDto requestDto) {
-//        Member member = memberRepository.findById(new ObjectId(requestDto.getMemberId()))
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 회원을 찾을 수 없습니다."));
-//
-//        // 이미 동의했으면 그냥 로그인 처리
-//        if (member.isAgreement()) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 약관에 동의한 회원입니다.");
-//        }
-//
-//        member.setAgreement(true);
-//        memberRepository.save(member);
-//
-//        String googleAccessToken = (String) httpSession.getAttribute("googleAccessToken");
-//        if (googleAccessToken == null) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "AccessToken이 없습니다.");
-//        }
-//
-//        MemberLoginResponseDto tokenResponseDto = getMemberToken(member, googleAccessToken);
-//
-//        httpSession.removeAttribute("googleAccessToken");
-//        httpSession.setAttribute("member", new SessionUser(member));
-//        httpSession.setAttribute("tokenResponseDto", tokenResponseDto);
-//
-//        return BaseResponse.res(SuccessStatus.USER_NEW_GOOGLE_LOGIN,tokenResponseDto);
-//    }
-
     public BaseResponse<MemberLoginResponseDto> agreeNewMember(AgreementRequestDto requestDto) {
         Member member = memberRepository.findById(new ObjectId(requestDto.getMemberId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 회원을 찾을 수 없습니다."));
@@ -295,7 +267,7 @@ public class MemberService {
         member.setAgreement(true);
         memberRepository.save(member);
 
-        // 🔹 DB에서 socialAccessToken 조회
+        // DB에서 socialAccessToken 조회
         Token token = tokenRepository.findByMemberId(member.getMemberId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "토큰 정보가 없습니다."));
 
@@ -307,7 +279,7 @@ public class MemberService {
         // 우리 서비스 JWT 발급
         MemberLoginResponseDto tokenResponseDto = getMemberToken(member, googleAccessToken);
 
-        // 🔹 DB에 우리 JWT 저장 (필요하다면)
+        // DB에 우리 JWT 저장 (필요하다면)
         token.changeToken(tokenResponseDto.getAccessToken(), tokenResponseDto.getRefreshToken(), googleAccessToken);
         tokenRepository.save(token);
 
