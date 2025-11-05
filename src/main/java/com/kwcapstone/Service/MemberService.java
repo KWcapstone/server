@@ -378,19 +378,16 @@ public class MemberService {
     public void checkingPw(ObjectId memberId, AuthPasswordCheckingRequestDto authPasswordCheckingRequestDto){
         //memberId
         Optional<Member> member = memberRepository.findByMemberId(memberId);
-        if(!member.isPresent()){
+        if(member.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "member 찾을 수 없습니다.");
         }
 
         String ori = authPasswordCheckingRequestDto.getPassword();
         String newri = member.get().getPassword();
         //password 있는지 확인
-        if(ori.equals(newri)){
-            return;
-        }else{
+        if (!ori.equals(newri)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "비밀번호를 찾을 수 없습니다.");
         }
-
     }
 
     //member 정보 update를 위함(회원탈퇴 때 사용)
