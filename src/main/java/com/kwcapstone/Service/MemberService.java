@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -134,7 +135,17 @@ public class MemberService {
     public void requestEmailVerification(String email) {
         Integer verificationCode = (int)(Math.random()*1000000);
         LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(10);  // 유효 시간 10분
-        EmailVerification emailVerification = new EmailVerification(email, verificationCode, expirationTime);
+        Optional<EmailVerification> previousEmailVerification = emailVerificationRepository.findLatestByEmail(email);
+
+        EmailVerification emailVerification;
+
+        if (previousEmailVerification.isPresent()) {
+            emailVerification = previousEmailVerification.get();
+            emailVerification.setExpirationTime(expirationTime);
+            emailVerification.setVerificationCode(verificationCode);
+        } else {
+            emailVerification = new EmailVerification(email, verificationCode, expirationTime);
+        }
         emailVerificationRepository.save(emailVerification);
 
         emailService.sendEmailRequestMessage(email, verificationCode.toString());
