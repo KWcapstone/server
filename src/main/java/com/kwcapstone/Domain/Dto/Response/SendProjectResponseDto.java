@@ -11,6 +11,19 @@ import java.util.List;
 @NoArgsConstructor
 public class SendProjectResponseDto {
     private String event;
-    private String projectId;  // 이거 그냥 추출해도되려나???
-    private SaveScriptDto scription;
+    private String projectId;
+    private SaveScriptDto scription;  // 단일용
+    private List<SaveScriptDto> scriptList;   // 히스토리용
+
+    public SendProjectResponseDto(String event, String projectId, SaveScriptDto scription) {
+        this.event = event;
+        this.projectId = projectId;
+        this.scription = scription;
+    }
+
+    public SendProjectResponseDto(String event, String projectId, List<SaveScriptDto> scriptList) {
+        this.event = event;
+        this.projectId = projectId;
+        this.scriptList = scriptList;
+    }
 }
