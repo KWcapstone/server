@@ -206,7 +206,7 @@ public class ProjectService {
                 projectRepository.deleteByProjectId(projectId);
                 memberToProjectRepository.deleteByProjectId(projectId);
             } else if (type.equals("record")) {
-                project.get().setRecord(null);
+                project.get().setZipFile(null);
                 project.get().setScript(null);
                 project.get().setUpdatedAt(LocalDateTime.now());
                 projectRepository.save(project.get());
@@ -380,7 +380,7 @@ public class ProjectService {
             }
             case RECORDING -> {
                 // Recording 추출 로직
-                projectUrl = project.get().getRecord().getFileUrl();
+                projectUrl = project.get().getZipFile().getZipUrl();
             }
             default -> throw new IllegalArgumentException("Unsupported export kind: " + kind);
         }
