@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface EmailVerificationRepository extends MongoRepository<EmailVerification, ObjectId> {
     @Aggregation(pipeline = {"{ $match:  {'email': ?0 }}", "{ $sort : {'expirationTime': -1}}", "{ $limit:  1}"})
     Optional<EmailVerification> findLatestByEmail(String email);
+    Optional<EmailVerification> findByEmail(String email);
 }

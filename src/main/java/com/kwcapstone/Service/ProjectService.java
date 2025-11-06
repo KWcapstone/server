@@ -107,13 +107,13 @@ public class ProjectService {
 
     private void saveInviteCode(String inviteCode, String projectId, String email, ObjectId userId) {
         Invite invite = Invite.builder()
-                .inviteCode(inviteCode)
-                .projectId(new ObjectId(projectId))
-                .email(email)
-                .userId(userId)
-                .createdAt(LocalDateTime.now())
-                .expiredAt(LocalDateTime.now().plusHours(72))  // 유효시간 : 3일
-                .build();
+                    .inviteCode(inviteCode)
+                    .projectId(new ObjectId(projectId))
+                    .email(email)
+                    .userId(userId)
+                    .createdAt(LocalDateTime.now())
+                    .expiredAt(LocalDateTime.now().plusHours(72))  // 유효시간 : 3일
+                    .build();
 
         inviteRepository.save(invite);
     }
