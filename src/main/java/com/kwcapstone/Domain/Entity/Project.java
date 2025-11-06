@@ -45,6 +45,8 @@ public class Project {
     public static class Zip {
         private String zipUrl;
         private String zipFileName;
+        private long documentFileSize;
+        private long recordFileSize;
         private long zipFileSize;
     }
     @Getter

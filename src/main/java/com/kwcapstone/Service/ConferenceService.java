@@ -245,6 +245,8 @@ public class ConferenceService {
             project.setZipFile(new Project.Zip(
                     zipUrl,
                     zipFileName,
+                    scriptFile.length(),
+                    recordFile.length(),
                     zipFile.length()
             ));
 //            project.setRecord(new Project.Record(

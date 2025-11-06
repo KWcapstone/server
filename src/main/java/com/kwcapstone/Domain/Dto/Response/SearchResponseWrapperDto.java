@@ -29,9 +29,9 @@ public class SearchResponseWrapperDto {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class RecordDto {
-        private String length;
-        private long sizeInBytes;
+    public static class ZipDto {
+        private long documentFileSize;
+        private long recordFileSize;
         private String fileName;
     }
 
