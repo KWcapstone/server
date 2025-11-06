@@ -224,8 +224,11 @@ public class MainService {
                         String creatorName = memberRepository.findByMemberId(project.getCreator())
                                 .map(Member::getName)
                                 .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
-                        Project.Record record = project.getRecord();
-                        if (record == null) return null;
+                        Project.Zip zipFile = project.getZipFile();
+
+                        if (zipFile == null){
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "zipFile이 존재하지 않습니다.");
+                        }
 
                         //recordId= projectId
                         String strRecordId = project.getProjectId().toString();
@@ -234,16 +237,12 @@ public class MainService {
                                 ? project.getProjectName() + ".zip"
                                 : "unnamed.zip";  // 음성+스크립트 파일 zip
 
-                        long sizeInBytes = project.getScript() != null
-                                ? project.getScript().getSizeInBytes()
-                                : 0L;
-
                         return new ShowRecordResponseDto(
                                 strRecordId,
                                 fileName,
                                 project.getUpdatedAt(),
-                                project.getRecord().getLength(),
-                                sizeInBytes,
+                                project.getZipFile().getRecordFileSize(),
+                                project.getZipFile().getDocumentFileSize(),
                                 creatorName
                         );
                     })
@@ -388,15 +387,16 @@ public class MainService {
                     }
                 }
 
-                Project.Record record = project.getRecord();
-                if (record == null){
+                Project.Zip zipFile = project.getZipFile();
+                if (zipFile == null){
                     continue;  // NullPointException 방지
                 }
 
                 dto.setResult(List.of(
-                        new SearchResponseWrapperDto.RecordDto(
-                                record.getLength(),
-                                project.getScript() != null ? project.getScript().getSizeInBytes(): 0L,
+                        new SearchResponseWrapperDto.ZipDto(
+                                zipFile.getDocumentFileSize(),
+                                project.getZipFile().getRecordFileSize(),
+//                                project.getScript() != null ? project.getScript().getSizeInBytes(): 0L,
                                 project.getProjectName() != null ? project.getProjectName() + ".zip" : "unnamed.zip"
                         )
                 ));

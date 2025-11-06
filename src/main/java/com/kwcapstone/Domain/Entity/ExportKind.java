@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum ExportKind {
     MINDMAP("KIND_MINDMAP","MindMap"),
     SUMMARY("KIND_SUMMARY","Summary"),
-    RECORDING("KIND_RECORDING","Recording");
+    RECORDING("KIND_RECORDING","Zip");
 
     private final String key;
     private final String title;

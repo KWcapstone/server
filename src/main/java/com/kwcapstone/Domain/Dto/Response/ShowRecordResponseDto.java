@@ -14,7 +14,7 @@ public class ShowRecordResponseDto {
     private String recordId;
     private String name;
     private LocalDateTime updatedAt;
-    private String length;
-    private long sizeInBytes;
+    private long length; //음성길이
+    private long sizeInBytes; //문서
     private String creator;
 }
