@@ -24,9 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,20 +66,45 @@ public class WebSocketService {
             participantTracker.removeParticipant(projectId, dto.getMemberId());
         }
 
-        // 세션 ID 추출 및 sessionRegistry 에 등록
-        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        if (accessor != null) {
-            String sessionId = accessor.getSessionId();
-            sessionRegistry.register(sessionId, dto.getMemberId(), dto.getProjectId());
-        }
-
-        List<ParticipantDto> participants = participantTracker.getParticipantDtos(dto.getProjectId());
+        List<ParticipantDto> participants = participantTracker.getParticipantDtos(projectId);
 
         messagingTemplate.convertAndSend(
                 "/topic/conference/" + projectId,
                 new ParticipantResponseDto("participants", dto.getProjectId(),
                         String.valueOf((long) participants.size()), participants)
         );
+
+        // 새 참여자에게 기존 스크립트 이력 전송
+        if (dto.getEvent().equals("participant_join")) {
+            List<SaveScriptDto> history = loadHistory(projectId);
+
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId + "/history",
+                    new SendProjectResponseDto("script_history", projectId, null, history)
+            );
+        }
+    }
+
+    private List<SaveScriptDto> loadHistory(String projectId) {
+        List<SaveScriptDto> merged = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+
+        String tmpDirPath = System.getProperty("java.io.tmpdir");
+        File file = new File(tmpDirPath, "script_" + projectId + ".txt");
+        if (file.exists()) {
+            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                for (String line; (line = br.readLine()) != null; ) {
+                    if (!line.isBlank()) {
+                        merged.add(mapper.readValue(line, SaveScriptDto.class));
+                    }
+                }
+            } catch (IOException ignore) {}
+        }
+
+        List<SaveScriptDto> buf = scriptBuffer.getOrDefault(projectId, Collections.emptyList());
+        merged.addAll(buf);
+
+        return merged;
     }
 
     public void sendScript(String projectIdStr, ScriptMessageRequestDto dto){
@@ -93,14 +116,16 @@ public class WebSocketService {
            changeTheStatus(project);
 
            String content = dto.getScription();
-
            String time = dto.getTime();
 
            SaveScriptDto saveScriptDto = new SaveScriptDto(content, time);
 
+           // 누적 저장
+           scriptBuffer.computeIfAbsent(projectIdStr, k -> new ArrayList<>()).add(saveScriptDto);
+
            messagingTemplate.convertAndSend(
-                   "/topic/conference/" + projectId,
-                   new SendProjectResponseDto("script", projectIdStr, saveScriptDto));
+                   "/topic/conference/" + projectIdStr + "/history",
+                   new SendProjectResponseDto("script", projectIdStr, saveScriptDto, null));
        } catch (Exception e) {
            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
        }
