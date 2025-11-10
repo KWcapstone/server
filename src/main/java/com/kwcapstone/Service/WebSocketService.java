@@ -137,9 +137,6 @@ public class WebSocketService {
                 Project project = projectRepository.findByProjectId(projectId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
-                //상태 변화
-                changeTheStatus(project);
-
                 String content = dto.getScription();
                 SaveScriptDto saveScriptDto = new SaveScriptDto(content, dto.getTime());
 
@@ -184,17 +181,6 @@ public class WebSocketService {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "스크립트 저장 중 오류가 발생하였습니다." + e);
             }
         }
-    }
-
-    //상태 변경
-    private void changeTheStatus(Project project){
-        if(Objects.equals(project.getStatus(), "Before")){
-            project.setStatus("Processing");
-
-            projectRepository.save(project);
-        }
-
-        return;
     }
 
     // 추천 키워드

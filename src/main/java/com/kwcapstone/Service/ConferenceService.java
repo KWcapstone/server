@@ -62,6 +62,17 @@ public class ConferenceService {
     private final JsonMapper jsonMapper;
 
 
+    //상태 변경
+    private void changeTheStatus(Project project){
+        if(Objects.equals(project.getStatus(), "Before")){
+            project.setStatus("Processing");
+
+            projectRepository.save(project);
+        }
+
+        return;
+    }
+
     public NewProjectResponseDto projectCreate(PrincipalDetails principalDetails) {
         ObjectId memberId = principalDetails.getId();
         String memberIdStr = memberId.toString();
@@ -124,6 +135,9 @@ public class ConferenceService {
                 .memberId(memberId)
                 .build();
         memberToProjectRepository.save(mapping);
+
+        //상태 변경
+        changeTheStatus(project);
 
         return new NewProjectResponseDto(
                 project.getProjectId().toHexString(),
