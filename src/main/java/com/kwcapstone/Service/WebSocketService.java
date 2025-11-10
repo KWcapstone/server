@@ -113,8 +113,6 @@ public class WebSocketService {
            Project project = projectRepository.findByProjectId(projectId)
                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."));
 
-           changeTheStatus(project);
-
            String content = dto.getScription();
            String time = dto.getTime();
 

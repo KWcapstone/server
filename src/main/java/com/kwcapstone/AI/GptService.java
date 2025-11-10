@@ -143,6 +143,7 @@ public class GptService {
                     3. 키워드는 5글자 이내여야 함.
                     4. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하면 안됨.
                     5. 반드시 JSON 배열로만 추출할 것. 예: ["React", "블록체인", "GPU", "그래픽AI", "클라우드"]
+                    6. 스크립트 부족하다고 같은 추천 키워드만 보내지 마.
                     """ + prompt;
 
         Map<String, Object> requestBody = Map.of(
