@@ -514,12 +514,22 @@ public class WebSocketService {
         //파일에 덮어씌우기
         String result = "";
 
+        String projectId = nodeRequstDto.getProjectId();
         //node가 null이 아니라면
 
         //1. 바뀐 노드에 대한 키워드도 다시 보내주기(이건 이후에 지워도 됨)
         sendMainKeywords(2, nodeRequstDto.getProjectId(), null, nodeRequstDto.getNodes());
         sendRecommendedKeywords(2, nodeRequstDto.getProjectId(), nodeRequstDto.getNodes());
         result = nodeRequstDto.getNodes();
+
+        // 2. nodes 문자열(JSON Array)을 파싱 → List<NodeDto>
+        List<NodeDto> newNodes;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            newNodes = mapper.readValue(nodeRequstDto.getNodes(), new TypeReference<List<NodeDto>>() {});
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "노드 JSON 파싱 실패", e);
+        }
 
 
         //먼저 파일명부터 생성 및 찾기
@@ -544,23 +554,30 @@ public class WebSocketService {
 
         //덮어씌우기
         try (FileWriter writer = new FileWriter(file, false)) {
-            writer.write(nodeRequstDto.getNodes());
+            writer.write(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(newNodes));
         }
         catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "업데이트 노드 저장 중 오류가 발생하였습니다." + e);
         }
 
 
-        String fileContent = null;
-        try {
-            fileContent = Files.readString(file.toPath(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "변경사항 반영된 노드 스크립트를 읽어오는데 오류가 발생했습니다." + e);
-        }
+//        String fileContent = null;
+//        try {
+//            fileContent = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+//        } catch (IOException e) {
+//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "변경사항 반영된 노드 스크립트를 읽어오는데 오류가 발생했습니다." + e);
+//        }
+//
+//        // 4. List<NodeDto>로 변환
+//        List<NodeDto> newNodes;
+//        try {
+//            ObjectMapper mapper = new ObjectMapper();
+//            newNodes = mapper.readValue(nodesJson, new TypeReference<List<NodeDto>>() {});
+//        } catch (IOException e) {
+//            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "노드 역직렬화 실패", e);
+//        }
 
-        messagingTemplate.convertAndSend("/topic/conference/live_on",
-                Map.of("event", "live_on",
-                        "projectId", nodeRequstDto.getProjectId(),
-                        "node", fileContent));
+        messagingTemplate.convertAndSend("/topic/conference/"+ projectId,
+                new NodeUpdateResponseDto("live_on_node", projectId, newNodes));
     }
 }
