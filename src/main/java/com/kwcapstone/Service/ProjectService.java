@@ -344,9 +344,14 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다.");
         }
 
+        ObjectId creatorId = project.get().getCreator();
+        String creatorName = memberRepository.findByMemberId(creatorId)
+                .map(Member::getName)
+                .orElse("알 수 없음");
+
         String projectStatus = project.get().getStatus();
 
-        return new ProjectStatusResponseDto(projectId, projectStatus);
+        return new ProjectStatusResponseDto(projectId, creatorName, projectStatus);
     }
 
     //프로젝트 추출

@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProjectStatusResponseDto {
     private String projectId;
+    private String creator;
     private String status;
 }
