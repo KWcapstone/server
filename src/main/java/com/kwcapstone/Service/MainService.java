@@ -168,7 +168,7 @@ public class MainService {
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
+            return null;
         }
 
         try {
@@ -214,7 +214,7 @@ public class MainService {
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 녹음 데이터를 찾을 수 없습니다.");
+            return null;
         }
 
         try {
@@ -274,7 +274,7 @@ public class MainService {
         List<Project> projects = getProjects(String.valueOf(memberId), filterType);
 
         if (projects.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 요약본 데이터를 찾을 수 없습니다.");
+            return null;
         }
 
         try {
