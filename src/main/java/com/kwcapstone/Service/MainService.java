@@ -159,7 +159,7 @@ public class MainService {
     public List<ShowMainResponseDto> showMain(PrincipalDetails principalDetails, String sort, String filterType) {
         ObjectId memberId = principalDetails.getId();
 
-        //member가 조재하는지
+        //member가 존재하는지
         Optional<Member> member = memberRepository.findById(memberId);
         if(!member.isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 ObjectId 형식 입니다.");
@@ -170,7 +170,6 @@ public class MainService {
         if (projects.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
         }
-
 
         try {
             Stream<ShowMainResponseDto> mainStream = projects.stream()
@@ -345,7 +344,6 @@ public class MainService {
         // 3. 탭으로 필터링
         List<SearchResponseWrapperDto> result = new ArrayList<>();
 
-
         for (Project project : projects) {
             //dto에 집어넣기
             SearchResponseWrapperDto dto = new SearchResponseWrapperDto();
@@ -354,6 +352,7 @@ public class MainService {
             dto.setProjectId(strprojectId);
             dto.setProjectName(project.getProjectName());
             dto.setUpdatedAt(project.getUpdatedAt());
+
             String creatorName = memberRepository.findByMemberId(project.getCreator())
                     .map(Member::getName)
                     .orElse("Unknown");  // creator 정보가 없을 경우 기본값 설정
@@ -361,21 +360,18 @@ public class MainService {
 
             //프로젝트를 불러올 때,
             if ("entire".equalsIgnoreCase(tap)) {
-                //만약 null 이면 모든 프로젝트를 다 불러오는 거임
-                //keyword 가 있을 경우 null이거나 대소문자 구분없이 keyword 포함되어있지 않은 경우 다 걸러내야 함
+                // keyword 필터링
                 if(keyword != null && !keyword.isBlank()) {
                     if ((project.getProjectName() == null
                             || !project.getProjectName().toLowerCase().contains(keyword.toLowerCase()))) {
                         continue;
                     }
                 }
+
                 String imgUrl = project.getProjectImage();
-                if(imgUrl == null || imgUrl.isBlank()) {
-                    dto.setResult(List.of(new SearchResponseWrapperDto.EntireDto(null)));
-                }
-                else{
-                    dto.setResult(List.of(new SearchResponseWrapperDto.EntireDto(project.getProjectImage())));
-                }
+                dto.setResult(new SearchResponseWrapperDto.EntireDto(
+                        (imgUrl == null || imgUrl.isBlank()) ? null : imgUrl
+                ));
                 result.add(dto);
             } else if ("record".equalsIgnoreCase(tap)) {
                 //만약 null 이면 모든 프로젝트를 다 불러오는 거임
@@ -396,14 +392,11 @@ public class MainService {
                         new SearchResponseWrapperDto.ZipDto(
                                 zipFile.getDocumentFileSize(),
                                 project.getZipFile().getRecordFileSize(),
-//                                project.getScript() != null ? project.getScript().getSizeInBytes(): 0L,
                                 project.getProjectName() != null ? project.getProjectName() + ".zip" : "unnamed.zip"
                         )
                 ));
                 result.add(dto);
             } else if ("summary".equalsIgnoreCase(tap)) {
-                //만약 null 이면 모든 프로젝트를 다 불러오는 거임
-                //keyword 가 있을 경우 null이거나 대소문자 구분없이 keyword 포함되어있지 않은 경우 다 걸러내야 함
                 if(keyword != null && !keyword.isBlank()) {
                     if ((project.getProjectName() == null
                             || !project.getProjectName().toLowerCase().contains(keyword.toLowerCase()))) {
@@ -430,9 +423,8 @@ public class MainService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "요청한 조건에 맞는 프로젝트를 찾을 수 없습니다.");
         }
 
-        //result 정렬하기
+        //result 정렬
         result.sort(Comparator.comparing(SearchResponseWrapperDto::getUpdatedAt).reversed());
-
         return result;
     }
 
