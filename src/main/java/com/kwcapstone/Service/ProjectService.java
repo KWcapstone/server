@@ -250,7 +250,7 @@ public class ProjectService {
         }
 
         //inviteLink
-        String inviteUrl = "http://localhost:3000/project/" + projectId;
+        String inviteUrl = "https://www.moaba.site/project/" + projectId;
 
         //참여자 목록 가져오기
         List<MemberToProject> connections = memberToProjectRepository.findByProjectId(ObjprojectId);
