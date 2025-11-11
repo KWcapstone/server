@@ -17,7 +17,7 @@ public class SearchResponseWrapperDto {
     private String projectName;
     private LocalDateTime updatedAt;
     private String creator;
-    private List<?> result;  // 각 탭별 DTO
+    private Object result;  // 각 탭별 DTO
 
     @Data
     @AllArgsConstructor
