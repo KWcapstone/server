@@ -208,11 +208,9 @@ public class ProjectService {
             } else if (type.equals("record")) {
                 project.get().setZipFile(null);
                 project.get().setScript(null);
-                project.get().setUpdatedAt(LocalDateTime.now());
                 projectRepository.save(project.get());
             } else if (type.equals("summary")) {
                 project.get().setSummary(null);
-                project.get().setUpdatedAt(LocalDateTime.now());
                 projectRepository.save(project.get());
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 삭제 타입입니다.");
