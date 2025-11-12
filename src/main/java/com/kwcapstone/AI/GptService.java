@@ -94,8 +94,14 @@ public class GptService {
         int maxTokens = estimateMaxTokens(prompt);
 
         String promptMessage = """
-            다음 텍스트는 현재 진행 중인 아이디에이션 과정의 스크립트야. 이의 주제를 파악하고 현재 아이디에이션에 대한 주요 키워드를 5개 알려줘.
-            주요 키워드만 대답해주면 돼. "더 필요하신거 있으신가요" 과 같은 답변 이어서 하지마. JSON 배열로 추출해줘.
+            다음 텍스트는 현재 진행 중인 아이디에이션 과정의 스크립트야. 
+            오로지 이 스크립트만을 보고 주제를 파악하고 현재 진행되고 있는 이 대화의 주요 키워드 5개를 파악해야해.
+            
+            주요 키워드만으로 구성된 JSON 배열로 추출해줘.
+            주요 키워드 외의 다른 말은 필요 없어.
+            
+            **응답으로 와야할 JSON 형식 (이건 그저 형식일 뿐, 대화의 요지를 파악 못했을 때 이 5개를 보내라는 의미는 아니야.)
+             ["React", "블록체인", "GPU", "그래픽AI", "클라우드"]
             """.formatted(maxTokens);
 
         Map<String, Object> requestBody = Map.of(
