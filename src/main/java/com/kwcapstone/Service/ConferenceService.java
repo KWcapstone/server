@@ -292,6 +292,11 @@ public class ConferenceService {
             project.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
             projectRepository.save(project);
 
+            messagingTemplate.convertAndSend(
+                    "/topic/conference/" + projectId,
+                    "event : save"
+            );
+
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 처리 중 오류 발생");
         }
