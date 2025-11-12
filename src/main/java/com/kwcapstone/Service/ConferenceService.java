@@ -307,7 +307,7 @@ public class ConferenceService {
 
             messagingTemplate.convertAndSend(
                     "/topic/conference/" + projectId,
-                    "event : save"
+                    Map.of("event", "save")
             );
 
         } catch (IOException e) {
