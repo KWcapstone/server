@@ -307,7 +307,7 @@ public class ConferenceService {
 
             messagingTemplate.convertAndSend(
                     "/topic/conference/" + projectId,
-                    Map.of("event", "save")
+                    Map.of("event", "save") // JSON 형식으로 수정
             );
 
         } catch (IOException e) {
