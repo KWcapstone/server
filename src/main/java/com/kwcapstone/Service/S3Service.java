@@ -28,35 +28,13 @@ public class S3Service {
         return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + s3Path;
     }
 
-//    // 업로드
-//    public void uploadFileToS3(String s3Path, File file) {
-//        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-//                .bucket(bucketName)
-//                .key(s3Path)
-//                .acl(ObjectCannedACL.BUCKET_OWNER_FULL_CONTROL)
-//                .build();
-//        s3Client.putObject(putObjectRequest, RequestBody.fromFile(file));
-//    }
-
     // 업로드
     public void uploadFileToS3(String s3Path, File file) {
-        String contentType;
-        try {
-            contentType = Files.probeContentType(file.toPath());
-            if (contentType == null) {
-                contentType = "application/octet-stream"; // fallback MIME
-            }
-        } catch (IOException e) {
-            contentType = "application/octet-stream";
-        }
-
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(s3Path)
-                .contentType(contentType)
-                .acl(ObjectCannedACL.PUBLIC_READ)
+                .acl(ObjectCannedACL.BUCKET_OWNER_FULL_CONTROL)
                 .build();
-
         s3Client.putObject(putObjectRequest, RequestBody.fromFile(file));
     }
 
