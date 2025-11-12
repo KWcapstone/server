@@ -218,9 +218,20 @@ public class ConferenceService {
 
             //summary
             String summaryText = gptService.callSummaryOpenAI(scriptText);
+
+            ObjectMapper summaryMapper = new ObjectMapper();
+            JsonNode summaryNode = summaryMapper.readTree(summaryText);
+            String title = summaryNode.path("title").asText("");
+            String content = summaryNode.path("content").asText("");
+            String formattedSummary = String.format("📍%s\n\n%s", title, content);
+
             String summaryFileName = "summary/" + projectId + ".txt";
-            File summaryFile = createTempTextFile(summaryText);
+            File summaryFile = createTempTextFile(formattedSummary);
             s3Service.uploadFileToS3(summaryFileName, summaryFile);
+//
+//            String summaryFileName = "summary/" + projectId + ".txt";
+//            File summaryFile = createTempTextFile(summaryText);
+//            s3Service.uploadFileToS3(summaryFileName, summaryFile);
 
             //record
             File recordFile = convertMultipartToFile(requestDto.getRecord());
