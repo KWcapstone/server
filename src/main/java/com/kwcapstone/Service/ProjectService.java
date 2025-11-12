@@ -349,7 +349,10 @@ public class ProjectService {
 
         String projectStatus = project.get().getStatus();
 
-        return new ProjectStatusResponseDto(projectId, creatorName, projectStatus);
+        String projectName = project.get().getProjectName();
+        LocalDateTime updatedAt = project.get().getUpdatedAt();
+
+        return new ProjectStatusResponseDto(projectId, creatorName, projectStatus, projectName, updatedAt);
     }
 
     //프로젝트 추출
